@@ -1,34 +1,35 @@
 package main
 
 import (
-    "fmt"
     "encoding/json"
+    "fmt"
     "net/http"
-    "gorm.io/gorm"
-    "gorm.io/driver/sqlite"
+
     "github.com/gorilla/mux"
+    "gorm.io/driver/sqlite"
+    "gorm.io/gorm"
 )
 
 var db *gorm.DB
 var err error
 
 type Student struct {
-    RollNumber       int    `json:"Roll_Number"`
-    Section          string `json:"Section"`
-    SubSection       string `json:"SubSection"`
-    Name             string `json:"Name"`
-    Gender           string `json:"Gender"`
-    Mobile           string `json:"Mobile"`
-    Birthday         string `json:"Birthday"`
-    Email            string `json:"Institute_Email"`
-    Batch            int    `json:"Batch"`
-    HostelNumber     string `json:"Hostel_Number"`
-    RoomNumber       string `json:"Room_Number"`
-    DiscordUID       int    `json:"Discord_UID"`
-    Verified         bool   `json:"Verified"`
+    RollNumber   int    `json:"Roll_Number"`
+    Section      string `json:"Section"`
+    SubSection   string `json:"SubSection"`
+    Name         string `json:"Name"`
+    Gender       string `json:"Gender"`
+    Mobile       string `json:"Mobile"`
+    Birthday     string `json:"Birthday"`
+    Email        string `json:"Institute_Email"`
+    Batch        int    `json:"Batch"`
+    HostelNumber string `json:"Hostel_Number"`
+    RoomNumber   string `json:"Room_Number"`
+    DiscordUID   int    `json:"Discord_UID"`
+    Verified     bool   `json:"Verified"`
 }
 
-func GetUserByRoll(w http.ResponseWriter, r *http.Request) {
+func GetStudentByRoll(w http.ResponseWriter, r *http.Request) {
     db, err = gorm.Open(sqlite.Open("details.db"), &gorm.Config{})
     if err != nil {
         fmt.Println(err.Error())

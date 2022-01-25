@@ -4,6 +4,7 @@ import (
     "fmt"
     "log"
     "net/http"
+
     "github.com/gorilla/mux"
 )
 
@@ -14,7 +15,7 @@ func helloWorld(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
     myRouter := mux.NewRouter().StrictSlash(true)
     myRouter.HandleFunc("/", helloWorld).Methods("GET")
-    myRouter.HandleFunc("/user/roll/{roll}", GetUserByRoll).Methods("GET")
+    myRouter.HandleFunc("/user/roll/{roll}", GetStudentByRoll).Methods("GET")
     log.Fatal(http.ListenAndServe(":8081", myRouter))
 }
 
