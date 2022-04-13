@@ -15,9 +15,17 @@ func helloWorld(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
     myRouter := mux.NewRouter().StrictSlash(true)
     myRouter.HandleFunc("/", helloWorld).Methods("GET")
+
+    // student.go
     myRouter.HandleFunc("/user/roll/{roll}", GetStudentByRoll).Methods("GET")
+
+    // course.go
     myRouter.HandleFunc("/courses", GetCourses).Methods("GET")
     myRouter.HandleFunc("/course/{code}", GetCourse).Methods("GET")
+
+    // announcement.go
+    myRouter.HandleFunc("/announcements", GetAnnouncements).Methods("GET")
+
     log.Fatal(http.ListenAndServe(":8081", myRouter))
 }
 
