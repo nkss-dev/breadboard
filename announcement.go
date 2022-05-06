@@ -39,6 +39,7 @@ func FormatAnnouncement(name string) []string {
         "M.Tech.": regexp.MustCompile(`(?i)M[\. ]?Tech`),
         "MCA":     regexp.MustCompile(`(?i)MCA`),
         "MBA":     regexp.MustCompile(`(?i)MBA`),
+		"Ph.D":    regexp.MustCompile(`(?i)Ph[\. ]?D\.?`),
 
         // Semester
         "1st semester": regexp.MustCompile(`(?i)[^(except )]1st sem(ester)?`),
