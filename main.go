@@ -4,6 +4,7 @@ import (
     "fmt"
     "log"
     "net/http"
+    "os"
 
     "github.com/gorilla/mux"
 )
@@ -26,7 +27,11 @@ func handleRequests() {
     // announcement.go
     myRouter.HandleFunc("/announcements", GetAnnouncements).Methods("GET")
 
-    log.Fatal(http.ListenAndServe(":8081", myRouter))
+    port, port_exists := os.LookupEnv("PORT")
+    if !port_exists {
+        port = "8081"
+    }
+    log.Fatal(http.ListenAndServe(":"+port, myRouter))
 }
 
 func main() {
