@@ -4,6 +4,7 @@ import (
     "encoding/json"
     "fmt"
     "net/http"
+    "net/url"
     "regexp"
 
     "github.com/PuerkitoBio/goquery"
@@ -65,9 +66,9 @@ func FormatAnnouncement(name string) []string {
 }
 
 func GetAnnouncements(w http.ResponseWriter, r *http.Request) {
-    url := "http://nitkkr.ac.in/notifications.php?tbl=notifications"
+    nitkkr_url := "http://nitkkr.ac.in/notifications.php?tbl=notifications"
 
-    response, err := http.Get(url)
+    response, err := http.Get(nitkkr_url)
     check(err)
     defer response.Body.Close()
 
@@ -78,7 +79,13 @@ func GetAnnouncements(w http.ResponseWriter, r *http.Request) {
     doc.Find("div.bg-white").Find("p").Each(func(index int, item *goquery.Selection) {
         var announcement Announcement
         announcement.Name = item.Find("a").Text()
-        announcement.Link, _ = item.Find("a").Attr("href")
+        link, _ := item.Find("a").Attr("href")
+        encoded_url, err := url.Parse(link)
+        if err != nil {
+            fmt.Println(err.Error())
+            return
+        }
+        announcement.Link = encoded_url.String()
         announcement.Tags = FormatAnnouncement(announcement.Name)
 
         if announcement.Name != "" && announcement.Link != "" {
