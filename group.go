@@ -79,7 +79,7 @@ func GetAllMemberInfo(w http.ResponseWriter, r *http.Request) {
 	dsn := "host=localhost user=gorm password=gorm dbname=group port=9920 sslmode=disable TimeZone=Asia/Shanghai"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Prstringln(err.Error())
+		fmt.Println(err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
