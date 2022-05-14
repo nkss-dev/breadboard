@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,17 +10,16 @@ import (
 	"NKSS-backend/config"
 
 	"github.com/gorilla/mux"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	_ "github.com/lib/pq"
 )
 
 type App struct {
 	Router *mux.Router
-	DB     *gorm.DB
+	DB     *sql.DB
 }
 
 func (a *App) Initialise(config *config.Config) {
-	dbURI := fmt.Sprintf(
+	dsn := fmt.Sprintf(
 		"postgresql://%s:%s@%s:%s/%s",
 		config.DB.User,
 		config.DB.Password,
@@ -28,7 +28,7 @@ func (a *App) Initialise(config *config.Config) {
 		config.DB.Database,
 	)
 
-	db, err := gorm.Open(postgres.Open(dbURI), &gorm.Config{})
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalln(err)
 	}
