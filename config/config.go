@@ -19,11 +19,11 @@ type DBConfig struct {
 func GetConfig() *Config {
 	return &Config{
 		DB: &DBConfig{
-			Database: os.Getenv("database"),
-			Host:     os.Getenv("host"),
-			Password: os.Getenv("password"),
-			Port:     os.Getenv("port"),
-			User:     os.Getenv("user"),
+			Database: os.Getenv("pgdatabase"),
+			Host:     os.Getenv("pghost"),
+			Password: os.Getenv("pgpassword"),
+			Port:     os.Getenv("pgport"),
+			User:     os.Getenv("pguser"),
 		},
 	}
 }
