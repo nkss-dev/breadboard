@@ -70,7 +70,7 @@ func GetCourses(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	branch := vars.Get("branch")
-	branches := []string{"CE", "CS", "ECE", "EE", "IT", "ME", "PIE"}
+	branches := []string{"", "CE", "CS", "ECE", "EE", "IT", "ME", "PIE"}
 	if !slices.Contains(branches, branch) {
 		respondError(w, 400, "Invalid branch parameter!")
 		return
