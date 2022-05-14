@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"NKSS-backend/config"
+	"NKSS-backend/pkg/handlers"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -47,5 +48,5 @@ func (a *App) Run() {
 }
 
 func (a *App) setRouters() {
-	panic("unimplemented!")
+	a.Router.HandleFunc("/announcements", handlers.GetAnnouncements).Methods("GET")
 }
