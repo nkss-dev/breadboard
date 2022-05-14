@@ -8,6 +8,20 @@ import (
 	"database/sql"
 )
 
+type Course struct {
+	Code       string
+	Title      string
+	Branch     string
+	Semester   int16
+	Credits    []int32
+	Prereq     []string
+	Type       string
+	Objectives string
+	Content    string
+	Books      string
+	Outcomes   string
+}
+
 type Hostel struct {
 	Number     string
 	Name       sql.NullString
