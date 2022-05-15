@@ -8,8 +8,7 @@ import (
 
 func main() {
 	config := config.GetConfig()
-	app := pkg.App{}
-	app.Initialise(&config)
+	app := pkg.NewApp(&config)
 
 	fmt.Println("API Online")
 	app.Run()

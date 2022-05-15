@@ -18,15 +18,15 @@ type App struct {
 	DB     *sql.DB
 }
 
-func (a *App) Initialise(config *config.Config) {
+func NewApp(config *config.Config) *App {
 	db, err := sql.Open("postgres", config.DatabaseUrl)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	a.DB = db
-	a.Router = mux.NewRouter().StrictSlash(true)
-	a.setRouters()
+	app := App{DB: db, Router: mux.NewRouter().StrictSlash(true)}
+	app.setRouters()
+	return &app
 }
 
 func (a *App) Run() {
