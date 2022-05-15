@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -19,24 +18,15 @@ type App struct {
 	DB     *sql.DB
 }
 
-func (a *App) Initialise(config *config.Config) {
-	dsn := fmt.Sprintf(
-		"postgresql://%s:%s@%s:%s/%s",
-		config.DB.User,
-		config.DB.Password,
-		config.DB.Host,
-		config.DB.Port,
-		config.DB.Database,
-	)
-
-	db, err := sql.Open("postgres", dsn)
+func NewApp(config *config.Config) *App {
+	db, err := sql.Open("postgres", config.DatabaseUrl)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	a.DB = db
-	a.Router = mux.NewRouter().StrictSlash(true)
-	a.setRouters()
+	app := App{DB: db, Router: mux.NewRouter().StrictSlash(true)}
+	app.setRouters()
+	return &app
 }
 
 func (a *App) Run() {

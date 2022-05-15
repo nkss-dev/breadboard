@@ -1,29 +1,19 @@
 package config
 
 import (
+	"log"
 	"os"
 )
 
 type Config struct {
-	DB *DBConfig
+	DatabaseUrl string
 }
 
-type DBConfig struct {
-	Database string
-	Host     string
-	Password string
-	Port     string
-	User     string
-}
-
-func GetConfig() *Config {
-	return &Config{
-		DB: &DBConfig{
-			Database: os.Getenv("pgdatabase"),
-			Host:     os.Getenv("pghost"),
-			Password: os.Getenv("pgpassword"),
-			Port:     os.Getenv("pgport"),
-			User:     os.Getenv("pguser"),
-		},
+func GetConfig() Config {
+	DatabaseUrl := os.Getenv("DATABASE_URL")
+	if DatabaseUrl == "" {
+		log.Fatalln("DATABASE_URL is not set")
 	}
+
+	return Config{DatabaseUrl: DatabaseUrl}
 }
