@@ -3,101 +3,86 @@ package handlers
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"net/http"
 
 	"NKSS-backend/pkg/query"
 )
 
 type Group struct {
-	Name        string
-	Alias       string
-	Faculty     []query.GroupFaculty
-	Branch      string
-	Kind        string
-	Description string
-	Socials     interface{}
-	Admins      []query.GroupAdmin
-	Members     []int32
+	Name        string                 `json:"name"`
+	Alias       string                 `json:"alias"`
+	Faculty     []Faculty              `json:"faculty"`
+	Branch      string                 `json:"branch"`
+	Kind        string                 `json:"kind"`
+	Description string                 `json:"description"`
+	Socials     map[string]interface{} `json:"socials"`
+	Admins      []Admin                `json:"admins"`
+	Members     []int64                `json:"members"`
+}
+
+type Faculty struct {
+	Name   string `json:"name"`
+	Mobile int64  `json:"mobile"`
+}
+
+type Admin struct {
+	Position   string `json:"position"`
+	RollNumber int64  `json:"roll_number"`
 }
 
 func GetGroups(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	queries := query.New(db)
-	allGroups, err := queries.GetAllGroups(ctx)
+	group_rows, err := queries.GetAllGroups(ctx)
 	if err == sql.ErrNoRows {
 		respondError(w, 404, "No groups found!")
 		return
 	}
-	allFaculties, err := queries.GetAllFaculty(ctx)
-	if err == sql.ErrNoRows {
-		respondError(w, 404, "No faculty found!")
-		return
-	}
-	allSocials, err := queries.GetAllGroupSocials(ctx)
-	if err == sql.ErrNoRows {
-		respondError(w, 404, "No socials found!")
-		return
-	}
-	allAdmins, err := queries.GetAllGroupAdmins(ctx)
-	if err == sql.ErrNoRows {
-		respondError(w, 404, "No admins found!")
-		return
-	}
-	allMembers, err := queries.GetAllGroupMembers(ctx)
-	if err == sql.ErrNoRows {
-		respondError(w, 404, "No members found!")
+	if err != nil {
+		respondError(w, 500, "Something went wrong while fetching details from our database")
 		return
 	}
 
 	var groups []Group
+	for _, group_row := range group_rows {
+		var group Group
 
-	for _, group := range allGroups {
-		name := group.Name
-		alias := group.Alias
-		branch := group.Branch
-		kind := group.Kind
-		description := group.Description
+		group.Name = group_row.Name
+		group.Alias = group_row.Alias.String
+		group.Branch = group_row.Branch.String
+		group.Kind = group_row.Kind
+		group.Description = group_row.Description.String
+		group.Members = group_row.Members
 
-		var faculty []query.GroupFaculty
-		for _, thisFaculty := range allFaculties {
-			if thisFaculty.GroupName == name {
-				faculty = append(faculty, thisFaculty)
-			}
+		var faculties []Faculty
+		for i, name := range group_row.FacultyNames {
+			faculties = append(faculties, Faculty{Name: name, Mobile: group_row.FacultyMobiles[i]})
 		}
-		var socials []query.GroupSocial
-		for _, social := range allSocials {
-			if social.Name == name {
-				socials = append(socials, social)
-			}
-		}
-		var admins []query.GroupAdmin
-		for _, admin := range allAdmins {
-			if admin.GroupName == name {
-				admins = append(admins, admin)
-			}
-		}
-		var members []int32
-		for _, member := range allMembers {
-			if member.GroupName == name {
-				members = append(members, member.RollNumber)
-			}
-		}
+		group.Faculty = faculties
 
-		fmt.Println(group)
-		groups = append(
-			groups,
-			Group{
-				Name:        name,
-				Alias:       alias.String,
-				Faculty:     faculty,
-				Branch:      branch.String,
-				Kind:        kind,
-				Description: description.String,
-				Socials:     socials,
-				Admins:      admins,
-				Members:     members,
-			})
+		socials := make(map[string]interface{})
+		for i, social_type := range group_row.SocialTypes {
+			socials[social_type] = group_row.SocialLinks[i]
+		}
+		discord := make(map[string]interface{})
+		discord["id"] = group_row.ServerID
+		discord["invite"] = group_row.ServerInvite
+		discord["roles"] = map[string]int64{
+			"freshman":  group_row.FresherRole.Int64,
+			"sophomore": group_row.SophomoreRole.Int64,
+			"junior":    group_row.JuniorRole.Int64,
+			"senior":    group_row.SeniorRole.Int64,
+		}
+		socials["discord"] = discord
+		group.Socials = socials
+
+		var admins []Admin
+		for i, position := range group_row.AdminPositions {
+			admins = append(admins, Admin{Position: position, RollNumber: group_row.AdminRolls[i]})
+		}
+		group.Admins = admins
+
+		groups = append(groups, group)
 	}
 
 	respondJSON(w, 200, groups)

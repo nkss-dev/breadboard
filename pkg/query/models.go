@@ -13,7 +13,7 @@ type Course struct {
 	Title      string
 	Branch     string
 	Semester   int16
-	Credits    []int32
+	Credits    []int16
 	Prereq     []string
 	Type       string
 	Objectives string
@@ -26,14 +26,14 @@ type Group struct {
 	Name        string
 	Alias       sql.NullString
 	Branch      sql.NullString
-	Kind        sql.NullString
+	Kind        string
 	Description sql.NullString
 }
 
 type GroupAdmin struct {
-	GroupName  sql.NullString
+	GroupName  string
 	Position   sql.NullString
-	RollNumber sql.NullInt32
+	RollNumber int32
 }
 
 type GroupDiscord struct {
@@ -64,7 +64,7 @@ type GroupDiscordUser struct {
 type GroupFaculty struct {
 	GroupName string
 	Name      string
-	Mobile    sql.NullInt64
+	Mobile    int64
 }
 
 type GroupMember struct {
@@ -73,9 +73,9 @@ type GroupMember struct {
 }
 
 type GroupSocial struct {
-	Name sql.NullString
-	Type sql.NullString
-	Link sql.NullString
+	Name string
+	Type string
+	Link string
 }
 
 type Hostel struct {

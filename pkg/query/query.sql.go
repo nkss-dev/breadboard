@@ -51,132 +51,48 @@ func (q *Queries) GetAllCourses(ctx context.Context) ([]Course, error) {
 	return items, nil
 }
 
-const getAllFaculty = `-- name: GetAllFaculty :many
-SELECT group_name, name, mobile FROM group_faculty
-`
-
-func (q *Queries) GetAllFaculty(ctx context.Context) ([]GroupFaculty, error) {
-	rows, err := q.db.QueryContext(ctx, getAllFaculty)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GroupFaculty
-	for rows.Next() {
-		var i GroupFaculty
-		if err := rows.Scan(&i.GroupName, &i.Name, &i.Mobile); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getAllGroupAdmins = `-- name: GetAllGroupAdmins :many
-SELECT group_name, position, roll_number FROM group_admin
-`
-
-func (q *Queries) GetAllGroupAdmins(ctx context.Context) ([]GroupAdmin, error) {
-	rows, err := q.db.QueryContext(ctx, getAllGroupAdmins)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GroupAdmin
-	for rows.Next() {
-		var i GroupAdmin
-		if err := rows.Scan(&i.GroupName, &i.Position, &i.RollNumber); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getAllGroupMembers = `-- name: GetAllGroupMembers :many
-SELECT roll_number, group_name FROM group_member
-`
-
-func (q *Queries) GetAllGroupMembers(ctx context.Context) ([]GroupMember, error) {
-	rows, err := q.db.QueryContext(ctx, getAllGroupMembers)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GroupMember
-	for rows.Next() {
-		var i GroupMember
-		if err := rows.Scan(&i.RollNumber, &i.GroupName); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getAllGroupSocials = `-- name: GetAllGroupSocials :many
-SELECT name, type, link FROM group_social
-`
-
-func (q *Queries) GetAllGroupSocials(ctx context.Context) ([]GroupSocial, error) {
-	rows, err := q.db.QueryContext(ctx, getAllGroupSocials)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GroupSocial
-	for rows.Next() {
-		var i GroupSocial
-		if err := rows.Scan(&i.Name, &i.Type, &i.Link); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getAllGroups = `-- name: GetAllGroups :many
-SELECT groups.name, alias, branch, kind, description, group_discord.name, id, invite, fresher_role, sophomore_role, junior_role, senior_role, guest_role FROM groups NATURAL JOIN group_discord
+SELECT
+    g.name, g.alias, g.branch, g.kind, g.description,
+    gd.id AS server_id,
+    gd.invite AS server_invite,
+    gd.fresher_role,
+    gd.sophomore_role,
+    gd.junior_role,
+    gd.senior_role,
+    gd.guest_role,
+    CAST(ARRAY(SELECT gf.name FROM group_faculty gf WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
+    CAST(ARRAY(SELECT gf.mobile FROM group_faculty gf WHERE g.name = gf.group_name) AS bigint[]) AS faculty_mobiles,
+    CAST(ARRAY(SELECT gs.type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_links,
+    CAST(ARRAY(SELECT ga.position FROM group_admin ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
+    CAST(ARRAY(SELECT ga.roll_number FROM group_admin ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
+    CAST(ARRAY(SELECT gm.roll_number from group_member gm where g.name = gm.group_name) AS bigint[]) AS members
+FROM
+    groups g
+    JOIN group_discord gd ON g.name = gd.name
 `
 
 type GetAllGroupsRow struct {
-	Name          string
-	Alias         sql.NullString
-	Branch        sql.NullString
-	Kind          sql.NullString
-	Description   sql.NullString
-	Name_2        sql.NullString
-	ID            sql.NullInt64
-	Invite        sql.NullString
-	FresherRole   sql.NullInt64
-	SophomoreRole sql.NullInt64
-	JuniorRole    sql.NullInt64
-	SeniorRole    sql.NullInt64
-	GuestRole     sql.NullInt64
+	Name           string
+	Alias          sql.NullString
+	Branch         sql.NullString
+	Kind           string
+	Description    sql.NullString
+	ServerID       sql.NullInt64
+	ServerInvite   sql.NullString
+	FresherRole    sql.NullInt64
+	SophomoreRole  sql.NullInt64
+	JuniorRole     sql.NullInt64
+	SeniorRole     sql.NullInt64
+	GuestRole      sql.NullInt64
+	FacultyNames   []string
+	FacultyMobiles []int64
+	SocialTypes    []string
+	SocialLinks    []string
+	AdminPositions []string
+	AdminRolls     []int64
+	Members        []int64
 }
 
 func (q *Queries) GetAllGroups(ctx context.Context) ([]GetAllGroupsRow, error) {
@@ -194,14 +110,20 @@ func (q *Queries) GetAllGroups(ctx context.Context) ([]GetAllGroupsRow, error) {
 			&i.Branch,
 			&i.Kind,
 			&i.Description,
-			&i.Name_2,
-			&i.ID,
-			&i.Invite,
+			&i.ServerID,
+			&i.ServerInvite,
 			&i.FresherRole,
 			&i.SophomoreRole,
 			&i.JuniorRole,
 			&i.SeniorRole,
 			&i.GuestRole,
+			pq.Array(&i.FacultyNames),
+			pq.Array(&i.FacultyMobiles),
+			pq.Array(&i.SocialTypes),
+			pq.Array(&i.SocialLinks),
+			pq.Array(&i.AdminPositions),
+			pq.Array(&i.AdminRolls),
+			pq.Array(&i.Members),
 		); err != nil {
 			return nil, err
 		}

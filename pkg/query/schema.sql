@@ -39,14 +39,14 @@ CREATE TABLE IF NOT EXISTS groups (
     name         text       primary key,
     alias        text       unique,
     branch       varchar(5) unique,
-    kind         text       check(kind in ('cultural club', 'technical club', 'technical society')),
+    kind         text       NOT NULL check(kind in ('cultural club', 'technical club', 'technical society')),
     description  text
 );
 
 CREATE TABLE IF NOT EXISTS group_faculty (
     group_name  text   references groups(name),
     name        text,
-    mobile      bigint unique,
+    mobile      bigint unique NOT NULL,
     primary key (group_name, name)
 );
 
@@ -64,13 +64,15 @@ CREATE TABLE IF NOT EXISTS group_discord (
 CREATE TABLE IF NOT EXISTS group_social (
     name  text references groups(name),
     type  varchar(15),
-    link  text
+    link  text NOT NULL,
+    primary key (name, type)
 );
 
 CREATE TABLE IF NOT EXISTS group_admin (
     group_name   text references groups(name),
     position     varchar(20),
-    roll_number  int  references student(roll_number)
+    roll_number  int  references student(roll_number),
+    primary key (group_name, roll_number)
 );
 
 CREATE TABLE IF NOT EXISTS group_member (
