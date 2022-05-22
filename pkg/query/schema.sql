@@ -35,7 +35,6 @@ CREATE TABLE IF NOT EXISTS course (
     PRIMARY KEY (code, branch)
 );
 
-
 CREATE TABLE IF NOT EXISTS groups (
     name         text       primary key,
     alias        text       unique,
