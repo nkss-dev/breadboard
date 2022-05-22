@@ -25,7 +25,7 @@ func GetAllMemberInfo(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		respondError(w, 404, "No groups found!")
 		return
 	}
-	faculty , err := queries.getAllFaculty(ctx)
+	faculty, err := queries.getAllFaculty(ctx)
 	if err == sql.ErrNoRows {
 		respondError(w, 404, "No faculty found!")
 		return
