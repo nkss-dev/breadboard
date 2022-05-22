@@ -105,12 +105,12 @@ func (q *Queries) GetAllGroupAdmins(ctx context.Context) ([]GroupAdmin, error) {
 	return items, nil
 }
 
-const getAllGroupMemmbers = `-- name: GetAllGroupMemmbers :many
+const getAllGroupMembers = `-- name: GetAllGroupMembers :many
 SELECT roll_number, group_name FROM group_member
 `
 
-func (q *Queries) GetAllGroupMemmbers(ctx context.Context) ([]GroupMember, error) {
-	rows, err := q.db.QueryContext(ctx, getAllGroupMemmbers)
+func (q *Queries) GetAllGroupMembers(ctx context.Context) ([]GroupMember, error) {
+	rows, err := q.db.QueryContext(ctx, getAllGroupMembers)
 	if err != nil {
 		return nil, err
 	}
