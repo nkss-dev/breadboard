@@ -33,5 +33,5 @@ SELECT * FROM group_social;
 -- name: GetAllGroupAdmins :many
 SELECT * FROM group_admin;
 
--- name: GetAllGroupMemmbers :many
+-- name: GetAllGroupMembers :many
 SELECT * FROM group_member;
