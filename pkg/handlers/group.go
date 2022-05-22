@@ -59,8 +59,9 @@ func GetAllMemberInfo(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		group["description"] := discord[g]["description"]
 
 
-		var group["faculty"] []map[string]string
-		x := 
+		var faculty []map[string]string
+		group["faculty"] = faculty
+		x := 0
 		for f:=0; f < len(faculty); f++ {
 			thisfaculty = faculty[f]
 			if thisfaculty["group_name"] == group["name"] {
@@ -69,17 +70,19 @@ func GetAllMemberInfo(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 				x += 1
 			}
 		}
-		var group["social"] []map[string]string
+		var social []map[string]string
+		group["social"] = social
 		x := 0
 		for s:=0; s < len(social); s++ {
-			thissocial = social[s]	
+			thissocial = social[s]
 			if thissocial["name"] == group["name"] {
 				group["social"][x]["type"] = thissocial["type"]
 				group["social"][x]["link"] = thissocial["link"]
 				x += 1
 			}
 		}
-		var group["admin"] []map[string]string
+		var admin []map[string]string
+		group["admin"] = admin
 		x := 0
 		for a:=0; a < len(admin); a++ {
 			thisadmin = admin[a]
@@ -89,7 +92,8 @@ func GetAllMemberInfo(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 				x += 1
 			}
 		}
-		var group["member"] []map[string]string
+		var member []map[string]string
+		group["member"] = member
 		x := 0
 		for m:=0; m < len(member); m++ {
 			thismember = member[m]
