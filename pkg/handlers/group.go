@@ -5,110 +5,100 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"NKSS-backend/pkg/query"
-
-	"github.com/gorilla/mux"
-	"golang.org/x/exp/slices"
 )
 
-func GetAllMemberInfo(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+type Group struct {
+	Name        string
+	Alias       string
+	Faculty     []query.GroupFaculty
+	Branch      string
+	Kind        string
+	Description string
+	Socials     interface{}
+	Admins      []query.GroupAdmin
+	Members     []int32
+}
 
-	w.Header().set("Content-Type", "application/json")
-
+func GetGroups(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	queries := query.New(db)
-	discord, err := queries.getAllGroups(ctx)
+	allGroups, err := queries.GetAllGroups(ctx)
 	if err == sql.ErrNoRows {
 		respondError(w, 404, "No groups found!")
 		return
 	}
-	faculty, err := queries.getAllFaculty(ctx)
+	allFaculties, err := queries.GetAllFaculty(ctx)
 	if err == sql.ErrNoRows {
 		respondError(w, 404, "No faculty found!")
 		return
 	}
-	social, err := queries.getAllGroupSocials(ctx)
+	allSocials, err := queries.GetAllGroupSocials(ctx)
 	if err == sql.ErrNoRows {
 		respondError(w, 404, "No socials found!")
 		return
 	}
-	admin, err := queries.getAllGroupAdmins(ctx)
+	allAdmins, err := queries.GetAllGroupAdmins(ctx)
 	if err == sql.ErrNoRows {
 		respondError(w, 404, "No admins found!")
 		return
 	}
-	member, err := queries.getAllGroupMembers(ctx)
+	allMembers, err := queries.GetAllGroupMembers(ctx)
 	if err == sql.ErrNoRows {
 		respondError(w, 404, "No members found!")
 		return
 	}
-	
-	var groups [](map[string]interface{})
-	
-	for g:=0; g < len(discord); g++ {
-		
-		var group map[string]interface{}
 
-		group["name"] := discord[g]["name"]
-		group["alias"] := discord[g]["alias"]
-		group["branch"] := discord[g]["branch"]
-		group["kind"] := discord[g]["kind"]
-		group["description"] := discord[g]["description"]
+	var groups []Group
 
+	for _, group := range allGroups {
+		name := group.Name
+		alias := group.Alias
+		branch := group.Branch
+		kind := group.Kind
+		description := group.Description
 
-		var faculty []map[string]string
-		group["faculty"] = faculty
-		x := 0
-		for f:=0; f < len(faculty); f++ {
-			thisfaculty = faculty[f]
-			if thisfaculty["group_name"] == group["name"] {
-				group["faculty"][x]["name"] = thisfaculty["name"]
-				group["faculty"][x]["mobile"] = thisfaculty["mobile"]
-				x += 1
+		var faculty []query.GroupFaculty
+		for _, thisFaculty := range allFaculties {
+			if thisFaculty.GroupName == name {
+				faculty = append(faculty, thisFaculty)
 			}
 		}
-		var social []map[string]string
-		group["social"] = social
-		x := 0
-		for s:=0; s < len(social); s++ {
-			thissocial = social[s]
-			if thissocial["name"] == group["name"] {
-				group["social"][x]["type"] = thissocial["type"]
-				group["social"][x]["link"] = thissocial["link"]
-				x += 1
+		var socials []query.GroupSocial
+		for _, social := range allSocials {
+			if social.Name == name {
+				socials = append(socials, social)
 			}
 		}
-		var admin []map[string]string
-		group["admin"] = admin
-		x := 0
-		for a:=0; a < len(admin); a++ {
-			thisadmin = admin[a]
-			if thisadmin["group_name"] == group["name"] {
-				group["admin"][x]["roll_number"] = thisadmin["roll_number"]
-				group["admin"][x]["position"] = thisadmin["position"]
-				x += 1
+		var admins []query.GroupAdmin
+		for _, admin := range allAdmins {
+			if admin.GroupName == name {
+				admins = append(admins, admin)
 			}
 		}
-		var member []map[string]string
-		group["member"] = member
-		x := 0
-		for m:=0; m < len(member); m++ {
-			thismember = member[m]
-			if thismember["group_name"] == group["name"] {
-				group["member"][x]["roll_number"] = thisadmin["roll_number"]
-				x += 1
+		var members []int32
+		for _, member := range allMembers {
+			if member.GroupName == name {
+				members = append(members, member.RollNumber)
 			}
 		}
 
-		groups[g] = group
-
+		fmt.Println(group)
+		groups = append(
+			groups,
+			Group{
+				Name:        name,
+				Alias:       alias.String,
+				Faculty:     faculty,
+				Branch:      branch.String,
+				Kind:        kind,
+				Description: description.String,
+				Socials:     socials,
+				Admins:      admins,
+				Members:     members,
+			})
 	}
 
-	jsonResp, _ := json.Marshal(groups)
-	w.Write(jsonResp)
 	respondJSON(w, 200, groups)
-
 }
