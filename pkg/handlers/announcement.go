@@ -1,22 +1,23 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/net/html"
 )
 
 type Announcement struct {
+	Date  string   `json:"date"`
 	Title string   `json:"title"`
 	Link  string   `json:"link"`
 	Tags  []string `json:"tags"`
 }
 
-func fetchTags(name string) []string {
-	var tags []string
+func fetchTags(name string) (tags []string) {
 	regexes := map[string]*regexp.Regexp{
 		// Disciplines
 		"CE":  regexp.MustCompile(`(?i)( CE )|(civil engg[\. ]? ?deptt)`),
@@ -59,9 +60,48 @@ func fetchTags(name string) []string {
 	return tags
 }
 
+func getTextInSpan(a *html.Node) (text string) {
+	// Loop into the child continuously until a text node is found
+	for n := a.FirstChild; n != nil; n = n.FirstChild {
+		if n.Type == html.TextNode {
+			text = strings.TrimSpace(n.Data)
+			break
+		}
+	}
+	return text
+}
+
+func parseA(a *html.Node) (text string, link string) {
+	for _, attr := range a.Attr {
+		if attr.Key != "href" {
+			continue
+		}
+
+		encoded_url, _ := url.Parse(attr.Val)
+		link = encoded_url.String()
+	}
+
+	if a.FirstChild.Data == "span" {
+		text = getTextInSpan(a.FirstChild)
+	} else {
+		text = strings.TrimSpace(a.FirstChild.Data)
+	}
+	return text, link
+}
+
+func parseSpan(a *html.Node) (text string, link string) {
+	for n := a.FirstChild; n != nil; n = n.FirstChild {
+		if n.Data == "a" {
+			text, link = parseA(n)
+			break
+		}
+	}
+	return text, link
+}
+
 func GetAnnouncements(w http.ResponseWriter, r *http.Request) {
 	// Request the HTML page
-	response, err := http.Get("http://nitkkr.ac.in/notifications.php")
+	response, err := http.Get("http://nitkkr.ac.in/sub_courses.php?id=80&id4=52")
 	if err != nil {
 		respondError(w, 404, "The source web-page for scraping was not found")
 		return
@@ -82,18 +122,42 @@ func GetAnnouncements(w http.ResponseWriter, r *http.Request) {
 	// Find the announcements
 	var announcements []Announcement
 	doc.Find("div.bg-white").Find("p").Each(func(i int, item *goquery.Selection) {
-		title := item.Find("a").Text()
-		link, _ := item.Find("a").Attr("href")
-		encoded_url, err := url.Parse(link)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		link = encoded_url.String()
-		tags := fetchTags(title)
+		for _, node := range item.Nodes {
+			for n := node.FirstChild; n != nil; n = n.NextSibling {
+				if n.Type != html.ElementNode {
+					continue
+				}
+				if n.Data != "a" && n.Data != "span" {
+					continue
+				}
 
-		if title != "" && link != "" {
-			announcements = append(announcements, Announcement{Title: title, Link: link, Tags: tags})
+				// Loop to previous siblings until a text node is found
+				var date, PrevSibling string
+				for prev := n.PrevSibling; prev != nil; prev = prev.PrevSibling {
+					if prev.Data == "span" {
+						PrevSibling = getTextInSpan(prev)
+					} else if prev.Type == html.TextNode {
+						PrevSibling = prev.Data
+					}
+
+					if PrevSibling != "" {
+						break
+					}
+				}
+				date = strings.TrimSpace(PrevSibling)
+
+				var title, link string
+				if n.Data == "a" {
+					title, link = parseA(n)
+				} else if n.Data == "span" {
+					title, link = parseSpan(n)
+				}
+
+				tags := fetchTags(title)
+				if title != "" && link != "" {
+					announcements = append(announcements, Announcement{Date: date, Title: title, Link: link, Tags: tags})
+				}
+			}
 		}
 	})
 
