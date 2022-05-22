@@ -20,3 +20,18 @@ WHERE branch = $1 AND semester = $2;
 -- name: GetSemesterCourses :many
 SELECT * FROM course
 WHERE semester = $1;
+
+-- name: GetAllGroups :many
+SELECT * FROM groups NATURAL JOIN group_discord;
+
+-- name: GetAllFaculty :many
+SELECT * FROM group_faculty;
+
+-- name: GetAllGroupSocials :many
+SELECT * FROM group_social;
+
+-- name: GetAllGroupAdmins :many
+SELECT * FROM group_admin;
+
+-- name: GetAllGroupMembers :many
+SELECT * FROM group_member;

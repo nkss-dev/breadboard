@@ -7,6 +7,7 @@ package query
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/lib/pq"
 )
@@ -36,6 +37,171 @@ func (q *Queries) GetAllCourses(ctx context.Context) ([]Course, error) {
 			&i.Content,
 			&i.Books,
 			&i.Outcomes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllFaculty = `-- name: GetAllFaculty :many
+SELECT group_name, name, mobile FROM group_faculty
+`
+
+func (q *Queries) GetAllFaculty(ctx context.Context) ([]GroupFaculty, error) {
+	rows, err := q.db.QueryContext(ctx, getAllFaculty)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GroupFaculty
+	for rows.Next() {
+		var i GroupFaculty
+		if err := rows.Scan(&i.GroupName, &i.Name, &i.Mobile); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllGroupAdmins = `-- name: GetAllGroupAdmins :many
+SELECT group_name, position, roll_number FROM group_admin
+`
+
+func (q *Queries) GetAllGroupAdmins(ctx context.Context) ([]GroupAdmin, error) {
+	rows, err := q.db.QueryContext(ctx, getAllGroupAdmins)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GroupAdmin
+	for rows.Next() {
+		var i GroupAdmin
+		if err := rows.Scan(&i.GroupName, &i.Position, &i.RollNumber); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllGroupMembers = `-- name: GetAllGroupMembers :many
+SELECT roll_number, group_name FROM group_member
+`
+
+func (q *Queries) GetAllGroupMembers(ctx context.Context) ([]GroupMember, error) {
+	rows, err := q.db.QueryContext(ctx, getAllGroupMembers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GroupMember
+	for rows.Next() {
+		var i GroupMember
+		if err := rows.Scan(&i.RollNumber, &i.GroupName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllGroupSocials = `-- name: GetAllGroupSocials :many
+SELECT name, type, link FROM group_social
+`
+
+func (q *Queries) GetAllGroupSocials(ctx context.Context) ([]GroupSocial, error) {
+	rows, err := q.db.QueryContext(ctx, getAllGroupSocials)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GroupSocial
+	for rows.Next() {
+		var i GroupSocial
+		if err := rows.Scan(&i.Name, &i.Type, &i.Link); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllGroups = `-- name: GetAllGroups :many
+SELECT groups.name, alias, branch, kind, description, group_discord.name, id, invite, fresher_role, sophomore_role, junior_role, senior_role, guest_role FROM groups NATURAL JOIN group_discord
+`
+
+type GetAllGroupsRow struct {
+	Name          string
+	Alias         sql.NullString
+	Branch        sql.NullString
+	Kind          sql.NullString
+	Description   sql.NullString
+	Name_2        sql.NullString
+	ID            sql.NullInt64
+	Invite        sql.NullString
+	FresherRole   sql.NullInt64
+	SophomoreRole sql.NullInt64
+	JuniorRole    sql.NullInt64
+	SeniorRole    sql.NullInt64
+	GuestRole     sql.NullInt64
+}
+
+func (q *Queries) GetAllGroups(ctx context.Context) ([]GetAllGroupsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllGroups)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllGroupsRow
+	for rows.Next() {
+		var i GetAllGroupsRow
+		if err := rows.Scan(
+			&i.Name,
+			&i.Alias,
+			&i.Branch,
+			&i.Kind,
+			&i.Description,
+			&i.Name_2,
+			&i.ID,
+			&i.Invite,
+			&i.FresherRole,
+			&i.SophomoreRole,
+			&i.JuniorRole,
+			&i.SeniorRole,
+			&i.GuestRole,
 		); err != nil {
 			return nil, err
 		}
