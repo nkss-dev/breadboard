@@ -13,7 +13,7 @@ type Course struct {
 	Title      string
 	Branch     string
 	Semester   int16
-	Credits    []int16
+	Credits    []int32
 	Prereq     []string
 	Type       string
 	Objectives string
