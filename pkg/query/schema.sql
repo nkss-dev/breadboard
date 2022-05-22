@@ -19,3 +19,18 @@ CREATE TABLE IF NOT EXISTS student (
     discord_uid    bigint      unique,
     verified       boolean     not null default false
 );
+
+CREATE TABLE IF NOT EXISTS course (
+    code        char(7) NOT NULL,
+    title       varchar(32) NOT NULL,
+    branch      char(3) NOT NULL,
+    semester    smallint NOT NULL,
+    credits     smallint[4] NOT NULL,
+    prereq      char(7)[],
+    type        char(3) NOT NULL,
+    objectives  text NOT NULL,
+    content     text NOT NULL,
+    books       text NOT NULL,
+    outcomes    text NOT NULL,
+    PRIMARY KEY (code, branch)
+);

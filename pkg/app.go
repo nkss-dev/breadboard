@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -19,24 +18,15 @@ type App struct {
 	DB     *sql.DB
 }
 
-func (a *App) Initialise(config *config.Config) {
-	dsn := fmt.Sprintf(
-		"postgresql://%s:%s@%s:%s/%s",
-		config.DB.User,
-		config.DB.Password,
-		config.DB.Host,
-		config.DB.Port,
-		config.DB.Database,
-	)
-
-	db, err := sql.Open("postgres", dsn)
+func NewApp(config *config.Config) *App {
+	db, err := sql.Open("postgres", config.DatabaseUrl)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	a.DB = db
-	a.Router = mux.NewRouter().StrictSlash(true)
-	a.setRouters()
+	app := App{DB: db, Router: mux.NewRouter().StrictSlash(true)}
+	app.setRouters()
+	return &app
 }
 
 func (a *App) Run() {
@@ -49,4 +39,13 @@ func (a *App) Run() {
 
 func (a *App) setRouters() {
 	a.Router.HandleFunc("/announcements", handlers.GetAnnouncements).Methods("GET")
+
+	a.Router.HandleFunc("/courses", a.passDB(handlers.GetCourses)).Methods("GET")
+	a.Router.HandleFunc("/course/{code}", a.passDB(handlers.GetCourse)).Methods("GET")
+}
+
+func (a *App) passDB(handler func(db *sql.DB, w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handler(a.DB, w, r)
+	}
 }
