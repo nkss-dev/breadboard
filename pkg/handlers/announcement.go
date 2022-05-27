@@ -103,19 +103,19 @@ func GetAnnouncements(w http.ResponseWriter, r *http.Request) {
 	// Request the HTML page
 	response, err := http.Get("http://nitkkr.ac.in/sub_courses.php?id=80&id4=52")
 	if err != nil {
-		respondError(w, 404, "The source web-page for scraping was not found")
+		RespondError(w, 404, "The source web-page for scraping was not found")
 		return
 	}
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
-		respondError(w, response.StatusCode, "")
+		RespondError(w, response.StatusCode, "")
 		return
 	}
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
-		respondError(w, 502, "Server could not parse the source HTML document")
+		RespondError(w, 502, "Server could not parse the source HTML document")
 		return
 	}
 
@@ -161,5 +161,5 @@ func GetAnnouncements(w http.ResponseWriter, r *http.Request) {
 		}
 	})
 
-	respondJSON(w, 200, announcements)
+	RespondJSON(w, 200, announcements)
 }

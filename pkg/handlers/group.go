@@ -35,11 +35,11 @@ func GetGroups(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	queries := query.New(db)
 	group_rows, err := queries.GetAllGroups(ctx)
 	if err == sql.ErrNoRows {
-		respondError(w, 404, "No groups found!")
+		RespondError(w, 404, "No groups found!")
 		return
 	}
 	if err != nil {
-		respondError(w, 500, "Something went wrong while fetching details from our database")
+		RespondError(w, 500, "Something went wrong while fetching details from our database")
 		return
 	}
 
@@ -85,5 +85,5 @@ func GetGroups(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		groups = append(groups, group)
 	}
 
-	respondJSON(w, 200, groups)
+	RespondJSON(w, 200, groups)
 }
