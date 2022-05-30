@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,7 +14,6 @@ import (
 func Authenticator(next http.Handler, secret []byte) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		// Check authorization via JWT
 		tokenStr := r.Header.Get("Authorization")
 		if tokenStr == "" {
@@ -25,7 +25,9 @@ func Authenticator(next http.Handler, secret []byte) http.HandlerFunc {
 			handlers.RespondError(w, 400, "Token is invalid")
 			return
 		}
-		next.ServeHTTP(w, r)
+
+		ctx := context.WithValue(r.Context(), "rollno", rollno)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
