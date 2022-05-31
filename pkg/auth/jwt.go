@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"NKSS-backend/pkg/handlers"
 
@@ -12,15 +13,15 @@ import (
 )
 
 func Authenticator(next http.Handler, secret []byte) http.HandlerFunc {
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check authorization via JWT
-		tokenStr := r.Header.Get("Authorization")
-		if tokenStr == "" {
+		value := r.Header.Get("Authorization")
+		token := strings.SplitN(value, "Bearer ", 2)
+		if len(token) == 1 {
 			handlers.RespondError(w, 401, "Token is absent")
 			return
 		}
-		rollno, ok := validateJWT(tokenStr, secret)
+		rollno, ok := validateJWT(token[1], secret)
 		if !ok {
 			handlers.RespondError(w, 400, "Token is invalid")
 			return
