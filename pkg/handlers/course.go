@@ -45,11 +45,11 @@ func GetCourse(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	queries := query.New(db)
 	course, err := queries.GetCourse(ctx, vars["code"])
 	if err == sql.ErrNoRows {
-		respondError(w, 404, "Course not found in the database")
+		RespondError(w, 404, "Course not found in the database")
 		return
 	}
 	fmt.Println(course)
-	respondJSON(w, 200, course)
+	RespondJSON(w, 200, course)
 }
 
 func GetCourses(db *sql.DB, w http.ResponseWriter, r *http.Request) {
@@ -61,18 +61,18 @@ func GetCourses(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	if vars.Get("semester") != "" {
 		semester, err = strconv.Atoi(vars.Get("semester"))
 		if err != nil {
-			respondError(w, 400, "Semester paramter must be of type int")
+			RespondError(w, 400, "Semester paramter must be of type int")
 			return
 		}
 		if semester < 1 || semester > 8 {
-			respondError(w, 400, "Semester parameter must be between 1 and 8 (inclusive)")
+			RespondError(w, 400, "Semester parameter must be between 1 and 8 (inclusive)")
 			return
 		}
 	}
 	branch := vars.Get("branch")
 	branches := []string{"", "CE", "CS", "ECE", "EE", "IT", "ME", "PIE"}
 	if !slices.Contains(branches, branch) {
-		respondError(w, 400, "Invalid branch parameter!")
+		RespondError(w, 400, "Invalid branch parameter!")
 		return
 	}
 
@@ -89,8 +89,8 @@ func GetCourses(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		courses, err = queries.GetCourses(ctx, query.GetCoursesParams{Branch: branch, Semester: int16(semester)})
 	}
 	if err == sql.ErrNoRows || len(courses) == 0 {
-		respondError(w, 404, "Courses not found in the database")
+		RespondError(w, 404, "Courses not found in the database")
 		return
 	}
-	respondJSON(w, 200, courses)
+	RespondJSON(w, 200, courses)
 }

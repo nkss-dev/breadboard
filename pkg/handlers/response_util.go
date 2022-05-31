@@ -10,11 +10,11 @@ type Error struct {
 	Detail string `json:"detail"`
 }
 
-func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
+func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
 	data := map[string]interface{}{"data": payload}
 	response, err := json.Marshal(data)
 	if err != nil {
-		respondError(w, 500, err.Error())
+		RespondError(w, 500, err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/vnd.api+json")
@@ -23,7 +23,7 @@ func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 	w.Write(response)
 }
 
-func respondError(w http.ResponseWriter, status int, detail string) {
+func RespondError(w http.ResponseWriter, status int, detail string) {
 	response, _ := json.Marshal(map[string][]Error{
 		"errors": {{Title: http.StatusText(status), Detail: detail}},
 	})

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"NKSS-backend/config"
+	"NKSS-backend/pkg/auth"
 	"NKSS-backend/pkg/handlers"
 
 	"github.com/gorilla/mux"
@@ -14,8 +15,9 @@ import (
 )
 
 type App struct {
-	Router *mux.Router
-	DB     *sql.DB
+	Router     *mux.Router
+	DB         *sql.DB
+	HMACSecret []byte
 }
 
 func NewApp(config *config.Config) *App {
@@ -24,7 +26,7 @@ func NewApp(config *config.Config) *App {
 		log.Fatalln(err)
 	}
 
-	app := App{DB: db, Router: mux.NewRouter().StrictSlash(true)}
+	app := App{DB: db, HMACSecret: config.HMACSecret, Router: mux.NewRouter().StrictSlash(true)}
 	app.setRouters()
 	return &app
 }
@@ -42,6 +44,7 @@ func (a *App) setRouters() {
 
 	a.Router.HandleFunc("/courses", a.passDB(handlers.GetCourses)).Methods("GET")
 	a.Router.HandleFunc("/course/{code}", a.passDB(handlers.GetCourse)).Methods("GET")
+	a.Router.Handle("/group/get", auth.Authenticator(a.passDB(handlers.GetGroups), a.HMACSecret)).Methods("GET")
 }
 
 func (a *App) passDB(handler func(db *sql.DB, w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
