@@ -43,8 +43,11 @@ func (a *App) setRouters() {
 	a.Router.HandleFunc("/announcements", handlers.GetAnnouncements).Methods("GET")
 
 	a.Router.HandleFunc("/courses", a.passDB(handlers.GetCourses)).Methods("GET")
-	a.Router.HandleFunc("/course/{code}", a.passDB(handlers.GetCourse)).Methods("GET")
-	a.Router.Handle("/group/get", auth.Authenticator(a.passDB(handlers.GetGroups), a.HMACSecret)).Methods("GET")
+	a.Router.HandleFunc("/courses/{code}", a.passDB(handlers.GetCourse)).Methods("GET")
+
+	a.Router.Handle("/groups", auth.Authenticator(a.passDB(handlers.GetGroups), a.HMACSecret)).Methods("GET")
+
+	a.Router.Handle("/students/{roll}", auth.Authenticator(a.passDB(handlers.GetStudentByRoll), a.HMACSecret)).Methods("GET")
 }
 
 func (a *App) passDB(handler func(db *sql.DB, w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
