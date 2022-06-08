@@ -40,6 +40,10 @@ func (a *App) Run() {
 }
 
 func (a *App) setRouters() {
+	a.Router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Welcome to NKSSS' API!"))
+	})
+
 	a.Router.HandleFunc("/announcements", handlers.GetAnnouncements).Methods("GET")
 
 	a.Router.HandleFunc("/courses", a.passDB(handlers.GetCourses)).Methods("GET")
