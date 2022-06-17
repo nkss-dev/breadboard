@@ -67,7 +67,7 @@ SELECT
     CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_links,
     CAST(ARRAY(SELECT ga.position FROM group_admin ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
     CAST(ARRAY(SELECT ga.roll_number FROM group_admin ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
-    CAST(ARRAY(SELECT gm.roll_number from group_member gm where g.name = gm.group_name) AS bigint[]) AS members
+    CAST(ARRAY(SELECT gm.roll_number FROM group_member gm WHERE g.name = gm.group_name) AS bigint[]) AS members
 FROM
     groups g
     JOIN group_discord gd ON g.name = gd.name
@@ -164,6 +164,124 @@ func (q *Queries) GetBranchCourses(ctx context.Context, branch string) ([]Course
 			&i.Content,
 			&i.Books,
 			&i.Outcomes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getClubAdmins = `-- name: GetClubAdmins :many
+SELECT student.roll_number, student.section, student.sub_section, student.name, student.gender, student.mobile, student.birthday, student.email, student.batch, student.hostel_number, student.room_number, student.discord_uid, student.verified, group_admin.group_name FROM group_admin, student WHERE group_admin.roll_number = $1 AND group_admin.roll_number = student.roll_number
+`
+
+type GetClubAdminsRow struct {
+	RollNumber   int32
+	Section      string
+	SubSection   string
+	Name         string
+	Gender       sql.NullString
+	Mobile       sql.NullString
+	Birthday     sql.NullTime
+	Email        string
+	Batch        int16
+	HostelNumber sql.NullString
+	RoomNumber   sql.NullString
+	DiscordUid   sql.NullInt64
+	Verified     bool
+	GroupName    string
+}
+
+func (q *Queries) GetClubAdmins(ctx context.Context, rollNumber int32) ([]GetClubAdminsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClubAdmins, rollNumber)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetClubAdminsRow
+	for rows.Next() {
+		var i GetClubAdminsRow
+		if err := rows.Scan(
+			&i.RollNumber,
+			&i.Section,
+			&i.SubSection,
+			&i.Name,
+			&i.Gender,
+			&i.Mobile,
+			&i.Birthday,
+			&i.Email,
+			&i.Batch,
+			&i.HostelNumber,
+			&i.RoomNumber,
+			&i.DiscordUid,
+			&i.Verified,
+			&i.GroupName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getClubMemberships = `-- name: GetClubMemberships :many
+SELECT student.roll_number, student.section, student.sub_section, student.name, student.gender, student.mobile, student.birthday, student.email, student.batch, student.hostel_number, student.room_number, student.discord_uid, student.verified, group_member.group_name FROM group_member, student WHERE group_member.roll_number = $1 AND group_member.roll_number = student.roll_number
+`
+
+type GetClubMembershipsRow struct {
+	RollNumber   int32
+	Section      string
+	SubSection   string
+	Name         string
+	Gender       sql.NullString
+	Mobile       sql.NullString
+	Birthday     sql.NullTime
+	Email        string
+	Batch        int16
+	HostelNumber sql.NullString
+	RoomNumber   sql.NullString
+	DiscordUid   sql.NullInt64
+	Verified     bool
+	GroupName    string
+}
+
+func (q *Queries) GetClubMemberships(ctx context.Context, rollNumber int32) ([]GetClubMembershipsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClubMemberships, rollNumber)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetClubMembershipsRow
+	for rows.Next() {
+		var i GetClubMembershipsRow
+		if err := rows.Scan(
+			&i.RollNumber,
+			&i.Section,
+			&i.SubSection,
+			&i.Name,
+			&i.Gender,
+			&i.Mobile,
+			&i.Birthday,
+			&i.Email,
+			&i.Batch,
+			&i.HostelNumber,
+			&i.RoomNumber,
+			&i.DiscordUid,
+			&i.Verified,
+			&i.GroupName,
 		); err != nil {
 			return nil, err
 		}

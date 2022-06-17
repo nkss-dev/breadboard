@@ -37,7 +37,13 @@ SELECT
     CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_links,
     CAST(ARRAY(SELECT ga.position FROM group_admin ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
     CAST(ARRAY(SELECT ga.roll_number FROM group_admin ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
-    CAST(ARRAY(SELECT gm.roll_number FROM group_member gm where g.name = gm.group_name) AS bigint[]) AS members
+    CAST(ARRAY(SELECT gm.roll_number FROM group_member gm WHERE g.name = gm.group_name) AS bigint[]) AS members
 FROM
     groups g
     JOIN group_discord gd ON g.name = gd.name;
+
+-- name: GetClubMemberships :many
+SELECT student.*, group_member.group_name FROM group_member, student WHERE group_member.roll_number = $1 AND group_member.roll_number = student.roll_number;
+
+-- name: GetClubAdmins :many
+SELECT student.*, group_admin.group_name FROM group_admin, student WHERE group_admin.roll_number = $1 AND group_admin.roll_number = student.roll_number;

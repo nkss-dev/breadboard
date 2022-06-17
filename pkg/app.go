@@ -52,6 +52,8 @@ func (a *App) setRouters() {
 	a.Router.Handle("/groups", auth.Authenticator(a.passDB(handlers.GetGroups), a.HMACSecret)).Methods("GET")
 
 	a.Router.Handle("/students/{roll}", auth.Authenticator(a.passDB(handlers.GetStudentByRoll), a.HMACSecret)).Methods("GET")
+	a.Router.Handle("/students/{roll}/member", auth.Authenticator(a.passDB(handlers.GetStudentClubMemberships), a.HMACSecret)).Methods("GET")
+	a.Router.Handle("/students/{roll}/admin", auth.Authenticator(a.passDB(handlers.IsStudentAdmin), a.HMACSecret)).Methods("GET")
 }
 
 func (a *App) passDB(handler func(db *sql.DB, w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
