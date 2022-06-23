@@ -17,6 +17,11 @@ type Announcement struct {
 	Tags  []string `json:"tags"`
 }
 
+// fetchTags returns the tags for a given string.
+//
+// It retrieves tags from the given string using RegEx for each
+// tag that is to be searched for. Due to its high complexity
+// and unnecessary computation, it will be replaces in the future.
 func fetchTags(name string) (tags []string) {
 	regexes := map[string]*regexp.Regexp{
 		// Disciplines
@@ -60,6 +65,10 @@ func fetchTags(name string) (tags []string) {
 	return tags
 }
 
+// getTextInSpan returns the textual data within a span tag.
+//
+// It iteratively traverses through each child within the span tag
+// to search for `html.TextNode` and returns the trimmed data within.
 func getTextInSpan(a *html.Node) (text string) {
 	// Loop into the child continuously until a text node is found
 	for n := a.FirstChild; n != nil; n = n.FirstChild {
@@ -71,6 +80,11 @@ func getTextInSpan(a *html.Node) (text string) {
 	return text
 }
 
+// parseA returns the text and its URL from a hyperlink.
+//
+// It looks for the href attribute within the `<a>` tag's attributes
+// to find its text and URL. If it encounters `<span>`, it then calls
+// `getTextInSpan` to retrieve the text within.
 func parseA(a *html.Node) (text string, link string) {
 	for _, attr := range a.Attr {
 		if attr.Key != "href" {
@@ -89,6 +103,11 @@ func parseA(a *html.Node) (text string, link string) {
 	return text, link
 }
 
+// parseSpan returns the text and its URL from a hyperlink.
+//
+// It iteratively traveses through each child within the span tag
+// to search for the `<a>` tag and calls `parseA` to retrieve the
+// text and URL of the respective tag.
 func parseSpan(a *html.Node) (text string, link string) {
 	for n := a.FirstChild; n != nil; n = n.FirstChild {
 		if n.Data == "a" {
@@ -99,67 +118,73 @@ func parseSpan(a *html.Node) (text string, link string) {
 	return text, link
 }
 
-func GetAnnouncements(w http.ResponseWriter, r *http.Request) {
-	// Request the HTML page
-	response, err := http.Get("http://nitkkr.ac.in/sub_courses.php?id=80&id4=52")
-	if err != nil {
-		RespondError(w, 404, "The source web-page for scraping was not found")
-		return
-	}
-	defer response.Body.Close()
-	if response.StatusCode != 200 {
-		RespondError(w, response.StatusCode, "")
-		return
-	}
+// GetAnnouncements returns all the announcements from a specified URL.
+//
+// It is a handler function which scrapes the URL and retrieves elements
+// to convert them into the Announcement type.
+func GetAnnouncements() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Request the HTML page
+		response, err := http.Get("http://nitkkr.ac.in/sub_courses.php?id=80&id4=52")
+		if err != nil {
+			RespondError(w, 404, "The source web-page for scraping was not found")
+			return
+		}
+		defer response.Body.Close()
+		if response.StatusCode != 200 {
+			RespondError(w, response.StatusCode, "")
+			return
+		}
 
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(response.Body)
-	if err != nil {
-		RespondError(w, 502, "Server could not parse the source HTML document")
-		return
-	}
+		// Load the HTML document
+		doc, err := goquery.NewDocumentFromReader(response.Body)
+		if err != nil {
+			RespondError(w, 502, "Server could not parse the source HTML document")
+			return
+		}
 
-	// Find the announcements
-	var announcements []Announcement
-	doc.Find("div.bg-white").Find("p").Each(func(i int, item *goquery.Selection) {
-		for _, node := range item.Nodes {
-			for n := node.FirstChild; n != nil; n = n.NextSibling {
-				if n.Type != html.ElementNode {
-					continue
-				}
-				if n.Data != "a" && n.Data != "span" {
-					continue
-				}
-
-				// Loop to previous siblings until a text node is found
-				var date, PrevSibling string
-				for prev := n.PrevSibling; prev != nil; prev = prev.PrevSibling {
-					if prev.Data == "span" {
-						PrevSibling = getTextInSpan(prev)
-					} else if prev.Type == html.TextNode {
-						PrevSibling = prev.Data
+		// Find the announcements
+		var announcements []Announcement
+		doc.Find("div.bg-white").Find("p").Each(func(i int, item *goquery.Selection) {
+			for _, node := range item.Nodes {
+				for n := node.FirstChild; n != nil; n = n.NextSibling {
+					if n.Type != html.ElementNode {
+						continue
+					}
+					if n.Data != "a" && n.Data != "span" {
+						continue
 					}
 
-					if PrevSibling != "" {
-						break
+					// Loop to previous siblings until a text node is found
+					var date, PrevSibling string
+					for prev := n.PrevSibling; prev != nil; prev = prev.PrevSibling {
+						if prev.Data == "span" {
+							PrevSibling = getTextInSpan(prev)
+						} else if prev.Type == html.TextNode {
+							PrevSibling = prev.Data
+						}
+
+						if PrevSibling != "" {
+							break
+						}
 					}
-				}
-				date = strings.TrimSpace(PrevSibling)
+					date = strings.TrimSpace(PrevSibling)
 
-				var title, link string
-				if n.Data == "a" {
-					title, link = parseA(n)
-				} else if n.Data == "span" {
-					title, link = parseSpan(n)
-				}
+					var title, link string
+					if n.Data == "a" {
+						title, link = parseA(n)
+					} else if n.Data == "span" {
+						title, link = parseSpan(n)
+					}
 
-				tags := fetchTags(title)
-				if title != "" && link != "" {
-					announcements = append(announcements, Announcement{Date: date, Title: title, Link: link, Tags: tags})
+					tags := fetchTags(title)
+					if title != "" && link != "" {
+						announcements = append(announcements, Announcement{Date: date, Title: title, Link: link, Tags: tags})
+					}
 				}
 			}
-		}
-	})
+		})
 
-	RespondJSON(w, 200, announcements)
+		RespondJSON(w, 200, announcements)
+	}
 }
