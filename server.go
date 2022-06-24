@@ -47,6 +47,7 @@ func (s *server) setRouters() {
 	s.router.HandleFunc("/courses/{code}", h.GetCourse(s.db)).Methods("GET")
 
 	s.router.Handle("/groups", m.Authenticator(h.GetGroups(s.db))).Methods("GET")
+	s.router.Handle("/groups/{name}", m.Authenticator(h.GetGroup(s.db))).Methods("GET")
 
 	s.router.Handle("/students/{roll}", m.Authenticator(h.GetStudentByRoll(s.db))).Methods("GET")
 	s.router.Handle("/students/{roll}/member", m.Authenticator(h.GetStudentClubMemberships(s.db))).Methods("GET")

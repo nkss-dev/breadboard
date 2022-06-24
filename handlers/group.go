@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"nkssbackend/query"
+
+	"github.com/gorilla/mux"
 )
 
 type Group struct {
@@ -30,6 +32,73 @@ type Admin struct {
 	RollNumber int64  `json:"roll_number"`
 }
 
+// ConstructGroup translates the row returned by sqlc into
+// the struct Group for a better strucutre
+func ConstructGroup(raw_group query.GetGroupRow) (group Group) {
+	group.Name = raw_group.Name
+	group.Alias = raw_group.Alias.String
+	group.Branch = raw_group.Branch.String
+	group.Kind = raw_group.Kind
+	group.Description = raw_group.Description.String
+	group.Members = raw_group.Members
+
+	var faculties []Faculty
+	for i, name := range raw_group.FacultyNames {
+		faculties = append(faculties, Faculty{Name: name, Mobile: raw_group.FacultyMobiles[i]})
+	}
+	group.Faculty = faculties
+
+	socials := make(map[string]interface{})
+	for i, social_type := range raw_group.SocialTypes {
+		socials[social_type] = raw_group.SocialLinks[i]
+	}
+	discord := make(map[string]interface{})
+	discord["id"] = raw_group.ServerID
+	discord["invite"] = raw_group.ServerInvite
+	discord["roles"] = map[string]int64{
+		"freshman":  raw_group.FresherRole.Int64,
+		"sophomore": raw_group.SophomoreRole.Int64,
+		"junior":    raw_group.JuniorRole.Int64,
+		"senior":    raw_group.SeniorRole.Int64,
+	}
+	socials["discord"] = discord
+	group.Socials = socials
+
+	var admins []Admin
+	for i, position := range raw_group.AdminPositions {
+		admins = append(admins, Admin{Position: position, RollNumber: raw_group.AdminRolls[i]})
+	}
+	group.Admins = admins
+
+	return group
+}
+
+// GetGroup returns a handler to return a group's details
+// based on the unique parameter passed.
+//
+// This handler takes in a name argument which is first
+// checked as an alias and then as the name of a group.
+func GetGroup(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		group_row, err := queries.GetGroup(ctx, vars["name"])
+		if err == sql.ErrNoRows {
+			RespondError(w, 404, "No groups found!")
+			return
+		}
+		if err != nil {
+			RespondError(w, 500, "Something went wrong while fetching details from our database")
+			return
+		}
+
+		group := ConstructGroup(group_row)
+		RespondJSON(w, 200, group)
+	}
+}
+
 // GetGroups retrieves the group details from the database
 func GetGroups(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
@@ -47,44 +116,7 @@ func GetGroups(db *sql.DB) http.HandlerFunc {
 
 		var groups []Group
 		for _, group_row := range group_rows {
-			var group Group
-
-			group.Name = group_row.Name
-			group.Alias = group_row.Alias.String
-			group.Branch = group_row.Branch.String
-			group.Kind = group_row.Kind
-			group.Description = group_row.Description.String
-			group.Members = group_row.Members
-
-			var faculties []Faculty
-			for i, name := range group_row.FacultyNames {
-				faculties = append(faculties, Faculty{Name: name, Mobile: group_row.FacultyMobiles[i]})
-			}
-			group.Faculty = faculties
-
-			socials := make(map[string]interface{})
-			for i, social_type := range group_row.SocialTypes {
-				socials[social_type] = group_row.SocialLinks[i]
-			}
-			discord := make(map[string]interface{})
-			discord["id"] = group_row.ServerID
-			discord["invite"] = group_row.ServerInvite
-			discord["roles"] = map[string]int64{
-				"freshman":  group_row.FresherRole.Int64,
-				"sophomore": group_row.SophomoreRole.Int64,
-				"junior":    group_row.JuniorRole.Int64,
-				"senior":    group_row.SeniorRole.Int64,
-			}
-			socials["discord"] = discord
-			group.Socials = socials
-
-			var admins []Admin
-			for i, position := range group_row.AdminPositions {
-				admins = append(admins, Admin{Position: position, RollNumber: group_row.AdminRolls[i]})
-			}
-			group.Admins = admins
-
-			groups = append(groups, group)
+			groups = append(groups, ConstructGroup(query.GetGroupRow(group_row)))
 		}
 
 		RespondJSON(w, 200, groups)
