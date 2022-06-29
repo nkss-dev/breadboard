@@ -66,6 +66,45 @@ FROM
     groups g
     JOIN group_discord gd ON g.name = gd.name;
 
+-- name: GetGroupAdmins :many
+SELECT
+    s.*, admin.position
+FROM
+    student s
+    JOIN group_admin admin ON s.roll_number = admin.roll_number
+WHERE
+    admin.group_name = $1
+    OR $1 = (SELECT alias FROM groups WHERE name = admin.group_name);
+
+-- name: GetGroupFaculty :many
+SELECT
+    name, mobile
+FROM
+    group_faculty gf
+WHERE
+    gf.group_name = $1
+    OR $1 = (SELECT alias FROM groups WHERE name = gf.group_name);
+
+-- name: GetGroupMembers :many
+SELECT
+    s.*
+FROM
+    student s
+    JOIN group_member member ON s.roll_number = member.roll_number
+WHERE
+    member.group_name = $1
+    OR $1 = (SELECT alias FROM groups WHERE name = member.group_name);
+
+-- name: GetGroupSocials :many
+SELECT
+    type,
+    link
+FROM
+    group_social gs
+WHERE
+    gs.name = $1
+    OR $1 = (SELECT alias FROM groups WHERE name = gs.name);
+
 -- name: GetClubMemberships :many
 SELECT student.*, group_member.group_name FROM group_member, student WHERE group_member.roll_number = $1 AND group_member.roll_number = student.roll_number;
 

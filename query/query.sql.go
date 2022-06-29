@@ -439,6 +439,197 @@ func (q *Queries) GetGroup(ctx context.Context, name string) (GetGroupRow, error
 	return i, err
 }
 
+const getGroupAdmins = `-- name: GetGroupAdmins :many
+SELECT
+    s.roll_number, s.section, s.sub_section, s.name, s.gender, s.mobile, s.birthday, s.email, s.batch, s.hostel_number, s.room_number, s.discord_uid, s.verified, admin.position
+FROM
+    student s
+    JOIN group_admin admin ON s.roll_number = admin.roll_number
+WHERE
+    admin.group_name = $1
+    OR $1 = (SELECT alias FROM groups WHERE name = admin.group_name)
+`
+
+type GetGroupAdminsRow struct {
+	RollNumber   int32
+	Section      string
+	SubSection   string
+	Name         string
+	Gender       sql.NullString
+	Mobile       sql.NullString
+	Birthday     sql.NullTime
+	Email        string
+	Batch        int16
+	HostelNumber sql.NullString
+	RoomNumber   sql.NullString
+	DiscordUid   sql.NullInt64
+	Verified     bool
+	Position     sql.NullString
+}
+
+func (q *Queries) GetGroupAdmins(ctx context.Context, groupName string) ([]GetGroupAdminsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getGroupAdmins, groupName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGroupAdminsRow
+	for rows.Next() {
+		var i GetGroupAdminsRow
+		if err := rows.Scan(
+			&i.RollNumber,
+			&i.Section,
+			&i.SubSection,
+			&i.Name,
+			&i.Gender,
+			&i.Mobile,
+			&i.Birthday,
+			&i.Email,
+			&i.Batch,
+			&i.HostelNumber,
+			&i.RoomNumber,
+			&i.DiscordUid,
+			&i.Verified,
+			&i.Position,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getGroupFaculty = `-- name: GetGroupFaculty :many
+SELECT
+    name, mobile
+FROM
+    group_faculty gf
+WHERE
+    gf.group_name = $1
+    OR $1 = (SELECT alias FROM groups WHERE name = gf.group_name)
+`
+
+type GetGroupFacultyRow struct {
+	Name   string
+	Mobile int64
+}
+
+func (q *Queries) GetGroupFaculty(ctx context.Context, groupName string) ([]GetGroupFacultyRow, error) {
+	rows, err := q.db.QueryContext(ctx, getGroupFaculty, groupName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGroupFacultyRow
+	for rows.Next() {
+		var i GetGroupFacultyRow
+		if err := rows.Scan(&i.Name, &i.Mobile); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getGroupMembers = `-- name: GetGroupMembers :many
+SELECT
+    s.roll_number, s.section, s.sub_section, s.name, s.gender, s.mobile, s.birthday, s.email, s.batch, s.hostel_number, s.room_number, s.discord_uid, s.verified
+FROM
+    student s
+    JOIN group_member member ON s.roll_number = member.roll_number
+WHERE
+    member.group_name = $1
+    OR $1 = (SELECT alias FROM groups WHERE name = member.group_name)
+`
+
+func (q *Queries) GetGroupMembers(ctx context.Context, groupName string) ([]Student, error) {
+	rows, err := q.db.QueryContext(ctx, getGroupMembers, groupName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Student
+	for rows.Next() {
+		var i Student
+		if err := rows.Scan(
+			&i.RollNumber,
+			&i.Section,
+			&i.SubSection,
+			&i.Name,
+			&i.Gender,
+			&i.Mobile,
+			&i.Birthday,
+			&i.Email,
+			&i.Batch,
+			&i.HostelNumber,
+			&i.RoomNumber,
+			&i.DiscordUid,
+			&i.Verified,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getGroupSocials = `-- name: GetGroupSocials :many
+SELECT
+    type,
+    link
+FROM
+    group_social gs
+WHERE
+    gs.name = $1
+    OR $1 = (SELECT alias FROM groups WHERE name = gs.name)
+`
+
+type GetGroupSocialsRow struct {
+	Type string
+	Link string
+}
+
+func (q *Queries) GetGroupSocials(ctx context.Context, name string) ([]GetGroupSocialsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getGroupSocials, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGroupSocialsRow
+	for rows.Next() {
+		var i GetGroupSocialsRow
+		if err := rows.Scan(&i.Type, &i.Link); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSemesterCourses = `-- name: GetSemesterCourses :many
 SELECT code, title, branch, semester, credits, prereq, type, objectives, content, books, outcomes FROM course
 WHERE semester = $1

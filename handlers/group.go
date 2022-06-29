@@ -99,7 +99,7 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetGroups retrieves the group details from the database
+// GetGroups retrieves the group details from the database.
 func GetGroups(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
@@ -120,5 +120,69 @@ func GetGroups(db *sql.DB) http.HandlerFunc {
 		}
 
 		RespondJSON(w, 200, groups)
+	}
+}
+
+// GetGroupAdmins retrieves the admins of a group from the database.
+func GetGroupAdmins(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		group_name := mux.Vars(r)["name"]
+		admins, err := queries.GetGroupAdmins(ctx, group_name)
+		if err != nil {
+			RespondError(w, 500, "Something went wrong while fetching details from our database")
+			return
+		}
+
+		RespondJSON(w, 200, admins)
+	}
+}
+
+// GetGroupFaculty retrieves the management faculty of a group from the database.
+func GetGroupFaculty(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		group_name := mux.Vars(r)["name"]
+		faculty, err := queries.GetGroupFaculty(ctx, group_name)
+		if err != nil {
+			RespondError(w, 500, "Something went wrong while fetching details from our database")
+			return
+		}
+
+		RespondJSON(w, 200, faculty)
+	}
+}
+
+// GetGroupMembers retrieves the members of a group from the database.
+func GetGroupMembers(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		group_name := mux.Vars(r)["name"]
+		members, err := queries.GetGroupMembers(ctx, group_name)
+		if err != nil {
+			RespondError(w, 500, "Something went wrong while fetching details from our database")
+			return
+		}
+
+		RespondJSON(w, 200, members)
+	}
+}
+
+// GetGroupSocials retrieves the social media links of a group from the database.
+func GetGroupSocials(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		group_name := mux.Vars(r)["name"]
+		socials, err := queries.GetGroupSocials(ctx, group_name)
+		if err != nil {
+			RespondError(w, 500, "Something went wrong while fetching details from our database")
+			return
+		}
+
+		RespondJSON(w, 200, socials)
 	}
 }
