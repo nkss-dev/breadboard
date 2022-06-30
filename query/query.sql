@@ -110,3 +110,23 @@ SELECT student.*, group_member.group_name FROM group_member, student WHERE group
 
 -- name: GetClubAdmins :many
 SELECT student.*, group_admin.group_name FROM group_admin, student WHERE group_admin.roll_number = $1 AND group_admin.roll_number = student.roll_number;
+
+-- name: UpdateGroupFaculty :exec
+UPDATE
+    group_faculty gf
+SET
+    mobile = $2
+WHERE
+    gf.name = $1
+    AND gf.group_name = $3
+    OR $3 = (SELECT alias FROM groups WHERE name = gf.group_name);
+ 
+-- name: UpdateGroupSocials :exec
+UPDATE
+    group_social gs
+SET
+    link = $2
+WHERE
+    gs.type = $1
+    AND gs.name = $3
+    OR $3 = (SELECT alias FROM groups WHERE name = gs.name);

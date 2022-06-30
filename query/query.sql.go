@@ -695,3 +695,47 @@ func (q *Queries) GetStudent(ctx context.Context, rollNumber int32) (Student, er
 	)
 	return i, err
 }
+
+const updateGroupFaculty = `-- name: UpdateGroupFaculty :exec
+UPDATE
+    group_faculty gf
+SET
+    mobile = $2
+WHERE
+    gf.name = $1
+    AND gf.group_name = $3
+    OR $3 = (SELECT alias FROM groups WHERE name = gf.group_name)
+`
+
+type UpdateGroupFacultyParams struct {
+	Name      string
+	Mobile    int64
+	GroupName string
+}
+
+func (q *Queries) UpdateGroupFaculty(ctx context.Context, arg UpdateGroupFacultyParams) error {
+	_, err := q.db.ExecContext(ctx, updateGroupFaculty, arg.Name, arg.Mobile, arg.GroupName)
+	return err
+}
+
+const updateGroupSocials = `-- name: UpdateGroupSocials :exec
+UPDATE
+    group_social gs
+SET
+    link = $2
+WHERE
+    gs.type = $1
+    AND gs.name = $3
+    OR $3 = (SELECT alias FROM groups WHERE name = gs.name)
+`
+
+type UpdateGroupSocialsParams struct {
+	Type string
+	Link string
+	Name string
+}
+
+func (q *Queries) UpdateGroupSocials(ctx context.Context, arg UpdateGroupSocialsParams) error {
+	_, err := q.db.ExecContext(ctx, updateGroupSocials, arg.Type, arg.Link, arg.Name)
+	return err
+}

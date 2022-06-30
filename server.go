@@ -46,13 +46,19 @@ func (s *server) setRouters() {
 	s.router.HandleFunc("/courses", h.GetCourses(s.db)).Methods("GET")
 	s.router.HandleFunc("/courses/{code}", h.GetCourse(s.db)).Methods("GET")
 
+	// Groups
 	s.router.Handle("/groups", m.Authenticator(h.GetGroups(s.db))).Methods("GET")
 	s.router.Handle("/groups/{name}", m.Authenticator(h.GetGroup(s.db))).Methods("GET")
 
 	s.router.Handle("/groups/{name}/admins", h.GetGroupAdmins(s.db)).Methods("GET")
+
 	s.router.Handle("/groups/{name}/faculty", h.GetGroupFaculty(s.db)).Methods("GET")
+	s.router.Handle("/groups/{name}/faculty/{fname}", m.Authenticator(h.UpdateGroupFaculty(s.db))).Methods("PUT")
+
 	s.router.Handle("/groups/{name}/members", m.Authenticator(h.GetGroupMembers(s.db))).Methods("GET")
+
 	s.router.Handle("/groups/{name}/socials", h.GetGroupSocials(s.db)).Methods("GET")
+	s.router.Handle("/groups/{name}/socials/{type}", m.Authenticator(h.UpdateGroupSocials(s.db))).Methods("PUT")
 
 	s.router.Handle("/students/{roll}", m.Authenticator(h.GetStudentByRoll(s.db))).Methods("GET")
 	s.router.Handle("/students/{roll}/member", m.Authenticator(h.GetStudentClubMemberships(s.db))).Methods("GET")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+	"strconv"
 
 	"nkssbackend/query"
 
@@ -184,5 +185,64 @@ func GetGroupSocials(db *sql.DB) http.HandlerFunc {
 		}
 
 		RespondJSON(w, 200, socials)
+	}
+}
+
+// UpdateGroupFaculty updates the mobile number of a group incharge.
+func UpdateGroupFaculty(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		mobileStr := r.URL.Query().Get("mobile")
+		if mobileStr == "" {
+			RespondError(w, 400, "Required query param, mobile, missing")
+			return
+		}
+		mobile, err := strconv.Atoi(mobileStr)
+		if err != nil {
+			RespondError(w, 400, "Mobile paramter must only contain digits")
+			return
+		}
+
+		params := query.UpdateGroupFacultyParams{
+			Name:      vars["fname"],
+			Mobile:    int64(mobile),
+			GroupName: vars["name"],
+		}
+		err = queries.UpdateGroupFaculty(ctx, params)
+		if err != nil {
+			RespondError(w, 500, "Something went wrong while updating details to our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Faculty mobile number updated successfully")
+	}
+}
+
+// UpdateGroupSocials updates the link of a social media handle for a group.
+func UpdateGroupSocials(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		link := r.URL.Query().Get("link")
+		if link == "" {
+			RespondError(w, 400, "Required query param, link, missing")
+			return
+		}
+
+		params := query.UpdateGroupSocialsParams{
+			Type: vars["type"],
+			Link: link,
+			Name: vars["name"],
+		}
+		err := queries.UpdateGroupSocials(ctx, params)
+		if err != nil {
+			RespondError(w, 500, "Something went wrong while updating details to our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Social media link updated successfully")
 	}
 }
