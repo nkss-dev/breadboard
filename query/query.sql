@@ -169,3 +169,27 @@ VALUES (
     $2,
     $3
 );
+
+-- name: DeleteGroupAdmin :exec
+DELETE FROM group_admin
+WHERE
+    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    AND roll_number = $2;
+
+-- name: DeleteGroupFaculty :exec
+DELETE FROM group_faculty gf
+WHERE
+    gf.group_name = (SELECT g.name FROM groups g WHERE g.name = $1 OR g.alias = $1)
+    AND gf.name = $2;
+
+-- name: DeleteGroupMember :exec
+DELETE FROM group_member
+WHERE
+    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    AND roll_number = $2;
+
+-- name: DeleteGroupSocial :exec
+DELETE FROM group_social
+WHERE
+    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    AND platform_type = $2;

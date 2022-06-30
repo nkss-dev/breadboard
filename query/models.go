@@ -32,7 +32,7 @@ type Group struct {
 
 type GroupAdmin struct {
 	GroupName  string
-	Position   sql.NullString
+	Position   string
 	RollNumber int32
 }
 
@@ -73,9 +73,9 @@ type GroupMember struct {
 }
 
 type GroupSocial struct {
-	Name string
-	Type string
-	Link string
+	GroupName    string
+	PlatformType string
+	Link         string
 }
 
 type Hostel struct {

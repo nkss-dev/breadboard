@@ -227,6 +227,102 @@ func CreateGroupSocial(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// DeleteGroupAdmin deletes an existing admin of a group.
+func DeleteGroupAdmin(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		roll, err := strconv.Atoi(vars["roll"])
+		if err != nil {
+			RespondError(w, 400, "Roll paramter must only contain digits")
+			return
+		}
+
+		params := query.DeleteGroupAdminParams{
+			Name:       vars["name"],
+			RollNumber: int32(roll),
+		}
+		err = queries.DeleteGroupAdmin(ctx, params)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while deleting details from our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Removed '"+fmt.Sprint(roll)+"' as an admin of "+vars["name"]+" successfully!")
+	}
+}
+
+// DeleteGroupFaculty deletes an existing faculty incharge of a group.
+func DeleteGroupFaculty(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		params := query.DeleteGroupFacultyParams{
+			Name:   vars["name"],
+			Name_2: vars["fname"],
+		}
+		err := queries.DeleteGroupFaculty(ctx, params)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while deleting details from our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Removed "+vars["fname"]+" as a faculty incharge of "+vars["name"]+" successfully!")
+	}
+}
+
+// DeleteGroupMember deletes an existing member of a group.
+func DeleteGroupMember(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		roll, err := strconv.Atoi(vars["roll"])
+		if err != nil {
+			RespondError(w, 400, "Roll paramter must only contain digits")
+			return
+		}
+
+		params := query.DeleteGroupMemberParams{
+			Name:       vars["name"],
+			RollNumber: int32(roll),
+		}
+		err = queries.DeleteGroupMember(ctx, params)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while deleting details from our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Removed '"+fmt.Sprint(roll)+"' as a member of "+vars["name"]+" successfully!")
+	}
+}
+
+// DeleteGroupSocial deletes an existing social media handle of a group.
+func DeleteGroupSocial(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		params := query.DeleteGroupSocialParams{
+			Name:         vars["name"],
+			PlatformType: vars["type"],
+		}
+		err := queries.DeleteGroupSocial(ctx, params)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while deleting details from our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Removed '"+vars["type"]+"' as one of the social media handles of "+vars["name"]+" successfully!")
+	}
+}
+
 // GetGroup returns a handler to return a group's details
 // based on the unique parameter passed.
 //

@@ -98,6 +98,74 @@ func (q *Queries) CreateGroupSocial(ctx context.Context, arg CreateGroupSocialPa
 	return err
 }
 
+const deleteGroupAdmin = `-- name: DeleteGroupAdmin :exec
+DELETE FROM group_admin
+WHERE
+    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    AND roll_number = $2
+`
+
+type DeleteGroupAdminParams struct {
+	Name       string
+	RollNumber int32
+}
+
+func (q *Queries) DeleteGroupAdmin(ctx context.Context, arg DeleteGroupAdminParams) error {
+	_, err := q.db.ExecContext(ctx, deleteGroupAdmin, arg.Name, arg.RollNumber)
+	return err
+}
+
+const deleteGroupFaculty = `-- name: DeleteGroupFaculty :exec
+DELETE FROM group_faculty gf
+WHERE
+    gf.group_name = (SELECT g.name FROM groups g WHERE g.name = $1 OR g.alias = $1)
+    AND gf.name = $2
+`
+
+type DeleteGroupFacultyParams struct {
+	Name   string
+	Name_2 string
+}
+
+func (q *Queries) DeleteGroupFaculty(ctx context.Context, arg DeleteGroupFacultyParams) error {
+	_, err := q.db.ExecContext(ctx, deleteGroupFaculty, arg.Name, arg.Name_2)
+	return err
+}
+
+const deleteGroupMember = `-- name: DeleteGroupMember :exec
+DELETE FROM group_member
+WHERE
+    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    AND roll_number = $2
+`
+
+type DeleteGroupMemberParams struct {
+	Name       string
+	RollNumber int32
+}
+
+func (q *Queries) DeleteGroupMember(ctx context.Context, arg DeleteGroupMemberParams) error {
+	_, err := q.db.ExecContext(ctx, deleteGroupMember, arg.Name, arg.RollNumber)
+	return err
+}
+
+const deleteGroupSocial = `-- name: DeleteGroupSocial :exec
+DELETE FROM group_social
+WHERE
+    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    AND platform_type = $2
+`
+
+type DeleteGroupSocialParams struct {
+	Name         string
+	PlatformType string
+}
+
+func (q *Queries) DeleteGroupSocial(ctx context.Context, arg DeleteGroupSocialParams) error {
+	_, err := q.db.ExecContext(ctx, deleteGroupSocial, arg.Name, arg.PlatformType)
+	return err
+}
+
 const getAllCourses = `-- name: GetAllCourses :many
 SELECT code, title, branch, semester, credits, prereq, type, objectives, content, books, outcomes FROM course
 `
