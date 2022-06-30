@@ -39,7 +39,7 @@ INSERT INTO group_faculty (
     group_name, name, mobile
 )
 VALUES (
-    (SELECT g.name as group_name from groups g WHERE g.name = $1 or g.alias = $1),
+    (SELECT g.name from groups g WHERE g.name = $1 or g.alias = $1),
     $2,
     $3
 )
@@ -78,7 +78,7 @@ func (q *Queries) CreateGroupMember(ctx context.Context, arg CreateGroupMemberPa
 
 const createGroupSocial = `-- name: CreateGroupSocial :exec
 INSERT INTO group_social (
-    name, type, link
+    name, platform_type, link
 )
 VALUES (
     (SELECT g.name from groups g WHERE g.name = $1 or g.alias = $1),
@@ -88,13 +88,13 @@ VALUES (
 `
 
 type CreateGroupSocialParams struct {
-	Name string
-	Type string
-	Link string
+	Name         string
+	PlatformType string
+	Link         string
 }
 
 func (q *Queries) CreateGroupSocial(ctx context.Context, arg CreateGroupSocialParams) error {
-	_, err := q.db.ExecContext(ctx, createGroupSocial, arg.Name, arg.Type, arg.Link)
+	_, err := q.db.ExecContext(ctx, createGroupSocial, arg.Name, arg.PlatformType, arg.Link)
 	return err
 }
 
@@ -149,7 +149,7 @@ SELECT
     gd.guest_role,
     CAST(ARRAY(SELECT gf.name FROM group_faculty gf WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
     CAST(ARRAY(SELECT gf.mobile FROM group_faculty gf WHERE g.name = gf.group_name) AS bigint[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT gs.type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT gs.platform_type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
     CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_links,
     CAST(ARRAY(SELECT ga.position FROM group_admin ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
     CAST(ARRAY(SELECT ga.roll_number FROM group_admin ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
@@ -463,7 +463,7 @@ SELECT
     gd.guest_role,
     CAST(ARRAY(SELECT gf.name FROM group_faculty gf WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
     CAST(ARRAY(SELECT gf.mobile FROM group_faculty gf WHERE g.name = gf.group_name) AS bigint[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT gs.type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT gs.platform_type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
     CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_links,
     CAST(ARRAY(SELECT ga.position FROM group_admin ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
     CAST(ARRAY(SELECT ga.roll_number FROM group_admin ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
@@ -679,7 +679,7 @@ func (q *Queries) GetGroupMembers(ctx context.Context, groupName string) ([]Stud
 
 const getGroupSocials = `-- name: GetGroupSocials :many
 SELECT
-    type,
+    platform_type,
     link
 FROM
     group_social gs
@@ -689,8 +689,8 @@ WHERE
 `
 
 type GetGroupSocialsRow struct {
-	Type string
-	Link string
+	PlatformType string
+	Link         string
 }
 
 func (q *Queries) GetGroupSocials(ctx context.Context, name string) ([]GetGroupSocialsRow, error) {
@@ -702,7 +702,7 @@ func (q *Queries) GetGroupSocials(ctx context.Context, name string) ([]GetGroupS
 	var items []GetGroupSocialsRow
 	for rows.Next() {
 		var i GetGroupSocialsRow
-		if err := rows.Scan(&i.Type, &i.Link); err != nil {
+		if err := rows.Scan(&i.PlatformType, &i.Link); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -810,18 +810,18 @@ UPDATE
 SET
     link = $2
 WHERE
-    gs.type = $1
+    gs.platform_type = $1
     AND gs.name = $3
     OR $3 = (SELECT alias FROM groups WHERE name = gs.name)
 `
 
 type UpdateGroupSocialsParams struct {
-	Type string
-	Link string
-	Name string
+	PlatformType string
+	Link         string
+	Name         string
 }
 
 func (q *Queries) UpdateGroupSocials(ctx context.Context, arg UpdateGroupSocialsParams) error {
-	_, err := q.db.ExecContext(ctx, updateGroupSocials, arg.Type, arg.Link, arg.Name)
+	_, err := q.db.ExecContext(ctx, updateGroupSocials, arg.PlatformType, arg.Link, arg.Name)
 	return err
 }

@@ -62,9 +62,9 @@ CREATE TABLE IF NOT EXISTS group_discord (
 );
 
 CREATE TABLE IF NOT EXISTS group_social (
-    name  text references groups(name),
-    type  varchar(15),
-    link  text NOT NULL,
+    name           text references groups(name),
+    platform_type  varchar(15) NOT NULL,
+    link           text NOT NULL,
     primary key (name, type)
 );
 

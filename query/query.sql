@@ -33,7 +33,7 @@ SELECT
     gd.guest_role,
     CAST(ARRAY(SELECT gf.name FROM group_faculty gf WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
     CAST(ARRAY(SELECT gf.mobile FROM group_faculty gf WHERE g.name = gf.group_name) AS bigint[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT gs.type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT gs.platform_type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
     CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_links,
     CAST(ARRAY(SELECT ga.position FROM group_admin ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
     CAST(ARRAY(SELECT ga.roll_number FROM group_admin ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
@@ -57,7 +57,7 @@ SELECT
     gd.guest_role,
     CAST(ARRAY(SELECT gf.name FROM group_faculty gf WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
     CAST(ARRAY(SELECT gf.mobile FROM group_faculty gf WHERE g.name = gf.group_name) AS bigint[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT gs.type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT gs.platform_type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
     CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_links,
     CAST(ARRAY(SELECT ga.position FROM group_admin ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
     CAST(ARRAY(SELECT ga.roll_number FROM group_admin ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
@@ -97,7 +97,7 @@ WHERE
 
 -- name: GetGroupSocials :many
 SELECT
-    type,
+    platform_type,
     link
 FROM
     group_social gs
@@ -127,7 +127,7 @@ UPDATE
 SET
     link = $2
 WHERE
-    gs.type = $1
+    gs.platform_type = $1
     AND gs.name = $3
     OR $3 = (SELECT alias FROM groups WHERE name = gs.name);
 
@@ -162,7 +162,7 @@ VALUES (
 
 -- name: CreateGroupSocial :exec
 INSERT INTO group_social (
-    name, type, link
+    name, platform_type, link
 )
 VALUES (
     (SELECT g.name from groups g WHERE g.name = $1 or g.alias = $1),

@@ -212,9 +212,9 @@ func CreateGroupSocial(db *sql.DB) http.HandlerFunc {
 		}
 
 		params := query.CreateGroupSocialParams{
-			Name: group_name,
-			Type: platform_type,
-			Link: link,
+			Name:         group_name,
+			PlatformType: platform_type,
+			Link:         link,
 		}
 		err := queries.CreateGroupSocial(ctx, params)
 		if err != nil {
@@ -386,9 +386,9 @@ func UpdateGroupSocials(db *sql.DB) http.HandlerFunc {
 		}
 
 		params := query.UpdateGroupSocialsParams{
-			Type: vars["type"],
-			Link: link,
-			Name: vars["name"],
+			PlatformType: vars["type"],
+			Link:         link,
+			Name:         vars["name"],
 		}
 		err := queries.UpdateGroupSocials(ctx, params)
 		if err != nil {
