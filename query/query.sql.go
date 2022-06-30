@@ -12,6 +12,92 @@ import (
 	"github.com/lib/pq"
 )
 
+const createGroupAdmin = `-- name: CreateGroupAdmin :exec
+INSERT INTO group_admin (
+    group_name, position, roll_number
+)
+VALUES (
+    (SELECT name from groups WHERE name = $1 or alias = $1),
+    $2,
+    $3
+)
+`
+
+type CreateGroupAdminParams struct {
+	Name       string
+	Position   string
+	RollNumber int32
+}
+
+func (q *Queries) CreateGroupAdmin(ctx context.Context, arg CreateGroupAdminParams) error {
+	_, err := q.db.ExecContext(ctx, createGroupAdmin, arg.Name, arg.Position, arg.RollNumber)
+	return err
+}
+
+const createGroupFaculty = `-- name: CreateGroupFaculty :exec
+INSERT INTO group_faculty (
+    group_name, name, mobile
+)
+VALUES (
+    (SELECT g.name as group_name from groups g WHERE g.name = $1 or g.alias = $1),
+    $2,
+    $3
+)
+`
+
+type CreateGroupFacultyParams struct {
+	Name   string
+	Name_2 string
+	Mobile int64
+}
+
+func (q *Queries) CreateGroupFaculty(ctx context.Context, arg CreateGroupFacultyParams) error {
+	_, err := q.db.ExecContext(ctx, createGroupFaculty, arg.Name, arg.Name_2, arg.Mobile)
+	return err
+}
+
+const createGroupMember = `-- name: CreateGroupMember :exec
+INSERT INTO group_member (
+    group_name, roll_number
+)
+VALUES (
+    (SELECT name from groups WHERE name = $1 or alias = $1),
+    $2
+)
+`
+
+type CreateGroupMemberParams struct {
+	Name       string
+	RollNumber int32
+}
+
+func (q *Queries) CreateGroupMember(ctx context.Context, arg CreateGroupMemberParams) error {
+	_, err := q.db.ExecContext(ctx, createGroupMember, arg.Name, arg.RollNumber)
+	return err
+}
+
+const createGroupSocial = `-- name: CreateGroupSocial :exec
+INSERT INTO group_social (
+    name, type, link
+)
+VALUES (
+    (SELECT g.name from groups g WHERE g.name = $1 or g.alias = $1),
+    $2,
+    $3
+)
+`
+
+type CreateGroupSocialParams struct {
+	Name string
+	Type string
+	Link string
+}
+
+func (q *Queries) CreateGroupSocial(ctx context.Context, arg CreateGroupSocialParams) error {
+	_, err := q.db.ExecContext(ctx, createGroupSocial, arg.Name, arg.Type, arg.Link)
+	return err
+}
+
 const getAllCourses = `-- name: GetAllCourses :many
 SELECT code, title, branch, semester, credits, prereq, type, objectives, content, books, outcomes FROM course
 `
@@ -464,7 +550,7 @@ type GetGroupAdminsRow struct {
 	RoomNumber   sql.NullString
 	DiscordUid   sql.NullInt64
 	Verified     bool
-	Position     sql.NullString
+	Position     string
 }
 
 func (q *Queries) GetGroupAdmins(ctx context.Context, groupName string) ([]GetGroupAdminsRow, error) {

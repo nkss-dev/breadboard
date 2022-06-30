@@ -130,3 +130,42 @@ WHERE
     gs.type = $1
     AND gs.name = $3
     OR $3 = (SELECT alias FROM groups WHERE name = gs.name);
+
+-- name: CreateGroupAdmin :exec
+INSERT INTO group_admin (
+    group_name, position, roll_number
+)
+VALUES (
+    (SELECT name from groups WHERE name = $1 or alias = $1),
+    $2,
+    $3
+);
+
+-- name: CreateGroupFaculty :exec
+INSERT INTO group_faculty (
+    group_name, name, mobile
+)
+VALUES (
+    (SELECT g.name from groups g WHERE g.name = $1 or g.alias = $1),
+    $2,
+    $3
+);
+
+-- name: CreateGroupMember :exec
+INSERT INTO group_member (
+    group_name, roll_number
+)
+VALUES (
+    (SELECT name from groups WHERE name = $1 or alias = $1),
+    $2
+);
+
+-- name: CreateGroupSocial :exec
+INSERT INTO group_social (
+    name, type, link
+)
+VALUES (
+    (SELECT g.name from groups g WHERE g.name = $1 or g.alias = $1),
+    $2,
+    $3
+);

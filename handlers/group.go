@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -72,6 +74,157 @@ func ConstructGroup(raw_group query.GetGroupRow) (group Group) {
 	group.Admins = admins
 
 	return group
+}
+
+// CreateGroupAdmin creates a new admin for a group.
+func CreateGroupAdmin(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		group_name := mux.Vars(r)["name"]
+		vars := r.URL.Query()
+
+		position := vars.Get("position")
+		if position == "" {
+			RespondError(w, 400, "Required query param, position, missing")
+			return
+		}
+
+		rollStr := vars.Get("roll")
+		if rollStr == "" {
+			RespondError(w, 400, "Required query param, roll, missing")
+			return
+		}
+		roll, err := strconv.Atoi(rollStr)
+		if err != nil {
+			RespondError(w, 400, "Roll paramter must only contain digits")
+			return
+		}
+
+		params := query.CreateGroupAdminParams{
+			Name:       group_name,
+			Position:   position,
+			RollNumber: int32(roll),
+		}
+		err = queries.CreateGroupAdmin(ctx, params)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while inserting details to our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Added '"+fmt.Sprint(roll)+"' as the "+position+" of "+group_name+" successfully!")
+	}
+}
+
+// CreateGroupFaculty creates a new faculty incharge for a group.
+func CreateGroupFaculty(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		group_name := mux.Vars(r)["name"]
+		vars := r.URL.Query()
+
+		name := vars.Get("name")
+		if name == "" {
+			RespondError(w, 400, "Required query param, name, missing")
+			return
+		}
+
+		mobileStr := vars.Get("mobile")
+		if mobileStr == "" {
+			RespondError(w, 400, "Required query param, mobile, missing")
+			return
+		}
+		mobile, err := strconv.Atoi(mobileStr)
+		if err != nil {
+			RespondError(w, 400, "Mobile paramter must only contain digits")
+			return
+		}
+
+		params := query.CreateGroupFacultyParams{
+			Name_2: name,
+			Mobile: int64(mobile),
+			Name:   group_name,
+		}
+		err = queries.CreateGroupFaculty(ctx, params)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while inserting details to our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Added "+name+" as a faculty incharge of "+group_name+" successfully!")
+	}
+}
+
+// CreateGroupMember adds a new member to a group.
+func CreateGroupMember(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		group_name := mux.Vars(r)["name"]
+
+		rollStr := r.URL.Query().Get("roll")
+		if rollStr == "" {
+			RespondError(w, 400, "Required query param, roll, missing")
+			return
+		}
+		roll, err := strconv.Atoi(rollStr)
+		if err != nil {
+			RespondError(w, 400, "Roll paramter must only contain digits")
+			return
+		}
+
+		params := query.CreateGroupMemberParams{
+			Name:       group_name,
+			RollNumber: int32(roll),
+		}
+		err = queries.CreateGroupMember(ctx, params)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while inserting details to our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Added '"+fmt.Sprint(roll)+"' as a member of "+group_name+" successfully!")
+	}
+}
+
+// CreateGroupSocial adds a new social media handle of a group.
+func CreateGroupSocial(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		group_name := mux.Vars(r)["name"]
+		vars := r.URL.Query()
+
+		platform_type := vars.Get("type")
+		if platform_type == "" {
+			RespondError(w, 400, "Required query param, type, missing")
+			return
+		}
+
+		link := vars.Get("link")
+		if link == "" {
+			RespondError(w, 400, "Required query param, link, missing")
+			return
+		}
+
+		params := query.CreateGroupSocialParams{
+			Name: group_name,
+			Type: platform_type,
+			Link: link,
+		}
+		err := queries.CreateGroupSocial(ctx, params)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while inserting details to our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Added link of the "+platform_type+" handle for "+group_name+" successfully!")
+	}
 }
 
 // GetGroup returns a handler to return a group's details

@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS group_social (
 
 CREATE TABLE IF NOT EXISTS group_admin (
     group_name   text references groups(name),
-    position     varchar(20),
+    position     varchar(20) NOT NULL,
     roll_number  int  references student(roll_number),
     primary key (group_name, roll_number)
 );
