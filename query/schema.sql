@@ -44,9 +44,9 @@ CREATE TABLE IF NOT EXISTS groups (
 );
 
 CREATE TABLE IF NOT EXISTS group_faculty (
-    group_name  text   references groups(name),
-    name        text,
-    mobile      bigint unique NOT NULL,
+    group_name  text   NOT NULL references groups(name),
+    name        text   NOT NULL,
+    mobile      bigint NOT NULL UNIQUE,
     primary key (group_name, name)
 );
 
@@ -62,22 +62,22 @@ CREATE TABLE IF NOT EXISTS group_discord (
 );
 
 CREATE TABLE IF NOT EXISTS group_social (
-    name           text references groups(name),
+    group_name     text        NOT NULL references groups(name),
     platform_type  varchar(15) NOT NULL,
-    link           text NOT NULL,
+    link           text        NOT NULL,
     primary key (name, type)
 );
 
 CREATE TABLE IF NOT EXISTS group_admin (
-    group_name   text references groups(name),
+    group_name   text        NOT NULL references groups(name),
     position     varchar(20) NOT NULL,
-    roll_number  int  references student(roll_number),
+    roll_number  int         NOT NULL references student(roll_number),
     primary key (group_name, roll_number)
 );
 
 CREATE TABLE IF NOT EXISTS group_member (
-    roll_number  int  not null references student(roll_number),
-    group_name   text not null references groups(name),
+    roll_number  int  NOT NULL references student(roll_number),
+    group_name   text NOT NULL references groups(name),
     primary key(roll_number, group_name)
 );
 

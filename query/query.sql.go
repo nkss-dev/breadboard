@@ -463,8 +463,8 @@ SELECT
     gd.guest_role,
     CAST(ARRAY(SELECT gf.name FROM group_faculty gf WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
     CAST(ARRAY(SELECT gf.mobile FROM group_faculty gf WHERE g.name = gf.group_name) AS bigint[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT gs.platform_type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
-    CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_links,
+    CAST(ARRAY(SELECT gs.platform_type FROM group_social gs WHERE g.name = gs.group_name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.group_name) AS text[]) AS social_links,
     CAST(ARRAY(SELECT ga.position FROM group_admin ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
     CAST(ARRAY(SELECT ga.roll_number FROM group_admin ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
     CAST(ARRAY(SELECT gm.roll_number FROM group_member gm WHERE g.name = gm.group_name) AS bigint[]) AS members
@@ -682,10 +682,10 @@ SELECT
     platform_type,
     link
 FROM
-    group_social gs
+    group_social
 WHERE
-    gs.name = $1
-    OR $1 = (SELECT alias FROM groups WHERE name = gs.name)
+    group_name = $1
+    OR $1 = (SELECT alias FROM groups WHERE name = group_name)
 `
 
 type GetGroupSocialsRow struct {
@@ -693,8 +693,8 @@ type GetGroupSocialsRow struct {
 	Link         string
 }
 
-func (q *Queries) GetGroupSocials(ctx context.Context, name string) ([]GetGroupSocialsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getGroupSocials, name)
+func (q *Queries) GetGroupSocials(ctx context.Context, groupName string) ([]GetGroupSocialsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getGroupSocials, groupName)
 	if err != nil {
 		return nil, err
 	}
@@ -806,22 +806,22 @@ func (q *Queries) UpdateGroupFaculty(ctx context.Context, arg UpdateGroupFaculty
 
 const updateGroupSocials = `-- name: UpdateGroupSocials :exec
 UPDATE
-    group_social gs
+    group_social
 SET
     link = $2
 WHERE
-    gs.platform_type = $1
-    AND gs.name = $3
-    OR $3 = (SELECT alias FROM groups WHERE name = gs.name)
+    platform_type = $1
+    AND group_name = $3
+    OR $3 = (SELECT alias FROM groups WHERE name = group_name)
 `
 
 type UpdateGroupSocialsParams struct {
 	PlatformType string
 	Link         string
-	Name         string
+	GroupName    string
 }
 
 func (q *Queries) UpdateGroupSocials(ctx context.Context, arg UpdateGroupSocialsParams) error {
-	_, err := q.db.ExecContext(ctx, updateGroupSocials, arg.PlatformType, arg.Link, arg.Name)
+	_, err := q.db.ExecContext(ctx, updateGroupSocials, arg.PlatformType, arg.Link, arg.GroupName)
 	return err
 }

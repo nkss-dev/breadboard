@@ -388,7 +388,7 @@ func UpdateGroupSocials(db *sql.DB) http.HandlerFunc {
 		params := query.UpdateGroupSocialsParams{
 			PlatformType: vars["type"],
 			Link:         link,
-			Name:         vars["name"],
+			GroupName:    vars["name"],
 		}
 		err := queries.UpdateGroupSocials(ctx, params)
 		if err != nil {

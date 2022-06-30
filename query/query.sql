@@ -33,8 +33,8 @@ SELECT
     gd.guest_role,
     CAST(ARRAY(SELECT gf.name FROM group_faculty gf WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
     CAST(ARRAY(SELECT gf.mobile FROM group_faculty gf WHERE g.name = gf.group_name) AS bigint[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT gs.platform_type FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_types,
-    CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.name) AS text[]) AS social_links,
+    CAST(ARRAY(SELECT gs.platform_type FROM group_social gs WHERE g.name = gs.group_name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT gs.link FROM group_social gs WHERE g.name = gs.group_name) AS text[]) AS social_links,
     CAST(ARRAY(SELECT ga.position FROM group_admin ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
     CAST(ARRAY(SELECT ga.roll_number FROM group_admin ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
     CAST(ARRAY(SELECT gm.roll_number FROM group_member gm WHERE g.name = gm.group_name) AS bigint[]) AS members
@@ -100,10 +100,10 @@ SELECT
     platform_type,
     link
 FROM
-    group_social gs
+    group_social
 WHERE
-    gs.name = $1
-    OR $1 = (SELECT alias FROM groups WHERE name = gs.name);
+    group_name = $1
+    OR $1 = (SELECT alias FROM groups WHERE name = group_name);
 
 -- name: GetClubMemberships :many
 SELECT student.*, group_member.group_name FROM group_member, student WHERE group_member.roll_number = $1 AND group_member.roll_number = student.roll_number;
@@ -123,13 +123,13 @@ WHERE
  
 -- name: UpdateGroupSocials :exec
 UPDATE
-    group_social gs
+    group_social
 SET
     link = $2
 WHERE
-    gs.platform_type = $1
-    AND gs.name = $3
-    OR $3 = (SELECT alias FROM groups WHERE name = gs.name);
+    platform_type = $1
+    AND group_name = $3
+    OR $3 = (SELECT alias FROM groups WHERE name = group_name);
 
 -- name: CreateGroupAdmin :exec
 INSERT INTO group_admin (
