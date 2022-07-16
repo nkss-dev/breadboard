@@ -7,6 +7,7 @@ import (
 	"os"
 
 	h "nkssbackend/handlers"
+	"nkssbackend/internal/database"
 	m "nkssbackend/middleware"
 
 	"github.com/gorilla/mux"
@@ -24,6 +25,8 @@ func NewServer() *server {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	// !TODO: Make separate interface to initialise database
+	database.Init(db)
 
 	s := server{db: db, router: mux.NewRouter().StrictSlash(true)}
 	s.setRouters()
