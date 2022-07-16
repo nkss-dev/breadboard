@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"nkssbackend/query"
+	"nkssbackend/internal/query"
 
 	"github.com/gorilla/mux"
 )
@@ -17,7 +17,7 @@ type Group struct {
 	Name        string                 `json:"name"`
 	Alias       string                 `json:"alias"`
 	Faculty     []Faculty              `json:"faculty"`
-	Branch      string                 `json:"branch"`
+	Branch      []string               `json:"branch"`
 	Kind        string                 `json:"kind"`
 	Description string                 `json:"description"`
 	Socials     map[string]interface{} `json:"socials"`
@@ -27,7 +27,7 @@ type Group struct {
 
 type Faculty struct {
 	Name   string `json:"name"`
-	Mobile int64  `json:"mobile"`
+	Mobile string `json:"mobile"`
 }
 
 type Admin struct {
@@ -40,9 +40,9 @@ type Admin struct {
 func ConstructGroup(raw_group query.GetGroupRow) (group Group) {
 	group.Name = raw_group.Name
 	group.Alias = raw_group.Alias.String
-	group.Branch = raw_group.Branch.String
+	group.Branch = raw_group.Branch
 	group.Kind = raw_group.Kind
-	group.Description = raw_group.Description.String
+	group.Description = raw_group.Description
 	group.Members = raw_group.Members
 
 	var faculties []Faculty
@@ -55,16 +55,6 @@ func ConstructGroup(raw_group query.GetGroupRow) (group Group) {
 	for i, social_type := range raw_group.SocialTypes {
 		socials[social_type] = raw_group.SocialLinks[i]
 	}
-	discord := make(map[string]interface{})
-	discord["id"] = raw_group.ServerID
-	discord["invite"] = raw_group.ServerInvite
-	discord["roles"] = map[string]int64{
-		"freshman":  raw_group.FresherRole.Int64,
-		"sophomore": raw_group.SophomoreRole.Int64,
-		"junior":    raw_group.JuniorRole.Int64,
-		"senior":    raw_group.SeniorRole.Int64,
-	}
-	socials["discord"] = discord
 	group.Socials = socials
 
 	var admins []Admin
@@ -104,7 +94,7 @@ func CreateGroupAdmin(db *sql.DB) http.HandlerFunc {
 		params := query.CreateGroupAdminParams{
 			Name:       group_name,
 			Position:   position,
-			RollNumber: int32(roll),
+			RollNumber: rollStr,
 		}
 		err = queries.CreateGroupAdmin(ctx, params)
 		if err != nil {
@@ -143,9 +133,8 @@ func CreateGroupFaculty(db *sql.DB) http.HandlerFunc {
 		}
 
 		params := query.CreateGroupFacultyParams{
-			Name_2: name,
-			Mobile: int64(mobile),
-			Name:   group_name,
+			Name:  group_name,
+			EmpID: int32(mobile),
 		}
 		err = queries.CreateGroupFaculty(ctx, params)
 		if err != nil {
@@ -178,7 +167,7 @@ func CreateGroupMember(db *sql.DB) http.HandlerFunc {
 
 		params := query.CreateGroupMemberParams{
 			Name:       group_name,
-			RollNumber: int32(roll),
+			RollNumber: rollStr,
 		}
 		err = queries.CreateGroupMember(ctx, params)
 		if err != nil {
@@ -241,7 +230,7 @@ func DeleteGroupAdmin(db *sql.DB) http.HandlerFunc {
 
 		params := query.DeleteGroupAdminParams{
 			Name:       vars["name"],
-			RollNumber: int32(roll),
+			RollNumber: vars["roll"],
 		}
 		err = queries.DeleteGroupAdmin(ctx, params)
 		if err != nil {
@@ -260,18 +249,24 @@ func DeleteGroupFaculty(db *sql.DB) http.HandlerFunc {
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		params := query.DeleteGroupFacultyParams{
-			Name:   vars["name"],
-			Name_2: vars["fname"],
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			RespondError(w, 400, "Id paramter must only contain digits")
+			return
 		}
-		err := queries.DeleteGroupFaculty(ctx, params)
+
+		params := query.DeleteGroupFacultyParams{
+			Name:  vars["name"],
+			EmpID: int32(id),
+		}
+		err = queries.DeleteGroupFaculty(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while deleting details from our database")
 			return
 		}
 
-		RespondJSON(w, 200, "Removed "+vars["fname"]+" as a faculty incharge of "+vars["name"]+" successfully!")
+		RespondJSON(w, 200, "Removed "+vars["id"]+" as a faculty incharge of "+vars["name"]+" successfully!")
 	}
 }
 
@@ -289,7 +284,7 @@ func DeleteGroupMember(db *sql.DB) http.HandlerFunc {
 
 		params := query.DeleteGroupMemberParams{
 			Name:       vars["name"],
-			RollNumber: int32(roll),
+			RollNumber: vars["roll"],
 		}
 		err = queries.DeleteGroupMember(ctx, params)
 		if err != nil {
@@ -354,13 +349,14 @@ func GetGroups(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
-		group_rows, err := queries.GetAllGroups(ctx)
+		group_rows, err := queries.GetGroups(ctx)
 		if err == sql.ErrNoRows {
 			RespondError(w, 404, "No groups found!")
 			return
 		}
 		if err != nil {
 			RespondError(w, 500, "Something went wrong while fetching details from our database")
+			log.Println(err)
 			return
 		}
 
@@ -434,38 +430,6 @@ func GetGroupSocials(db *sql.DB) http.HandlerFunc {
 		}
 
 		RespondJSON(w, 200, socials)
-	}
-}
-
-// UpdateGroupFaculty updates the mobile number of a group incharge.
-func UpdateGroupFaculty(db *sql.DB) http.HandlerFunc {
-	ctx := context.Background()
-	queries := query.New(db)
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		mobileStr := r.URL.Query().Get("mobile")
-		if mobileStr == "" {
-			RespondError(w, 400, "Required query param, mobile, missing")
-			return
-		}
-		mobile, err := strconv.Atoi(mobileStr)
-		if err != nil {
-			RespondError(w, 400, "Mobile paramter must only contain digits")
-			return
-		}
-
-		params := query.UpdateGroupFacultyParams{
-			Name:      vars["fname"],
-			Mobile:    int64(mobile),
-			GroupName: vars["name"],
-		}
-		err = queries.UpdateGroupFaculty(ctx, params)
-		if err != nil {
-			RespondError(w, 500, "Something went wrong while updating details to our database")
-			return
-		}
-
-		RespondJSON(w, 200, "Faculty mobile number updated successfully")
 	}
 }
 

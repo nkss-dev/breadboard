@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"nkssbackend/query"
+	"nkssbackend/internal/query"
 
 	"github.com/gorilla/mux"
 	"golang.org/x/exp/slices"
@@ -37,7 +37,6 @@ func GetCourses(db *sql.DB) http.HandlerFunc {
 		vars := r.URL.Query()
 		var semester int
 		var err error
-		var courses []query.Course
 
 		if vars.Get("semester") != "" {
 			semester, err = strconv.Atoi(vars.Get("semester"))
@@ -57,19 +56,35 @@ func GetCourses(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		// !TODO: Make code idempotent
 		if semester == 0 && branch == "" {
-			courses, err = queries.GetAllCourses(ctx)
+			courses, err := queries.GetCourses(ctx)
+			if err == sql.ErrNoRows || len(courses) == 0 {
+				RespondError(w, 404, "Courses not found in the database")
+				return
+			}
+			RespondJSON(w, 200, courses)
 		} else if semester != 0 && branch == "" {
-			courses, err = queries.GetSemesterCourses(ctx, int16(semester))
+			courses, err := queries.GetCoursesBySemester(ctx, int16(semester))
+			if err == sql.ErrNoRows || len(courses) == 0 {
+				RespondError(w, 404, "Courses not found in the database")
+				return
+			}
+			RespondJSON(w, 200, courses)
 		} else if semester == 0 && branch != "" {
-			courses, err = queries.GetBranchCourses(ctx, branch)
+			courses, err := queries.GetCoursesByBranch(ctx, branch)
+			if err == sql.ErrNoRows || len(courses) == 0 {
+				RespondError(w, 404, "Courses not found in the database")
+				return
+			}
+			RespondJSON(w, 200, courses)
 		} else {
-			courses, err = queries.GetCourses(ctx, query.GetCoursesParams{Branch: branch, Semester: int16(semester)})
+			courses, err := queries.GetCoursesByBranchAndSemester(ctx, query.GetCoursesByBranchAndSemesterParams{Branch: branch, Semester: int16(semester)})
+			if err == sql.ErrNoRows || len(courses) == 0 {
+				RespondError(w, 404, "Courses not found in the database")
+				return
+			}
+			RespondJSON(w, 200, courses)
 		}
-		if err == sql.ErrNoRows || len(courses) == 0 {
-			RespondError(w, 404, "Courses not found in the database")
-			return
-		}
-		RespondJSON(w, 200, courses)
 	}
 }
