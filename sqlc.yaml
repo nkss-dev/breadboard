@@ -1,7 +1,15 @@
 version: 1
 packages:
-  - path: "query"
-    name: "query"
+  - name: "query"
+    path: "internal/query"
+    queries: "./sql/queries"
+    schema:
+      # These are listed separately so that the tables are created in a preferred order
+      - "./sql/schemas/student.sql"
+      - "./sql/schemas/faculty.sql"
+      - "./sql/schemas/guild.sql"
+      - "./sql/schemas/group.sql"
+      - "./sql/schemas/course.sql"
     engine: "postgresql"
-    schema: "query/schema.sql"
-    queries: "query/query.sql"
+    emit_json_tags: true
+    json_tags_case_style: "snake"
