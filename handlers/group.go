@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Group struct {
+type Club struct {
 	Name        string                 `json:"name"`
 	Alias       string                 `json:"alias"`
 	Faculty     []Faculty              `json:"faculty"`
@@ -35,9 +35,9 @@ type Admin struct {
 	RollNumber int64  `json:"roll_number"`
 }
 
-// ConstructGroup translates the row returned by sqlc into
-// the struct Group for a better strucutre
-func ConstructGroup(raw_group query.GetGroupRow) (group Group) {
+// ConstructClub translates the row returned by sqlc into
+// the struct Club for a better strucutre
+func ConstructClub(raw_group query.GetClubRow) (group Club) {
 	group.Name = raw_group.Name
 	group.Alias = raw_group.Alias.String
 	group.Branch = raw_group.Branch
@@ -66,8 +66,8 @@ func ConstructGroup(raw_group query.GetGroupRow) (group Group) {
 	return group
 }
 
-// CreateGroupAdmin creates a new admin for a group.
-func CreateGroupAdmin(db *sql.DB) http.HandlerFunc {
+// CreateClubAdmin creates a new admin for a group.
+func CreateClubAdmin(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -91,12 +91,12 @@ func CreateGroupAdmin(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		params := query.CreateGroupAdminParams{
+		params := query.CreateClubAdminParams{
 			Name:       group_name,
 			Position:   position,
 			RollNumber: rollStr,
 		}
-		err = queries.CreateGroupAdmin(ctx, params)
+		err = queries.CreateClubAdmin(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while inserting details to our database")
@@ -107,8 +107,8 @@ func CreateGroupAdmin(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// CreateGroupFaculty creates a new faculty incharge for a group.
-func CreateGroupFaculty(db *sql.DB) http.HandlerFunc {
+// CreateClubFaculty creates a new faculty incharge for a group.
+func CreateClubFaculty(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -132,11 +132,11 @@ func CreateGroupFaculty(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		params := query.CreateGroupFacultyParams{
+		params := query.CreateClubFacultyParams{
 			Name:  group_name,
 			EmpID: int32(mobile),
 		}
-		err = queries.CreateGroupFaculty(ctx, params)
+		err = queries.CreateClubFaculty(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while inserting details to our database")
@@ -147,8 +147,8 @@ func CreateGroupFaculty(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// CreateGroupMember adds a new member to a group.
-func CreateGroupMember(db *sql.DB) http.HandlerFunc {
+// CreateClubMember adds a new member to a group.
+func CreateClubMember(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -165,11 +165,11 @@ func CreateGroupMember(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		params := query.CreateGroupMemberParams{
+		params := query.CreateClubMemberParams{
 			Name:       group_name,
 			RollNumber: rollStr,
 		}
-		err = queries.CreateGroupMember(ctx, params)
+		err = queries.CreateClubMember(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while inserting details to our database")
@@ -180,8 +180,8 @@ func CreateGroupMember(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// CreateGroupSocial adds a new social media handle of a group.
-func CreateGroupSocial(db *sql.DB) http.HandlerFunc {
+// CreateClubSocial adds a new social media handle of a group.
+func CreateClubSocial(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -200,12 +200,12 @@ func CreateGroupSocial(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		params := query.CreateGroupSocialParams{
+		params := query.CreateClubSocialParams{
 			Name:         group_name,
 			PlatformType: platform_type,
 			Link:         link,
 		}
-		err := queries.CreateGroupSocial(ctx, params)
+		err := queries.CreateClubSocial(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while inserting details to our database")
@@ -216,8 +216,8 @@ func CreateGroupSocial(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// DeleteGroupAdmin deletes an existing admin of a group.
-func DeleteGroupAdmin(db *sql.DB) http.HandlerFunc {
+// DeleteClubAdmin deletes an existing admin of a group.
+func DeleteClubAdmin(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -228,11 +228,11 @@ func DeleteGroupAdmin(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		params := query.DeleteGroupAdminParams{
+		params := query.DeleteClubAdminParams{
 			Name:       vars["name"],
 			RollNumber: vars["roll"],
 		}
-		err = queries.DeleteGroupAdmin(ctx, params)
+		err = queries.DeleteClubAdmin(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while deleting details from our database")
@@ -243,8 +243,8 @@ func DeleteGroupAdmin(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// DeleteGroupFaculty deletes an existing faculty incharge of a group.
-func DeleteGroupFaculty(db *sql.DB) http.HandlerFunc {
+// DeleteClubFaculty deletes an existing faculty incharge of a group.
+func DeleteClubFaculty(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -255,11 +255,11 @@ func DeleteGroupFaculty(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		params := query.DeleteGroupFacultyParams{
+		params := query.DeleteClubFacultyParams{
 			Name:  vars["name"],
 			EmpID: int32(id),
 		}
-		err = queries.DeleteGroupFaculty(ctx, params)
+		err = queries.DeleteClubFaculty(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while deleting details from our database")
@@ -270,8 +270,8 @@ func DeleteGroupFaculty(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// DeleteGroupMember deletes an existing member of a group.
-func DeleteGroupMember(db *sql.DB) http.HandlerFunc {
+// DeleteClubMember deletes an existing member of a group.
+func DeleteClubMember(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -282,11 +282,11 @@ func DeleteGroupMember(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		params := query.DeleteGroupMemberParams{
+		params := query.DeleteClubMemberParams{
 			Name:       vars["name"],
 			RollNumber: vars["roll"],
 		}
-		err = queries.DeleteGroupMember(ctx, params)
+		err = queries.DeleteClubMember(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while deleting details from our database")
@@ -297,17 +297,17 @@ func DeleteGroupMember(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// DeleteGroupSocial deletes an existing social media handle of a group.
-func DeleteGroupSocial(db *sql.DB) http.HandlerFunc {
+// DeleteClubSocial deletes an existing social media handle of a group.
+func DeleteClubSocial(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		params := query.DeleteGroupSocialParams{
+		params := query.DeleteClubSocialParams{
 			Name:         vars["name"],
 			PlatformType: vars["type"],
 		}
-		err := queries.DeleteGroupSocial(ctx, params)
+		err := queries.DeleteClubSocial(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while deleting details from our database")
@@ -318,18 +318,18 @@ func DeleteGroupSocial(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetGroup returns a handler to return a group's details
+// GetClub returns a handler to return a group's details
 // based on the unique parameter passed.
 //
 // This handler takes in a name argument which is first
 // checked as an alias and then as the name of a group.
-func GetGroup(db *sql.DB) http.HandlerFunc {
+func GetClub(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		group_row, err := queries.GetGroup(ctx, vars["name"])
+		group_row, err := queries.GetClub(ctx, vars["name"])
 		if err == sql.ErrNoRows {
 			RespondError(w, 404, "No groups found!")
 			return
@@ -339,17 +339,17 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		group := ConstructGroup(group_row)
+		group := ConstructClub(group_row)
 		RespondJSON(w, 200, group)
 	}
 }
 
-// GetGroups retrieves the group details from the database.
-func GetGroups(db *sql.DB) http.HandlerFunc {
+// GetClubs retrieves the group details from the database.
+func GetClubs(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
-		group_rows, err := queries.GetGroups(ctx)
+		group_rows, err := queries.GetClubs(ctx)
 		if err == sql.ErrNoRows {
 			RespondError(w, 404, "No groups found!")
 			return
@@ -360,22 +360,22 @@ func GetGroups(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		var groups []Group
+		var groups []Club
 		for _, group_row := range group_rows {
-			groups = append(groups, ConstructGroup(query.GetGroupRow(group_row)))
+			groups = append(groups, ConstructClub(query.GetClubRow(group_row)))
 		}
 
 		RespondJSON(w, 200, groups)
 	}
 }
 
-// GetGroupAdmins retrieves the admins of a group from the database.
-func GetGroupAdmins(db *sql.DB) http.HandlerFunc {
+// GetClubAdmins retrieves the admins of a group from the database.
+func GetClubAdmins(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
 		group_name := mux.Vars(r)["name"]
-		admins, err := queries.GetGroupAdmins(ctx, group_name)
+		admins, err := queries.GetClubAdmins(ctx, group_name)
 		if err != nil {
 			RespondError(w, 500, "Something went wrong while fetching details from our database")
 			return
@@ -385,13 +385,13 @@ func GetGroupAdmins(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetGroupFaculty retrieves the management faculty of a group from the database.
-func GetGroupFaculty(db *sql.DB) http.HandlerFunc {
+// GetClubFaculty retrieves the management faculty of a group from the database.
+func GetClubFaculty(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
 		group_name := mux.Vars(r)["name"]
-		faculty, err := queries.GetGroupFaculty(ctx, group_name)
+		faculty, err := queries.GetClubFaculty(ctx, group_name)
 		if err != nil {
 			RespondError(w, 500, "Something went wrong while fetching details from our database")
 			return
@@ -401,13 +401,13 @@ func GetGroupFaculty(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetGroupMembers retrieves the members of a group from the database.
-func GetGroupMembers(db *sql.DB) http.HandlerFunc {
+// GetClubMembers retrieves the members of a group from the database.
+func GetClubMembers(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
 		group_name := mux.Vars(r)["name"]
-		members, err := queries.GetGroupMembers(ctx, group_name)
+		members, err := queries.GetClubMembers(ctx, group_name)
 		if err != nil {
 			RespondError(w, 500, "Something went wrong while fetching details from our database")
 			return
@@ -417,13 +417,13 @@ func GetGroupMembers(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetGroupSocials retrieves the social media links of a group from the database.
-func GetGroupSocials(db *sql.DB) http.HandlerFunc {
+// GetClubSocials retrieves the social media links of a group from the database.
+func GetClubSocials(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
 		group_name := mux.Vars(r)["name"]
-		socials, err := queries.GetGroupSocials(ctx, group_name)
+		socials, err := queries.GetClubSocials(ctx, group_name)
 		if err != nil {
 			RespondError(w, 500, "Something went wrong while fetching details from our database")
 			return
@@ -433,8 +433,8 @@ func GetGroupSocials(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// UpdateGroupSocials updates the link of a social media handle for a group.
-func UpdateGroupSocials(db *sql.DB) http.HandlerFunc {
+// UpdateClubSocials updates the link of a social media handle for a group.
+func UpdateClubSocials(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -445,12 +445,12 @@ func UpdateGroupSocials(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		params := query.UpdateGroupSocialsParams{
+		params := query.UpdateClubSocialsParams{
 			PlatformType: vars["type"],
 			Link:         link,
-			GroupName:    vars["name"],
+			ClubName:     vars["name"],
 		}
-		err := queries.UpdateGroupSocials(ctx, params)
+		err := queries.UpdateClubSocials(ctx, params)
 		if err != nil {
 			RespondError(w, 500, "Something went wrong while updating details to our database")
 			return

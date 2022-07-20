@@ -49,28 +49,28 @@ func (s *server) setRouters() {
 	s.router.HandleFunc("/courses", h.GetCourses(s.db)).Methods("GET")
 	s.router.HandleFunc("/courses/{code}", h.GetCourse(s.db)).Methods("GET")
 
-	// Groups
-	s.router.Handle("/groups", m.Authenticator(h.GetGroups(s.db))).Methods("GET")
-	s.router.Handle("/groups/{name}", m.Authenticator(h.GetGroup(s.db))).Methods("GET")
+	// Clubs
+	s.router.Handle("/clubs", m.Authenticator(h.GetClubs(s.db))).Methods("GET")
+	s.router.Handle("/clubs/{name}", m.Authenticator(h.GetClub(s.db))).Methods("GET")
 
-	s.router.Handle("/groups/{name}/admins", h.GetGroupAdmins(s.db)).Methods("GET")
-	s.router.Handle("/groups/{name}/admins", m.Authenticator(h.CreateGroupAdmin(s.db))).Methods("POST")
-	s.router.Handle("/groups/{name}/admins/{roll}", m.Authenticator(h.DeleteGroupAdmin(s.db))).Methods("DELETE")
+	s.router.Handle("/clubs/{name}/admins", h.GetClubAdmins(s.db)).Methods("GET")
+	s.router.Handle("/clubs/{name}/admins", m.Authenticator(h.CreateClubAdmin(s.db))).Methods("POST")
+	s.router.Handle("/clubs/{name}/admins/{roll}", m.Authenticator(h.DeleteClubAdmin(s.db))).Methods("DELETE")
 
-	s.router.Handle("/groups/{name}/faculty", h.GetGroupFaculty(s.db)).Methods("GET")
-	s.router.Handle("/groups/{name}/faculty", m.Authenticator(h.CreateGroupFaculty(s.db))).Methods("POST")
-	s.router.Handle("/groups/{name}/faculty/{fname}", m.Authenticator(h.DeleteGroupFaculty(s.db))).Methods("DELETE")
+	s.router.Handle("/clubs/{name}/faculty", h.GetClubFaculty(s.db)).Methods("GET")
+	s.router.Handle("/clubs/{name}/faculty", m.Authenticator(h.CreateClubFaculty(s.db))).Methods("POST")
+	s.router.Handle("/clubs/{name}/faculty/{fname}", m.Authenticator(h.DeleteClubFaculty(s.db))).Methods("DELETE")
 
-	s.router.Handle("/groups/{name}/members", m.Authenticator(h.GetGroupMembers(s.db))).Methods("GET")
-	s.router.Handle("/groups/{name}/members", m.Authenticator(h.CreateGroupMember(s.db))).Methods("POST")
-	s.router.Handle("/groups/{name}/members/{roll}", m.Authenticator(h.DeleteGroupMember(s.db))).Methods("DELETE")
+	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.GetClubMembers(s.db))).Methods("GET")
+	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.CreateClubMember(s.db))).Methods("POST")
+	s.router.Handle("/clubs/{name}/members/{roll}", m.Authenticator(h.DeleteClubMember(s.db))).Methods("DELETE")
 
-	s.router.Handle("/groups/{name}/socials", h.GetGroupSocials(s.db)).Methods("GET")
-	s.router.Handle("/groups/{name}/socials", m.Authenticator(h.CreateGroupSocial(s.db))).Methods("POST")
-	s.router.Handle("/groups/{name}/socials/{type}", m.Authenticator(h.UpdateGroupSocials(s.db))).Methods("PUT")
-	s.router.Handle("/groups/{name}/socials/{type}", m.Authenticator(h.DeleteGroupSocial(s.db))).Methods("DELETE")
+	s.router.Handle("/clubs/{name}/socials", h.GetClubSocials(s.db)).Methods("GET")
+	s.router.Handle("/clubs/{name}/socials", m.Authenticator(h.CreateClubSocial(s.db))).Methods("POST")
+	s.router.Handle("/clubs/{name}/socials/{type}", m.Authenticator(h.UpdateClubSocials(s.db))).Methods("PUT")
+	s.router.Handle("/clubs/{name}/socials/{type}", m.Authenticator(h.DeleteClubSocial(s.db))).Methods("DELETE")
 
-	s.router.Handle("/students/{roll}", m.Authenticator(h.GetStudentByRoll(s.db))).Methods("GET")
+	s.router.Handle("/students/{roll}", m.Authenticator(h.GetStudent(s.db))).Methods("GET")
 	s.router.Handle("/students/{roll}/member", m.Authenticator(h.GetStudentClubMemberships(s.db))).Methods("GET")
 	s.router.Handle("/students/{roll}/admin", m.Authenticator(h.IsStudentAdmin(s.db))).Methods("GET")
 }

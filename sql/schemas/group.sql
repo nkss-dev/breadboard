@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS groups (
+CREATE TABLE IF NOT EXISTS club (
     name         VARCHAR(50)   PRIMARY KEY,
     alias        VARCHAR(10)   UNIQUE,
     branch       VARCHAR(3)[]  UNIQUE,
@@ -6,15 +6,15 @@ CREATE TABLE IF NOT EXISTS groups (
     description  VARCHAR       NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS group_admin (
-    group_name   VARCHAR(50) NOT NULL REFERENCES groups(name),
+CREATE TABLE IF NOT EXISTS club_admin (
+    club_name    VARCHAR(50) NOT NULL REFERENCES club(name),
     position     VARCHAR(20) NOT NULL,
     roll_number  CHAR(8)     PRIMARY KEY REFERENCES student(roll_number)
 );
 
-CREATE TABLE IF NOT EXISTS group_discord (
-    group_name      VARCHAR(50) PRIMARY KEY REFERENCES groups(name),
-    server_id       BIGINT      UNIQUE NOT NULL REFERENCES guild(id),
+CREATE TABLE IF NOT EXISTS club_discord (
+    club_name       VARCHAR(50) PRIMARY KEY REFERENCES club(name),
+    guild_id        BIGINT      UNIQUE NOT NULL REFERENCES guild(id),
     freshman_role   BIGINT      UNIQUE NOT NULL,
     sophomore_role  BIGINT      UNIQUE NOT NULL,
     junior_role     BIGINT      UNIQUE NOT NULL,
@@ -22,38 +22,38 @@ CREATE TABLE IF NOT EXISTS group_discord (
     guest_role      BIGINT      UNIQUE NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS group_faculty (
-    group_name  VARCHAR(50) REFERENCES groups(name),
+CREATE TABLE IF NOT EXISTS club_faculty (
+    club_name   VARCHAR(50) REFERENCES club(name),
     emp_id      INT         REFERENCES faculty(emp_id),
-    PRIMARY KEY (group_name, emp_id)
+    PRIMARY KEY (club_name, emp_id)
 );
 
-CREATE TABLE IF NOT EXISTS group_member (
-    group_name   VARCHAR(50) REFERENCES groups(name),
+CREATE TABLE IF NOT EXISTS club_member (
+    club_name    VARCHAR(50) REFERENCES club(name),
     roll_number  CHAR(8)     REFERENCES student(roll_number),
-    PRIMARY KEY(group_name, roll_number)
+    PRIMARY KEY (club_name, roll_number)
 );
 
-CREATE TABLE IF NOT EXISTS group_social (
-    group_name     VARCHAR(50) REFERENCES groups(name),
+CREATE TABLE IF NOT EXISTS club_social (
+    club_name      VARCHAR(50) REFERENCES club(name),
     platform_type  VARCHAR(15),
     link           VARCHAR     NOT NULL,
-    PRIMARY KEY (group_name, platform_type)
+    PRIMARY KEY (club_name, platform_type)
 );
 
-CREATE OR REPLACE VIEW group_discord_user AS
+CREATE OR REPLACE VIEW club_discord_user AS
     SELECT
         s.batch,
         s.discord_id,
-        g.name, g.alias,
-        gd.server_id, gs.link,
-        gd.freshman_role, gd.sophomore_role, gd.junior_role, gd.senior_role,
-        gd.guest_role
+        c.name, c.alias,
+        cd.guild_id, cs.link,
+        cd.freshman_role, cd.sophomore_role, cd.junior_role, cd.senior_role,
+        cd.guest_role
     FROM
-        group_member AS gm
-    JOIN groups AS g ON g.name = gm.group_name
-    JOIN group_discord gd ON gd.group_name = gm.group_name
-    JOIN group_social AS gs ON gs.group_name = gm.group_name AND gs.platform_type = 'discord'
-    JOIN student AS s ON s.roll_number = gm.roll_number
+        club_member AS cm
+    JOIN club AS c ON c.name = cm.club_name
+    JOIN club_discord AS cd ON cd.club_name = cm.club_name
+    JOIN club_social AS cs ON cs.club_name = cm.club_name AND cs.platform_type = 'discord'
+    JOIN student AS s ON s.roll_number = cm.roll_number
     WHERE
         s.discord_id IS NOT NULL;

@@ -1,140 +1,140 @@
--- name: CreateGroupAdmin :exec
-INSERT INTO group_admin (
-    group_name, position, roll_number
+-- name: CreateClubAdmin :exec
+INSERT INTO club_admin (
+    club_name, position, roll_number
 )
 VALUES (
-    (SELECT name from groups WHERE name = $1 or alias = $1),
+    (SELECT name from club WHERE name = $1 or alias = $1),
     $2,
     $3
 );
 
--- name: CreateGroupFaculty :exec
-INSERT INTO group_faculty (
-    group_name, emp_id
+-- name: CreateClubFaculty :exec
+INSERT INTO club_faculty (
+    club_name, emp_id
 )
 VALUES (
-    (SELECT g.name from groups g WHERE g.name = $1 or g.alias = $1),
+    (SELECT c.name from club c WHERE c.name = $1 or c.alias = $1),
     $2
 );
 
--- name: CreateGroupMember :exec
-INSERT INTO group_member (
-    group_name, roll_number
+-- name: CreateClubMember :exec
+INSERT INTO club_member (
+    club_name, roll_number
 )
 VALUES (
-    (SELECT name from groups WHERE name = $1 or alias = $1),
+    (SELECT name from club WHERE name = $1 or alias = $1),
     $2
 );
 
--- name: CreateGroupSocial :exec
-INSERT INTO group_social (
+-- name: CreateClubSocial :exec
+INSERT INTO club_social (
     name, platform_type, link
 )
 VALUES (
-    (SELECT g.name from groups g WHERE g.name = $1 or g.alias = $1),
+    (SELECT c.name from club c WHERE c.name = $1 or c.alias = $1),
     $2,
     $3
 );
 
--- name: DeleteGroupAdmin :exec
-DELETE FROM group_admin
+-- name: DeleteClubAdmin :exec
+DELETE FROM club_admin
 WHERE
-    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
     AND roll_number = $2;
 
--- name: DeleteGroupFaculty :exec
-DELETE FROM group_faculty gf
+-- name: DeleteClubFaculty :exec
+DELETE FROM club_faculty cf
 WHERE
-    gf.group_name = (SELECT g.name FROM groups g WHERE g.name = $1 OR g.alias = $1)
-    AND gf.emp_id = $2;
+    cf.club_name = (SELECT c.name FROM club c WHERE c.name = $1 OR c.alias = $1)
+    AND cf.emp_id = $2;
 
--- name: DeleteGroupMember :exec
-DELETE FROM group_member
+-- name: DeleteClubMember :exec
+DELETE FROM club_member
 WHERE
-    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
     AND roll_number = $2;
 
--- name: DeleteGroupSocial :exec
-DELETE FROM group_social
+-- name: DeleteClubSocial :exec
+DELETE FROM club_social
 WHERE
-    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
     AND platform_type = $2;
 
--- name: GetGroup :one
+-- name: GetClub :one
 SELECT
-    g.*,
-    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN group_faculty AS gf ON f.emp_id = gf.emp_id WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
-    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN group_faculty AS gf ON f.emp_id = gf.emp_id WHERE g.name = gf.group_name) AS text[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT gs.platform_type FROM group_social AS gs WHERE g.name = gs.group_name) AS text[]) AS social_types,
-    CAST(ARRAY(SELECT gs.link FROM group_social AS gs WHERE g.name = gs.group_name) AS text[]) AS social_links,
-    CAST(ARRAY(SELECT ga.position FROM group_admin AS ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
-    CAST(ARRAY(SELECT ga.roll_number FROM group_admin AS ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
-    CAST(ARRAY(SELECT gm.roll_number FROM group_member AS gm WHERE g.name = gm.group_name) AS bigint[]) AS members
+    c.*,
+    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_names,
+    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_mobiles,
+    CAST(ARRAY(SELECT cs.platform_type FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT cs.link FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_links,
+    CAST(ARRAY(SELECT ca.position FROM club_admin AS ca WHERE c.name = ca.club_name) AS text[]) AS admin_positions,
+    CAST(ARRAY(SELECT ca.roll_number FROM club_admin AS ca WHERE c.name = ca.club_name) AS bigint[]) AS admin_rolls,
+    CAST(ARRAY(SELECT cm.roll_number FROM club_member AS cm WHERE c.name = cm.club_name) AS bigint[]) AS members
 FROM
-    groups AS g
+    club AS c
 WHERE
-    g.name = $1
-    OR g.alias = $1;
+    c.name = $1
+    OR c.alias = $1;
 
--- name: GetGroups :many
+-- name: GetClubs :many
 SELECT
-    g.*,
-    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN group_faculty AS gf ON f.emp_id = gf.emp_id WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
-    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN group_faculty AS gf ON f.emp_id = gf.emp_id WHERE g.name = gf.group_name) AS text[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT gs.platform_type FROM group_social AS gs WHERE g.name = gs.group_name) AS text[]) AS social_types,
-    CAST(ARRAY(SELECT gs.link FROM group_social AS gs WHERE g.name = gs.group_name) AS text[]) AS social_links,
-    CAST(ARRAY(SELECT ga.position FROM group_admin AS ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
-    CAST(ARRAY(SELECT ga.roll_number FROM group_admin AS ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
-    CAST(ARRAY(SELECT gm.roll_number FROM group_member AS gm WHERE g.name = gm.group_name) AS bigint[]) AS members
+    c.*,
+    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_names,
+    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_mobiles,
+    CAST(ARRAY(SELECT cs.platform_type FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT cs.link FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_links,
+    CAST(ARRAY(SELECT ca.position FROM club_admin AS ca WHERE c.name = ca.club_name) AS text[]) AS admin_positions,
+    CAST(ARRAY(SELECT ca.roll_number FROM club_admin AS ca WHERE c.name = ca.club_name) AS bigint[]) AS admin_rolls,
+    CAST(ARRAY(SELECT cm.roll_number FROM club_member AS cm WHERE c.name = cm.club_name) AS bigint[]) AS members
 FROM
-    groups AS g;
+    club AS c;
 
--- name: GetGroupAdmins :many
+-- name: GetClubAdmins :many
 SELECT
     s.*, admin.position
 FROM
     student s
-    JOIN group_admin admin ON s.roll_number = admin.roll_number
+    JOIN club_admin admin ON s.roll_number = admin.roll_number
 WHERE
-    admin.group_name = $1
-    OR $1 = (SELECT alias FROM groups WHERE name = admin.group_name);
+    admin.club_name = $1
+    OR $1 = (SELECT alias FROM club WHERE name = admin.club_name);
 
--- name: GetGroupFaculty :many
+-- name: GetClubFaculty :many
 SELECT
     f.name, f.mobile
 FROM
     faculty AS f
-    JOIN group_faculty AS gf ON f.emp_id = gf.emp_id
+    JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
 WHERE
-    gf.group_name = $1
-    OR $1 = (SELECT alias FROM groups WHERE name = gf.group_name);
+    cf.club_name = $1
+    OR $1 = (SELECT alias FROM club WHERE name = cf.club_name);
 
--- name: GetGroupMembers :many
+-- name: GetClubMembers :many
 SELECT
     s.*
 FROM
     student s
-    JOIN group_member member ON s.roll_number = member.roll_number
+    JOIN club_member member ON s.roll_number = member.roll_number
 WHERE
-    member.group_name = $1
-    OR $1 = (SELECT alias FROM groups WHERE name = member.group_name);
+    member.club_name = $1
+    OR $1 = (SELECT alias FROM club WHERE name = member.club_name);
 
--- name: GetGroupSocials :many
+-- name: GetClubSocials :many
 SELECT
     platform_type,
     link
 FROM
-    group_social
+    club_social
 WHERE
-    group_name = $1
-    OR $1 = (SELECT alias FROM groups WHERE name = group_name);
+    club_name = $1
+    OR $1 = (SELECT alias FROM club WHERE name = club_name);
 
--- name: UpdateGroupSocials :exec
+-- name: UpdateClubSocials :exec
 UPDATE
-    group_social
+    club_social
 SET
     link = $2
 WHERE
     platform_type = $1
-    AND group_name = $3
-    OR $3 = (SELECT alias FROM groups WHERE name = group_name);
+    AND club_name = $3
+    OR $3 = (SELECT alias FROM club WHERE name = club_name);
