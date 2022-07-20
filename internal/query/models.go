@@ -33,7 +33,61 @@ type BranchSpecific struct {
 	Code     string  `json:"code"`
 	Branch   string  `json:"branch"`
 	Semester int16   `json:"semester"`
-	Credits  []int16 `json:"credits"`
+	Credits  []int32 `json:"credits"`
+}
+
+type Club struct {
+	Name        string         `json:"name"`
+	Alias       sql.NullString `json:"alias"`
+	Branch      []string       `json:"branch"`
+	Kind        string         `json:"kind"`
+	Description string         `json:"description"`
+}
+
+type ClubAdmin struct {
+	ClubName   string `json:"club_name"`
+	Position   string `json:"position"`
+	RollNumber string `json:"roll_number"`
+}
+
+type ClubDiscord struct {
+	ClubName      string `json:"club_name"`
+	GuildID       int64  `json:"guild_id"`
+	FreshmanRole  int64  `json:"freshman_role"`
+	SophomoreRole int64  `json:"sophomore_role"`
+	JuniorRole    int64  `json:"junior_role"`
+	SeniorRole    int64  `json:"senior_role"`
+	GuestRole     int64  `json:"guest_role"`
+}
+
+type ClubDiscordUser struct {
+	Batch         int16          `json:"batch"`
+	DiscordID     sql.NullInt64  `json:"discord_id"`
+	Name          string         `json:"name"`
+	Alias         sql.NullString `json:"alias"`
+	GuildID       int64          `json:"guild_id"`
+	Link          string         `json:"link"`
+	FreshmanRole  int64          `json:"freshman_role"`
+	SophomoreRole int64          `json:"sophomore_role"`
+	JuniorRole    int64          `json:"junior_role"`
+	SeniorRole    int64          `json:"senior_role"`
+	GuestRole     int64          `json:"guest_role"`
+}
+
+type ClubFaculty struct {
+	ClubName string `json:"club_name"`
+	EmpID    int32  `json:"emp_id"`
+}
+
+type ClubMember struct {
+	ClubName   string `json:"club_name"`
+	RollNumber string `json:"roll_number"`
+}
+
+type ClubSocial struct {
+	ClubName     string `json:"club_name"`
+	PlatformType string `json:"platform_type"`
+	Link         string `json:"link"`
 }
 
 type Course struct {
@@ -67,60 +121,6 @@ type Faculty struct {
 	Email          string         `json:"email"`
 	Department     []string       `json:"department"`
 	IsRegular      bool           `json:"is_regular"`
-}
-
-type Group struct {
-	Name        string         `json:"name"`
-	Alias       sql.NullString `json:"alias"`
-	Branch      []string       `json:"branch"`
-	Kind        string         `json:"kind"`
-	Description string         `json:"description"`
-}
-
-type GroupAdmin struct {
-	GroupName  string `json:"group_name"`
-	Position   string `json:"position"`
-	RollNumber string `json:"roll_number"`
-}
-
-type GroupDiscord struct {
-	GroupName     string `json:"group_name"`
-	ServerID      int64  `json:"server_id"`
-	FreshmanRole  int64  `json:"freshman_role"`
-	SophomoreRole int64  `json:"sophomore_role"`
-	JuniorRole    int64  `json:"junior_role"`
-	SeniorRole    int64  `json:"senior_role"`
-	GuestRole     int64  `json:"guest_role"`
-}
-
-type GroupDiscordUser struct {
-	Batch         int16          `json:"batch"`
-	DiscordID     sql.NullInt64  `json:"discord_id"`
-	Name          string         `json:"name"`
-	Alias         sql.NullString `json:"alias"`
-	ServerID      int64          `json:"server_id"`
-	Link          string         `json:"link"`
-	FreshmanRole  int64          `json:"freshman_role"`
-	SophomoreRole int64          `json:"sophomore_role"`
-	JuniorRole    int64          `json:"junior_role"`
-	SeniorRole    int64          `json:"senior_role"`
-	GuestRole     int64          `json:"guest_role"`
-}
-
-type GroupFaculty struct {
-	GroupName string `json:"group_name"`
-	EmpID     int32  `json:"emp_id"`
-}
-
-type GroupMember struct {
-	GroupName  string `json:"group_name"`
-	RollNumber string `json:"roll_number"`
-}
-
-type GroupSocial struct {
-	GroupName    string `json:"group_name"`
-	PlatformType string `json:"platform_type"`
-	Link         string `json:"link"`
 }
 
 type Guild struct {

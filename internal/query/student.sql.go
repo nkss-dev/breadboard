@@ -8,130 +8,38 @@ package query
 import (
 	"context"
 	"database/sql"
+
+	"github.com/lib/pq"
 )
 
-const getClubAdmins = `-- name: GetClubAdmins :many
-SELECT student.roll_number, student.section, student.name, student.gender, student.mobile, student.birth_date, student.email, student.batch, student.hostel_id, student.room_id, student.discord_id, student.is_verified, group_admin.group_name FROM group_admin, student WHERE group_admin.roll_number = $1 AND group_admin.roll_number = student.roll_number
-`
-
-type GetClubAdminsRow struct {
-	RollNumber string         `json:"roll_number"`
-	Section    string         `json:"section"`
-	Name       string         `json:"name"`
-	Gender     sql.NullString `json:"gender"`
-	Mobile     sql.NullString `json:"mobile"`
-	BirthDate  sql.NullTime   `json:"birth_date"`
-	Email      string         `json:"email"`
-	Batch      int16          `json:"batch"`
-	HostelID   sql.NullString `json:"hostel_id"`
-	RoomID     sql.NullString `json:"room_id"`
-	DiscordID  sql.NullInt64  `json:"discord_id"`
-	IsVerified bool           `json:"is_verified"`
-	GroupName  string         `json:"group_name"`
-}
-
-func (q *Queries) GetClubAdmins(ctx context.Context, rollNumber string) ([]GetClubAdminsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getClubAdmins, rollNumber)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetClubAdminsRow
-	for rows.Next() {
-		var i GetClubAdminsRow
-		if err := rows.Scan(
-			&i.RollNumber,
-			&i.Section,
-			&i.Name,
-			&i.Gender,
-			&i.Mobile,
-			&i.BirthDate,
-			&i.Email,
-			&i.Batch,
-			&i.HostelID,
-			&i.RoomID,
-			&i.DiscordID,
-			&i.IsVerified,
-			&i.GroupName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getClubMemberships = `-- name: GetClubMemberships :many
-SELECT student.roll_number, student.section, student.name, student.gender, student.mobile, student.birth_date, student.email, student.batch, student.hostel_id, student.room_id, student.discord_id, student.is_verified, group_member.group_name FROM group_member, student WHERE group_member.roll_number = $1 AND group_member.roll_number = student.roll_number
-`
-
-type GetClubMembershipsRow struct {
-	RollNumber string         `json:"roll_number"`
-	Section    string         `json:"section"`
-	Name       string         `json:"name"`
-	Gender     sql.NullString `json:"gender"`
-	Mobile     sql.NullString `json:"mobile"`
-	BirthDate  sql.NullTime   `json:"birth_date"`
-	Email      string         `json:"email"`
-	Batch      int16          `json:"batch"`
-	HostelID   sql.NullString `json:"hostel_id"`
-	RoomID     sql.NullString `json:"room_id"`
-	DiscordID  sql.NullInt64  `json:"discord_id"`
-	IsVerified bool           `json:"is_verified"`
-	GroupName  string         `json:"group_name"`
-}
-
-func (q *Queries) GetClubMemberships(ctx context.Context, rollNumber string) ([]GetClubMembershipsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getClubMemberships, rollNumber)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetClubMembershipsRow
-	for rows.Next() {
-		var i GetClubMembershipsRow
-		if err := rows.Scan(
-			&i.RollNumber,
-			&i.Section,
-			&i.Name,
-			&i.Gender,
-			&i.Mobile,
-			&i.BirthDate,
-			&i.Email,
-			&i.Batch,
-			&i.HostelID,
-			&i.RoomID,
-			&i.DiscordID,
-			&i.IsVerified,
-			&i.GroupName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getStudent = `-- name: GetStudent :one
-SELECT roll_number, section, name, gender, mobile, birth_date, email, batch, hostel_id, room_id, discord_id, is_verified FROM student
+SELECT
+    roll_number, section, name, gender, mobile, birth_date, email, batch, hostel_id, room_id, discord_id, is_verified,
+    CAST(ARRAY(SELECT cm.club_name FROM club_member AS cm WHERE cm.roll_number = $1) AS VARCHAR[]) AS clubs
+FROM
+    student
 WHERE roll_number = $1
 `
 
-func (q *Queries) GetStudent(ctx context.Context, rollNumber string) (Student, error) {
+type GetStudentRow struct {
+	RollNumber string         `json:"roll_number"`
+	Section    string         `json:"section"`
+	Name       string         `json:"name"`
+	Gender     sql.NullString `json:"gender"`
+	Mobile     sql.NullString `json:"mobile"`
+	BirthDate  sql.NullTime   `json:"birth_date"`
+	Email      string         `json:"email"`
+	Batch      int16          `json:"batch"`
+	HostelID   sql.NullString `json:"hostel_id"`
+	RoomID     sql.NullString `json:"room_id"`
+	DiscordID  sql.NullInt64  `json:"discord_id"`
+	IsVerified bool           `json:"is_verified"`
+	Clubs      []string       `json:"clubs"`
+}
+
+func (q *Queries) GetStudent(ctx context.Context, rollNumber string) (GetStudentRow, error) {
 	row := q.db.QueryRowContext(ctx, getStudent, rollNumber)
-	var i Student
+	var i GetStudentRow
 	err := row.Scan(
 		&i.RollNumber,
 		&i.Section,
@@ -145,6 +53,7 @@ func (q *Queries) GetStudent(ctx context.Context, rollNumber string) (Student, e
 		&i.RoomID,
 		&i.DiscordID,
 		&i.IsVerified,
+		pq.Array(&i.Clubs),
 	)
 	return i, err
 }

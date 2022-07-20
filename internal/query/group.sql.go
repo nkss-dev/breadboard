@@ -12,176 +12,176 @@ import (
 	"github.com/lib/pq"
 )
 
-const createGroupAdmin = `-- name: CreateGroupAdmin :exec
-INSERT INTO group_admin (
-    group_name, position, roll_number
+const createClubAdmin = `-- name: CreateClubAdmin :exec
+INSERT INTO club_admin (
+    club_name, position, roll_number
 )
 VALUES (
-    (SELECT name from groups WHERE name = $1 or alias = $1),
+    (SELECT name from club WHERE name = $1 or alias = $1),
     $2,
     $3
 )
 `
 
-type CreateGroupAdminParams struct {
+type CreateClubAdminParams struct {
 	Name       string `json:"name"`
 	Position   string `json:"position"`
 	RollNumber string `json:"roll_number"`
 }
 
-func (q *Queries) CreateGroupAdmin(ctx context.Context, arg CreateGroupAdminParams) error {
-	_, err := q.db.ExecContext(ctx, createGroupAdmin, arg.Name, arg.Position, arg.RollNumber)
+func (q *Queries) CreateClubAdmin(ctx context.Context, arg CreateClubAdminParams) error {
+	_, err := q.db.ExecContext(ctx, createClubAdmin, arg.Name, arg.Position, arg.RollNumber)
 	return err
 }
 
-const createGroupFaculty = `-- name: CreateGroupFaculty :exec
-INSERT INTO group_faculty (
-    group_name, emp_id
+const createClubFaculty = `-- name: CreateClubFaculty :exec
+INSERT INTO club_faculty (
+    club_name, emp_id
 )
 VALUES (
-    (SELECT g.name from groups g WHERE g.name = $1 or g.alias = $1),
+    (SELECT c.name from club c WHERE c.name = $1 or c.alias = $1),
     $2
 )
 `
 
-type CreateGroupFacultyParams struct {
+type CreateClubFacultyParams struct {
 	Name  string `json:"name"`
 	EmpID int32  `json:"emp_id"`
 }
 
-func (q *Queries) CreateGroupFaculty(ctx context.Context, arg CreateGroupFacultyParams) error {
-	_, err := q.db.ExecContext(ctx, createGroupFaculty, arg.Name, arg.EmpID)
+func (q *Queries) CreateClubFaculty(ctx context.Context, arg CreateClubFacultyParams) error {
+	_, err := q.db.ExecContext(ctx, createClubFaculty, arg.Name, arg.EmpID)
 	return err
 }
 
-const createGroupMember = `-- name: CreateGroupMember :exec
-INSERT INTO group_member (
-    group_name, roll_number
+const createClubMember = `-- name: CreateClubMember :exec
+INSERT INTO club_member (
+    club_name, roll_number
 )
 VALUES (
-    (SELECT name from groups WHERE name = $1 or alias = $1),
+    (SELECT name from club WHERE name = $1 or alias = $1),
     $2
 )
 `
 
-type CreateGroupMemberParams struct {
+type CreateClubMemberParams struct {
 	Name       string `json:"name"`
 	RollNumber string `json:"roll_number"`
 }
 
-func (q *Queries) CreateGroupMember(ctx context.Context, arg CreateGroupMemberParams) error {
-	_, err := q.db.ExecContext(ctx, createGroupMember, arg.Name, arg.RollNumber)
+func (q *Queries) CreateClubMember(ctx context.Context, arg CreateClubMemberParams) error {
+	_, err := q.db.ExecContext(ctx, createClubMember, arg.Name, arg.RollNumber)
 	return err
 }
 
-const createGroupSocial = `-- name: CreateGroupSocial :exec
-INSERT INTO group_social (
+const createClubSocial = `-- name: CreateClubSocial :exec
+INSERT INTO club_social (
     name, platform_type, link
 )
 VALUES (
-    (SELECT g.name from groups g WHERE g.name = $1 or g.alias = $1),
+    (SELECT c.name from club c WHERE c.name = $1 or c.alias = $1),
     $2,
     $3
 )
 `
 
-type CreateGroupSocialParams struct {
+type CreateClubSocialParams struct {
 	Name         string `json:"name"`
 	PlatformType string `json:"platform_type"`
 	Link         string `json:"link"`
 }
 
-func (q *Queries) CreateGroupSocial(ctx context.Context, arg CreateGroupSocialParams) error {
-	_, err := q.db.ExecContext(ctx, createGroupSocial, arg.Name, arg.PlatformType, arg.Link)
+func (q *Queries) CreateClubSocial(ctx context.Context, arg CreateClubSocialParams) error {
+	_, err := q.db.ExecContext(ctx, createClubSocial, arg.Name, arg.PlatformType, arg.Link)
 	return err
 }
 
-const deleteGroupAdmin = `-- name: DeleteGroupAdmin :exec
-DELETE FROM group_admin
+const deleteClubAdmin = `-- name: DeleteClubAdmin :exec
+DELETE FROM club_admin
 WHERE
-    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
     AND roll_number = $2
 `
 
-type DeleteGroupAdminParams struct {
+type DeleteClubAdminParams struct {
 	Name       string `json:"name"`
 	RollNumber string `json:"roll_number"`
 }
 
-func (q *Queries) DeleteGroupAdmin(ctx context.Context, arg DeleteGroupAdminParams) error {
-	_, err := q.db.ExecContext(ctx, deleteGroupAdmin, arg.Name, arg.RollNumber)
+func (q *Queries) DeleteClubAdmin(ctx context.Context, arg DeleteClubAdminParams) error {
+	_, err := q.db.ExecContext(ctx, deleteClubAdmin, arg.Name, arg.RollNumber)
 	return err
 }
 
-const deleteGroupFaculty = `-- name: DeleteGroupFaculty :exec
-DELETE FROM group_faculty gf
+const deleteClubFaculty = `-- name: DeleteClubFaculty :exec
+DELETE FROM club_faculty cf
 WHERE
-    gf.group_name = (SELECT g.name FROM groups g WHERE g.name = $1 OR g.alias = $1)
-    AND gf.emp_id = $2
+    cf.club_name = (SELECT c.name FROM club c WHERE c.name = $1 OR c.alias = $1)
+    AND cf.emp_id = $2
 `
 
-type DeleteGroupFacultyParams struct {
+type DeleteClubFacultyParams struct {
 	Name  string `json:"name"`
 	EmpID int32  `json:"emp_id"`
 }
 
-func (q *Queries) DeleteGroupFaculty(ctx context.Context, arg DeleteGroupFacultyParams) error {
-	_, err := q.db.ExecContext(ctx, deleteGroupFaculty, arg.Name, arg.EmpID)
+func (q *Queries) DeleteClubFaculty(ctx context.Context, arg DeleteClubFacultyParams) error {
+	_, err := q.db.ExecContext(ctx, deleteClubFaculty, arg.Name, arg.EmpID)
 	return err
 }
 
-const deleteGroupMember = `-- name: DeleteGroupMember :exec
-DELETE FROM group_member
+const deleteClubMember = `-- name: DeleteClubMember :exec
+DELETE FROM club_member
 WHERE
-    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
     AND roll_number = $2
 `
 
-type DeleteGroupMemberParams struct {
+type DeleteClubMemberParams struct {
 	Name       string `json:"name"`
 	RollNumber string `json:"roll_number"`
 }
 
-func (q *Queries) DeleteGroupMember(ctx context.Context, arg DeleteGroupMemberParams) error {
-	_, err := q.db.ExecContext(ctx, deleteGroupMember, arg.Name, arg.RollNumber)
+func (q *Queries) DeleteClubMember(ctx context.Context, arg DeleteClubMemberParams) error {
+	_, err := q.db.ExecContext(ctx, deleteClubMember, arg.Name, arg.RollNumber)
 	return err
 }
 
-const deleteGroupSocial = `-- name: DeleteGroupSocial :exec
-DELETE FROM group_social
+const deleteClubSocial = `-- name: DeleteClubSocial :exec
+DELETE FROM club_social
 WHERE
-    group_name = (SELECT name FROM groups WHERE name = $1 OR alias = $1)
+    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
     AND platform_type = $2
 `
 
-type DeleteGroupSocialParams struct {
+type DeleteClubSocialParams struct {
 	Name         string `json:"name"`
 	PlatformType string `json:"platform_type"`
 }
 
-func (q *Queries) DeleteGroupSocial(ctx context.Context, arg DeleteGroupSocialParams) error {
-	_, err := q.db.ExecContext(ctx, deleteGroupSocial, arg.Name, arg.PlatformType)
+func (q *Queries) DeleteClubSocial(ctx context.Context, arg DeleteClubSocialParams) error {
+	_, err := q.db.ExecContext(ctx, deleteClubSocial, arg.Name, arg.PlatformType)
 	return err
 }
 
-const getGroup = `-- name: GetGroup :one
+const getClub = `-- name: GetClub :one
 SELECT
-    g.name, g.alias, g.branch, g.kind, g.description,
-    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN group_faculty AS gf ON f.emp_id = gf.emp_id WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
-    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN group_faculty AS gf ON f.emp_id = gf.emp_id WHERE g.name = gf.group_name) AS text[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT gs.platform_type FROM group_social AS gs WHERE g.name = gs.group_name) AS text[]) AS social_types,
-    CAST(ARRAY(SELECT gs.link FROM group_social AS gs WHERE g.name = gs.group_name) AS text[]) AS social_links,
-    CAST(ARRAY(SELECT ga.position FROM group_admin AS ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
-    CAST(ARRAY(SELECT ga.roll_number FROM group_admin AS ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
-    CAST(ARRAY(SELECT gm.roll_number FROM group_member AS gm WHERE g.name = gm.group_name) AS bigint[]) AS members
+    c.name, c.alias, c.branch, c.kind, c.description,
+    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_names,
+    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_mobiles,
+    CAST(ARRAY(SELECT cs.platform_type FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT cs.link FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_links,
+    CAST(ARRAY(SELECT ca.position FROM club_admin AS ca WHERE c.name = ca.club_name) AS text[]) AS admin_positions,
+    CAST(ARRAY(SELECT ca.roll_number FROM club_admin AS ca WHERE c.name = ca.club_name) AS bigint[]) AS admin_rolls,
+    CAST(ARRAY(SELECT cm.roll_number FROM club_member AS cm WHERE c.name = cm.club_name) AS bigint[]) AS members
 FROM
-    groups AS g
+    club AS c
 WHERE
-    g.name = $1
-    OR g.alias = $1
+    c.name = $1
+    OR c.alias = $1
 `
 
-type GetGroupRow struct {
+type GetClubRow struct {
 	Name           string         `json:"name"`
 	Alias          sql.NullString `json:"alias"`
 	Branch         []string       `json:"branch"`
@@ -196,9 +196,9 @@ type GetGroupRow struct {
 	Members        []int64        `json:"members"`
 }
 
-func (q *Queries) GetGroup(ctx context.Context, name string) (GetGroupRow, error) {
-	row := q.db.QueryRowContext(ctx, getGroup, name)
-	var i GetGroupRow
+func (q *Queries) GetClub(ctx context.Context, name string) (GetClubRow, error) {
+	row := q.db.QueryRowContext(ctx, getClub, name)
+	var i GetClubRow
 	err := row.Scan(
 		&i.Name,
 		&i.Alias,
@@ -216,18 +216,18 @@ func (q *Queries) GetGroup(ctx context.Context, name string) (GetGroupRow, error
 	return i, err
 }
 
-const getGroupAdmins = `-- name: GetGroupAdmins :many
+const getClubAdmins = `-- name: GetClubAdmins :many
 SELECT
     s.roll_number, s.section, s.name, s.gender, s.mobile, s.birth_date, s.email, s.batch, s.hostel_id, s.room_id, s.discord_id, s.is_verified, admin.position
 FROM
     student s
-    JOIN group_admin admin ON s.roll_number = admin.roll_number
+    JOIN club_admin admin ON s.roll_number = admin.roll_number
 WHERE
-    admin.group_name = $1
-    OR $1 = (SELECT alias FROM groups WHERE name = admin.group_name)
+    admin.club_name = $1
+    OR $1 = (SELECT alias FROM club WHERE name = admin.club_name)
 `
 
-type GetGroupAdminsRow struct {
+type GetClubAdminsRow struct {
 	RollNumber string         `json:"roll_number"`
 	Section    string         `json:"section"`
 	Name       string         `json:"name"`
@@ -243,15 +243,15 @@ type GetGroupAdminsRow struct {
 	Position   string         `json:"position"`
 }
 
-func (q *Queries) GetGroupAdmins(ctx context.Context, groupName string) ([]GetGroupAdminsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getGroupAdmins, groupName)
+func (q *Queries) GetClubAdmins(ctx context.Context, clubName string) ([]GetClubAdminsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClubAdmins, clubName)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetGroupAdminsRow
+	var items []GetClubAdminsRow
 	for rows.Next() {
-		var i GetGroupAdminsRow
+		var i GetClubAdminsRow
 		if err := rows.Scan(
 			&i.RollNumber,
 			&i.Section,
@@ -280,31 +280,31 @@ func (q *Queries) GetGroupAdmins(ctx context.Context, groupName string) ([]GetGr
 	return items, nil
 }
 
-const getGroupFaculty = `-- name: GetGroupFaculty :many
+const getClubFaculty = `-- name: GetClubFaculty :many
 SELECT
     f.name, f.mobile
 FROM
     faculty AS f
-    JOIN group_faculty AS gf ON f.emp_id = gf.emp_id
+    JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
 WHERE
-    gf.group_name = $1
-    OR $1 = (SELECT alias FROM groups WHERE name = gf.group_name)
+    cf.club_name = $1
+    OR $1 = (SELECT alias FROM club WHERE name = cf.club_name)
 `
 
-type GetGroupFacultyRow struct {
+type GetClubFacultyRow struct {
 	Name   string `json:"name"`
 	Mobile string `json:"mobile"`
 }
 
-func (q *Queries) GetGroupFaculty(ctx context.Context, groupName string) ([]GetGroupFacultyRow, error) {
-	rows, err := q.db.QueryContext(ctx, getGroupFaculty, groupName)
+func (q *Queries) GetClubFaculty(ctx context.Context, clubName string) ([]GetClubFacultyRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClubFaculty, clubName)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetGroupFacultyRow
+	var items []GetClubFacultyRow
 	for rows.Next() {
-		var i GetGroupFacultyRow
+		var i GetClubFacultyRow
 		if err := rows.Scan(&i.Name, &i.Mobile); err != nil {
 			return nil, err
 		}
@@ -319,19 +319,19 @@ func (q *Queries) GetGroupFaculty(ctx context.Context, groupName string) ([]GetG
 	return items, nil
 }
 
-const getGroupMembers = `-- name: GetGroupMembers :many
+const getClubMembers = `-- name: GetClubMembers :many
 SELECT
     s.roll_number, s.section, s.name, s.gender, s.mobile, s.birth_date, s.email, s.batch, s.hostel_id, s.room_id, s.discord_id, s.is_verified
 FROM
     student s
-    JOIN group_member member ON s.roll_number = member.roll_number
+    JOIN club_member member ON s.roll_number = member.roll_number
 WHERE
-    member.group_name = $1
-    OR $1 = (SELECT alias FROM groups WHERE name = member.group_name)
+    member.club_name = $1
+    OR $1 = (SELECT alias FROM club WHERE name = member.club_name)
 `
 
-func (q *Queries) GetGroupMembers(ctx context.Context, groupName string) ([]Student, error) {
-	rows, err := q.db.QueryContext(ctx, getGroupMembers, groupName)
+func (q *Queries) GetClubMembers(ctx context.Context, clubName string) ([]Student, error) {
+	rows, err := q.db.QueryContext(ctx, getClubMembers, clubName)
 	if err != nil {
 		return nil, err
 	}
@@ -366,31 +366,31 @@ func (q *Queries) GetGroupMembers(ctx context.Context, groupName string) ([]Stud
 	return items, nil
 }
 
-const getGroupSocials = `-- name: GetGroupSocials :many
+const getClubSocials = `-- name: GetClubSocials :many
 SELECT
     platform_type,
     link
 FROM
-    group_social
+    club_social
 WHERE
-    group_name = $1
-    OR $1 = (SELECT alias FROM groups WHERE name = group_name)
+    club_name = $1
+    OR $1 = (SELECT alias FROM club WHERE name = club_name)
 `
 
-type GetGroupSocialsRow struct {
+type GetClubSocialsRow struct {
 	PlatformType string `json:"platform_type"`
 	Link         string `json:"link"`
 }
 
-func (q *Queries) GetGroupSocials(ctx context.Context, groupName string) ([]GetGroupSocialsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getGroupSocials, groupName)
+func (q *Queries) GetClubSocials(ctx context.Context, clubName string) ([]GetClubSocialsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClubSocials, clubName)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetGroupSocialsRow
+	var items []GetClubSocialsRow
 	for rows.Next() {
-		var i GetGroupSocialsRow
+		var i GetClubSocialsRow
 		if err := rows.Scan(&i.PlatformType, &i.Link); err != nil {
 			return nil, err
 		}
@@ -405,21 +405,21 @@ func (q *Queries) GetGroupSocials(ctx context.Context, groupName string) ([]GetG
 	return items, nil
 }
 
-const getGroups = `-- name: GetGroups :many
+const getClubs = `-- name: GetClubs :many
 SELECT
-    g.name, g.alias, g.branch, g.kind, g.description,
-    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN group_faculty AS gf ON f.emp_id = gf.emp_id WHERE g.name = gf.group_name) AS text[]) AS faculty_names,
-    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN group_faculty AS gf ON f.emp_id = gf.emp_id WHERE g.name = gf.group_name) AS text[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT gs.platform_type FROM group_social AS gs WHERE g.name = gs.group_name) AS text[]) AS social_types,
-    CAST(ARRAY(SELECT gs.link FROM group_social AS gs WHERE g.name = gs.group_name) AS text[]) AS social_links,
-    CAST(ARRAY(SELECT ga.position FROM group_admin AS ga WHERE g.name = ga.group_name) AS text[]) AS admin_positions,
-    CAST(ARRAY(SELECT ga.roll_number FROM group_admin AS ga WHERE g.name = ga.group_name) AS bigint[]) AS admin_rolls,
-    CAST(ARRAY(SELECT gm.roll_number FROM group_member AS gm WHERE g.name = gm.group_name) AS bigint[]) AS members
+    c.name, c.alias, c.branch, c.kind, c.description,
+    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_names,
+    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_mobiles,
+    CAST(ARRAY(SELECT cs.platform_type FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_types,
+    CAST(ARRAY(SELECT cs.link FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_links,
+    CAST(ARRAY(SELECT ca.position FROM club_admin AS ca WHERE c.name = ca.club_name) AS text[]) AS admin_positions,
+    CAST(ARRAY(SELECT ca.roll_number FROM club_admin AS ca WHERE c.name = ca.club_name) AS bigint[]) AS admin_rolls,
+    CAST(ARRAY(SELECT cm.roll_number FROM club_member AS cm WHERE c.name = cm.club_name) AS bigint[]) AS members
 FROM
-    groups AS g
+    club AS c
 `
 
-type GetGroupsRow struct {
+type GetClubsRow struct {
 	Name           string         `json:"name"`
 	Alias          sql.NullString `json:"alias"`
 	Branch         []string       `json:"branch"`
@@ -434,15 +434,15 @@ type GetGroupsRow struct {
 	Members        []int64        `json:"members"`
 }
 
-func (q *Queries) GetGroups(ctx context.Context) ([]GetGroupsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getGroups)
+func (q *Queries) GetClubs(ctx context.Context) ([]GetClubsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClubs)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetGroupsRow
+	var items []GetClubsRow
 	for rows.Next() {
-		var i GetGroupsRow
+		var i GetClubsRow
 		if err := rows.Scan(
 			&i.Name,
 			&i.Alias,
@@ -470,24 +470,24 @@ func (q *Queries) GetGroups(ctx context.Context) ([]GetGroupsRow, error) {
 	return items, nil
 }
 
-const updateGroupSocials = `-- name: UpdateGroupSocials :exec
+const updateClubSocials = `-- name: UpdateClubSocials :exec
 UPDATE
-    group_social
+    club_social
 SET
     link = $2
 WHERE
     platform_type = $1
-    AND group_name = $3
-    OR $3 = (SELECT alias FROM groups WHERE name = group_name)
+    AND club_name = $3
+    OR $3 = (SELECT alias FROM club WHERE name = club_name)
 `
 
-type UpdateGroupSocialsParams struct {
+type UpdateClubSocialsParams struct {
 	PlatformType string `json:"platform_type"`
 	Link         string `json:"link"`
-	GroupName    string `json:"group_name"`
+	ClubName     string `json:"club_name"`
 }
 
-func (q *Queries) UpdateGroupSocials(ctx context.Context, arg UpdateGroupSocialsParams) error {
-	_, err := q.db.ExecContext(ctx, updateGroupSocials, arg.PlatformType, arg.Link, arg.GroupName)
+func (q *Queries) UpdateClubSocials(ctx context.Context, arg UpdateClubSocialsParams) error {
+	_, err := q.db.ExecContext(ctx, updateClubSocials, arg.PlatformType, arg.Link, arg.ClubName)
 	return err
 }
