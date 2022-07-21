@@ -9,7 +9,7 @@ import (
 )
 
 func Init(db *sql.DB) {
-	filenames := []string{"student", "faculty", "guild", "group", "course"}
+	filenames := []string{"student", "faculty", "guild", "club", "course"}
 	script := []string{}
 	for _, filename := range filenames {
 		// Read PostgreSQL script
