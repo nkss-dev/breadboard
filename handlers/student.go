@@ -11,6 +11,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func GetHostels(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		hostels, _ := queries.GetHostels(ctx)
+		RespondJSON(w, 200, hostels)
+	}
+}
+
 func GetStudent(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)

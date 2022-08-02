@@ -146,9 +146,9 @@ type Hod struct {
 }
 
 type Hostel struct {
-	ID         string         `json:"id"`
-	HostelName string         `json:"hostel_name"`
-	WardenName sql.NullString `json:"warden_name"`
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 type JoinRole struct {
@@ -174,4 +174,10 @@ type Student struct {
 	RoomID     sql.NullString `json:"room_id"`
 	DiscordID  sql.NullInt64  `json:"discord_id"`
 	IsVerified bool           `json:"is_verified"`
+}
+
+type Warden struct {
+	Name     string `json:"name"`
+	Mobile   string `json:"mobile"`
+	HostelID string `json:"hostel_id"`
 }

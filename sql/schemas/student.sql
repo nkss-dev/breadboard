@@ -1,7 +1,13 @@
 CREATE TABLE IF NOT EXISTS hostel (
-    id           VARCHAR(4)  PRIMARY KEY CHECK(id LIKE '%H_%'),
-    hostel_name  VARCHAR(40) UNIQUE NOT NULL,
-    warden_name  VARCHAR(50) UNIQUE
+    id     VARCHAR(4)  PRIMARY KEY CHECK(id LIKE '%H_%'),
+    name   VARCHAR(40) UNIQUE NOT NULL,
+    email  VARCHAR(40) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS warden (
+    name       VARCHAR(50) PRIMARY KEY,
+    mobile     VARCHAR(14) UNIQUE NOT NULL,
+    hostel_id  VARCHAR(4)  NOT NULL REFERENCES hostel(id)
 );
 
 CREATE TABLE IF NOT EXISTS student (

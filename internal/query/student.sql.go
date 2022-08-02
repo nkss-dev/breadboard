@@ -8,9 +8,52 @@ package query
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	"github.com/lib/pq"
 )
+
+const getHostels = `-- name: GetHostels :many
+SELECT hostel.id, hostel.name, hostel.email, JSON_AGG(JSON_BUILD_OBJECT('name', warden.name, 'mobile', warden.mobile)) AS "wardens"
+FROM hostel
+LEFT JOIN warden ON warden.hostel_id = hostel.id
+GROUP BY hostel.id
+`
+
+type GetHostelsRow struct {
+	ID      string          `json:"id"`
+	Name    string          `json:"name"`
+	Email   string          `json:"email"`
+	Wardens json.RawMessage `json:"wardens"`
+}
+
+func (q *Queries) GetHostels(ctx context.Context) ([]GetHostelsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getHostels)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetHostelsRow
+	for rows.Next() {
+		var i GetHostelsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.Wardens,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const getStudent = `-- name: GetStudent :one
 SELECT

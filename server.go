@@ -44,8 +44,10 @@ func (s *server) setRouters() {
 		w.Write([]byte("Welcome to NKSSS' API!"))
 	})
 
+	// Announcements
 	s.router.HandleFunc("/announcements", h.GetAnnouncements()).Methods("GET")
 
+	// Courses
 	s.router.HandleFunc("/courses", h.GetCourses(s.db)).Methods("GET")
 	s.router.HandleFunc("/courses/{code}", h.GetCourse(s.db)).Methods("GET")
 
@@ -70,7 +72,7 @@ func (s *server) setRouters() {
 	s.router.Handle("/clubs/{name}/socials/{type}", m.Authenticator(h.UpdateClubSocials(s.db))).Methods("PUT")
 	s.router.Handle("/clubs/{name}/socials/{type}", m.Authenticator(h.DeleteClubSocial(s.db))).Methods("DELETE")
 
+	// Students
+	s.router.Handle("/hostels", h.GetHostels(s.db)).Methods("GET")
 	s.router.Handle("/students/{roll}", m.Authenticator(h.GetStudent(s.db))).Methods("GET")
-	s.router.Handle("/students/{roll}/member", m.Authenticator(h.GetStudentClubMemberships(s.db))).Methods("GET")
-	s.router.Handle("/students/{roll}/admin", m.Authenticator(h.IsStudentAdmin(s.db))).Methods("GET")
 }
