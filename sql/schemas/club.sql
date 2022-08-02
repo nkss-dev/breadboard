@@ -46,14 +46,13 @@ CREATE OR REPLACE VIEW club_discord_user AS
         s.batch,
         s.discord_id,
         c.name, c.alias,
-        cd.guild_id, cs.link,
+        cd.guild_id, (SELECT link FROM club_social WHERE platform_type = 'discord') AS guild_invite,
         cd.freshman_role, cd.sophomore_role, cd.junior_role, cd.senior_role,
         cd.guest_role
     FROM
         club_member AS cm
     JOIN club AS c ON c.name = cm.club_name
     JOIN club_discord AS cd ON cd.club_name = cm.club_name
-    JOIN club_social AS cs ON cs.club_name = cm.club_name AND cs.platform_type = 'discord'
     JOIN student AS s ON s.roll_number = cm.roll_number
     WHERE
         s.discord_id IS NOT NULL;

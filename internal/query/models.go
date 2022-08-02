@@ -66,7 +66,7 @@ type ClubDiscordUser struct {
 	Name          string         `json:"name"`
 	Alias         sql.NullString `json:"alias"`
 	GuildID       int64          `json:"guild_id"`
-	Link          string         `json:"link"`
+	GuildInvite   string         `json:"guild_invite"`
 	FreshmanRole  int64          `json:"freshman_role"`
 	SophomoreRole int64          `json:"sophomore_role"`
 	JuniorRole    int64          `json:"junior_role"`
