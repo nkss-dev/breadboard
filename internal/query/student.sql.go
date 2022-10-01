@@ -9,8 +9,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-
-	"github.com/lib/pq"
 )
 
 const getHostels = `-- name: GetHostels :many
@@ -57,27 +55,36 @@ func (q *Queries) GetHostels(ctx context.Context) ([]GetHostelsRow, error) {
 
 const getStudent = `-- name: GetStudent :one
 SELECT
-    roll_number, section, name, gender, mobile, birth_date, email, batch, hostel_id, room_id, discord_id, is_verified,
-    CAST(ARRAY(SELECT cm.club_name FROM club_member AS cm WHERE cm.roll_number = $1) AS VARCHAR[]) AS clubs
+    roll_number, section, name, gender, mobile, birth_date, email, batch, hostel_id, room_id, discord_id, is_verified, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'name', cm.club_name, 'position',
+                COALESCE((SELECT position FROM club_admin WHERE roll_number = cm.roll_number), 'Member')
+            ))
+        FROM
+            club_member AS cm
+        WHERE
+            cm.roll_number = $1
+    ) AS clubs
 FROM
     student
 WHERE roll_number = $1
 `
 
 type GetStudentRow struct {
-	RollNumber string         `json:"roll_number"`
-	Section    string         `json:"section"`
-	Name       string         `json:"name"`
-	Gender     sql.NullString `json:"gender"`
-	Mobile     sql.NullString `json:"mobile"`
-	BirthDate  sql.NullTime   `json:"birth_date"`
-	Email      string         `json:"email"`
-	Batch      int16          `json:"batch"`
-	HostelID   sql.NullString `json:"hostel_id"`
-	RoomID     sql.NullString `json:"room_id"`
-	DiscordID  sql.NullInt64  `json:"discord_id"`
-	IsVerified bool           `json:"is_verified"`
-	Clubs      []string       `json:"clubs"`
+	RollNumber string          `json:"roll_number"`
+	Section    string          `json:"section"`
+	Name       string          `json:"name"`
+	Gender     sql.NullString  `json:"gender"`
+	Mobile     sql.NullString  `json:"mobile"`
+	BirthDate  sql.NullTime    `json:"birth_date"`
+	Email      string          `json:"email"`
+	Batch      int16           `json:"batch"`
+	HostelID   string          `json:"hostel_id"`
+	RoomID     sql.NullString  `json:"room_id"`
+	DiscordID  sql.NullInt64   `json:"discord_id"`
+	IsVerified bool            `json:"is_verified"`
+	Clubs      json.RawMessage `json:"clubs"`
 }
 
 func (q *Queries) GetStudent(ctx context.Context, rollNumber string) (GetStudentRow, error) {
@@ -96,7 +103,7 @@ func (q *Queries) GetStudent(ctx context.Context, rollNumber string) (GetStudent
 		&i.RoomID,
 		&i.DiscordID,
 		&i.IsVerified,
-		pq.Array(&i.Clubs),
+		&i.Clubs,
 	)
 	return i, err
 }

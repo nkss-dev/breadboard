@@ -170,7 +170,7 @@ type Student struct {
 	BirthDate  sql.NullTime   `json:"birth_date"`
 	Email      string         `json:"email"`
 	Batch      int16          `json:"batch"`
-	HostelID   sql.NullString `json:"hostel_id"`
+	HostelID   string         `json:"hostel_id"`
 	RoomID     sql.NullString `json:"room_id"`
 	DiscordID  sql.NullInt64  `json:"discord_id"`
 	IsVerified bool           `json:"is_verified"`
