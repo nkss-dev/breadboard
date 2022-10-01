@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS guild (
     id          BIGINT       PRIMARY KEY,
     name        VARCHAR(100) NOT NULL,
-    language    CHAR(2)      DEFAULT 'en' NOT NULL,
+    locale      VARCHAR(5)   DEFAULT 'en-GB' NOT NULL,
     bot_role    BIGINT       NOT NULL,
     mute_role   BIGINT,
     edit_log    BIGINT,
@@ -41,9 +41,9 @@ CREATE TABLE IF NOT EXISTS affiliated_guild (
 );
 
 CREATE TABLE IF NOT EXISTS event (
-    guild_id    BIGINT        REFERENCES guild(id),
-    event_type  VARCHAR(10)[] NOT NULL,
-    channel_id  BIGINT        NOT NULL,
-    message     VARCHAR,
+    guild_id     BIGINT        REFERENCES guild(id),
+    event_types  VARCHAR(10)[] NOT NULL,
+    channel_id   BIGINT        NOT NULL,
+    message      VARCHAR,
     PRIMARY KEY (guild_id, event_type)
 );
