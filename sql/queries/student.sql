@@ -1,3 +1,6 @@
+-- name: GetDiscordLinkStatus :one
+SELECT is_verified FROM student WHERE discord_id = $1;
+
 -- name: GetHostels :many
 SELECT hostel.*, JSON_AGG(JSON_BUILD_OBJECT('name', warden.name, 'mobile', warden.mobile)) AS "wardens"
 FROM hostel
@@ -20,3 +23,11 @@ SELECT
 FROM
     student
 WHERE roll_number = $1;
+
+-- name: GetStudentByDiscordID :one
+SELECT
+    *,
+    CAST(ARRAY(SELECT club.alias FROM club JOIN club_member AS cm ON cm.club_name = club.name WHERE cm.roll_number = s.roll_number) AS VARCHAR[]) AS clubs
+FROM
+    student AS s
+WHERE discord_id = $1;
