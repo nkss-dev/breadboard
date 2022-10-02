@@ -44,6 +44,9 @@ func (s *server) setRouters() {
 		w.Write([]byte("Welcome to NKSSS' API!"))
 	})
 
+	// Status
+	s.router.Handle("/status/student/discord", h.GetDiscordLinkStatus(s.db)).Methods("GET")
+
 	// Announcements
 	s.router.HandleFunc("/announcements", h.GetAnnouncements()).Methods("GET")
 
@@ -75,4 +78,7 @@ func (s *server) setRouters() {
 	// Students
 	s.router.Handle("/hostels", h.GetHostels(s.db)).Methods("GET")
 	s.router.Handle("/students/{roll}", m.Authenticator(h.GetStudent(s.db))).Methods("GET")
+
+	// Discord
+	s.router.Handle("/discord/users/{discord_id}", m.Authenticator(h.GetStudentByDiscordID(s.db))).Methods("GET")
 }
