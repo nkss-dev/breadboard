@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS book (
 
 CREATE TABLE IF NOT EXISTS course (
     code        VARCHAR(7)  PRIMARY KEY,  /* code can vary from 6-7 characters */
-    title       VARCHAR(32) NOT NULL,
+    title       VARCHAR(64) NOT NULL,
     prereq      VARCHAR(7)[],             /* prereq. of this course in course code format */ 
     kind        CHAR(3)     NOT NULL,
     objectives  VARCHAR[]   NOT NULL,
