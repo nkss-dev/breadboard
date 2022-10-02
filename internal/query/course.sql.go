@@ -7,16 +7,25 @@ package query
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/lib/pq"
 )
 
 const getCourse = `-- name: GetCourse :one
 SELECT
-    c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes,
-    CAST(ARRAY(SELECT bs.branch FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS branches,
-    CAST(ARRAY(SELECT bs.semester FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS semesters,
-    CAST(ARRAY(SELECT bs.credits FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS credits
+    c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'branch', bs.branch,
+                'semester', bs.semester,
+                'credits', bs.credits
+            ))
+        FROM
+            branch_specifics AS bs
+        WHERE
+            bs.code = c.code
+    ) AS specifics
 FROM
     course AS c
 WHERE
@@ -24,17 +33,15 @@ WHERE
 `
 
 type GetCourseRow struct {
-	Code       string   `json:"code"`
-	Title      string   `json:"title"`
-	Prereq     []string `json:"prereq"`
-	Kind       string   `json:"kind"`
-	Objectives []string `json:"objectives"`
-	Content    string   `json:"content"`
-	BookNames  []string `json:"book_names"`
-	Outcomes   []string `json:"outcomes"`
-	Branches   []string `json:"branches"`
-	Semesters  []string `json:"semesters"`
-	Credits    []string `json:"credits"`
+	Code       string          `json:"code"`
+	Title      string          `json:"title"`
+	Prereq     []string        `json:"prereq"`
+	Kind       string          `json:"kind"`
+	Objectives []string        `json:"objectives"`
+	Content    string          `json:"content"`
+	BookNames  []string        `json:"book_names"`
+	Outcomes   []string        `json:"outcomes"`
+	Specifics  json.RawMessage `json:"specifics"`
 }
 
 func (q *Queries) GetCourse(ctx context.Context, code string) (GetCourseRow, error) {
@@ -49,35 +56,39 @@ func (q *Queries) GetCourse(ctx context.Context, code string) (GetCourseRow, err
 		&i.Content,
 		pq.Array(&i.BookNames),
 		pq.Array(&i.Outcomes),
-		pq.Array(&i.Branches),
-		pq.Array(&i.Semesters),
-		pq.Array(&i.Credits),
+		&i.Specifics,
 	)
 	return i, err
 }
 
 const getCourses = `-- name: GetCourses :many
 SELECT
-    c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes,
-    CAST(ARRAY(SELECT bs.branch FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS branches,
-    CAST(ARRAY(SELECT bs.semester FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS semesters,
-    CAST(ARRAY(SELECT bs.credits FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS credits
+    c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'branch', bs.branch,
+                'semester', bs.semester,
+                'credits', bs.credits
+            ))
+        FROM
+            branch_specifics AS bs
+        WHERE
+            bs.code = c.code
+    ) AS specifics
 FROM
     course AS c
 `
 
 type GetCoursesRow struct {
-	Code       string   `json:"code"`
-	Title      string   `json:"title"`
-	Prereq     []string `json:"prereq"`
-	Kind       string   `json:"kind"`
-	Objectives []string `json:"objectives"`
-	Content    string   `json:"content"`
-	BookNames  []string `json:"book_names"`
-	Outcomes   []string `json:"outcomes"`
-	Branches   []string `json:"branches"`
-	Semesters  []string `json:"semesters"`
-	Credits    []string `json:"credits"`
+	Code       string          `json:"code"`
+	Title      string          `json:"title"`
+	Prereq     []string        `json:"prereq"`
+	Kind       string          `json:"kind"`
+	Objectives []string        `json:"objectives"`
+	Content    string          `json:"content"`
+	BookNames  []string        `json:"book_names"`
+	Outcomes   []string        `json:"outcomes"`
+	Specifics  json.RawMessage `json:"specifics"`
 }
 
 func (q *Queries) GetCourses(ctx context.Context) ([]GetCoursesRow, error) {
@@ -98,9 +109,7 @@ func (q *Queries) GetCourses(ctx context.Context) ([]GetCoursesRow, error) {
 			&i.Content,
 			pq.Array(&i.BookNames),
 			pq.Array(&i.Outcomes),
-			pq.Array(&i.Branches),
-			pq.Array(&i.Semesters),
-			pq.Array(&i.Credits),
+			&i.Specifics,
 		); err != nil {
 			return nil, err
 		}
@@ -117,10 +126,18 @@ func (q *Queries) GetCourses(ctx context.Context) ([]GetCoursesRow, error) {
 
 const getCoursesByBranch = `-- name: GetCoursesByBranch :many
 SELECT
-    c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes,
-    CAST(ARRAY(SELECT bs.branch FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS branches,
-    CAST(ARRAY(SELECT bs.semester FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS semesters,
-    CAST(ARRAY(SELECT bs.credits FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS credits
+    c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'branch', bs.branch,
+                'semester', bs.semester,
+                'credits', bs.credits
+            ))
+        FROM
+            branch_specifics AS bs
+        WHERE
+            bs.code = c.code
+    ) AS specifics
 FROM
     course AS c
 WHERE
@@ -128,17 +145,15 @@ WHERE
 `
 
 type GetCoursesByBranchRow struct {
-	Code       string   `json:"code"`
-	Title      string   `json:"title"`
-	Prereq     []string `json:"prereq"`
-	Kind       string   `json:"kind"`
-	Objectives []string `json:"objectives"`
-	Content    string   `json:"content"`
-	BookNames  []string `json:"book_names"`
-	Outcomes   []string `json:"outcomes"`
-	Branches   []string `json:"branches"`
-	Semesters  []string `json:"semesters"`
-	Credits    []string `json:"credits"`
+	Code       string          `json:"code"`
+	Title      string          `json:"title"`
+	Prereq     []string        `json:"prereq"`
+	Kind       string          `json:"kind"`
+	Objectives []string        `json:"objectives"`
+	Content    string          `json:"content"`
+	BookNames  []string        `json:"book_names"`
+	Outcomes   []string        `json:"outcomes"`
+	Specifics  json.RawMessage `json:"specifics"`
 }
 
 func (q *Queries) GetCoursesByBranch(ctx context.Context, branch string) ([]GetCoursesByBranchRow, error) {
@@ -159,9 +174,7 @@ func (q *Queries) GetCoursesByBranch(ctx context.Context, branch string) ([]GetC
 			&i.Content,
 			pq.Array(&i.BookNames),
 			pq.Array(&i.Outcomes),
-			pq.Array(&i.Branches),
-			pq.Array(&i.Semesters),
-			pq.Array(&i.Credits),
+			&i.Specifics,
 		); err != nil {
 			return nil, err
 		}
@@ -178,10 +191,18 @@ func (q *Queries) GetCoursesByBranch(ctx context.Context, branch string) ([]GetC
 
 const getCoursesByBranchAndSemester = `-- name: GetCoursesByBranchAndSemester :many
 SELECT
-    c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes,
-    CAST(ARRAY(SELECT bs.branch FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS branches,
-    CAST(ARRAY(SELECT bs.semester FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS semesters,
-    CAST(ARRAY(SELECT bs.credits FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS credits
+    c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'branch', bs.branch,
+                'semester', bs.semester,
+                'credits', bs.credits
+            ))
+        FROM
+            branch_specifics AS bs
+        WHERE
+            bs.code = c.code
+    ) AS specifics
 FROM
     course AS c
 WHERE
@@ -194,17 +215,15 @@ type GetCoursesByBranchAndSemesterParams struct {
 }
 
 type GetCoursesByBranchAndSemesterRow struct {
-	Code       string   `json:"code"`
-	Title      string   `json:"title"`
-	Prereq     []string `json:"prereq"`
-	Kind       string   `json:"kind"`
-	Objectives []string `json:"objectives"`
-	Content    string   `json:"content"`
-	BookNames  []string `json:"book_names"`
-	Outcomes   []string `json:"outcomes"`
-	Branches   []string `json:"branches"`
-	Semesters  []string `json:"semesters"`
-	Credits    []string `json:"credits"`
+	Code       string          `json:"code"`
+	Title      string          `json:"title"`
+	Prereq     []string        `json:"prereq"`
+	Kind       string          `json:"kind"`
+	Objectives []string        `json:"objectives"`
+	Content    string          `json:"content"`
+	BookNames  []string        `json:"book_names"`
+	Outcomes   []string        `json:"outcomes"`
+	Specifics  json.RawMessage `json:"specifics"`
 }
 
 func (q *Queries) GetCoursesByBranchAndSemester(ctx context.Context, arg GetCoursesByBranchAndSemesterParams) ([]GetCoursesByBranchAndSemesterRow, error) {
@@ -225,9 +244,7 @@ func (q *Queries) GetCoursesByBranchAndSemester(ctx context.Context, arg GetCour
 			&i.Content,
 			pq.Array(&i.BookNames),
 			pq.Array(&i.Outcomes),
-			pq.Array(&i.Branches),
-			pq.Array(&i.Semesters),
-			pq.Array(&i.Credits),
+			&i.Specifics,
 		); err != nil {
 			return nil, err
 		}
@@ -244,10 +261,18 @@ func (q *Queries) GetCoursesByBranchAndSemester(ctx context.Context, arg GetCour
 
 const getCoursesBySemester = `-- name: GetCoursesBySemester :many
 SELECT
-    c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes,
-    CAST(ARRAY(SELECT bs.branch FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS branches,
-    CAST(ARRAY(SELECT bs.semester FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS semesters,
-    CAST(ARRAY(SELECT bs.credits FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS credits
+    c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'branch', bs.branch,
+                'semester', bs.semester,
+                'credits', bs.credits
+            ))
+        FROM
+            branch_specifics AS bs
+        WHERE
+            bs.code = c.code
+    ) AS specifics
 FROM
     course AS c
 WHERE
@@ -255,17 +280,15 @@ WHERE
 `
 
 type GetCoursesBySemesterRow struct {
-	Code       string   `json:"code"`
-	Title      string   `json:"title"`
-	Prereq     []string `json:"prereq"`
-	Kind       string   `json:"kind"`
-	Objectives []string `json:"objectives"`
-	Content    string   `json:"content"`
-	BookNames  []string `json:"book_names"`
-	Outcomes   []string `json:"outcomes"`
-	Branches   []string `json:"branches"`
-	Semesters  []string `json:"semesters"`
-	Credits    []string `json:"credits"`
+	Code       string          `json:"code"`
+	Title      string          `json:"title"`
+	Prereq     []string        `json:"prereq"`
+	Kind       string          `json:"kind"`
+	Objectives []string        `json:"objectives"`
+	Content    string          `json:"content"`
+	BookNames  []string        `json:"book_names"`
+	Outcomes   []string        `json:"outcomes"`
+	Specifics  json.RawMessage `json:"specifics"`
 }
 
 func (q *Queries) GetCoursesBySemester(ctx context.Context, semester int16) ([]GetCoursesBySemesterRow, error) {
@@ -286,9 +309,7 @@ func (q *Queries) GetCoursesBySemester(ctx context.Context, semester int16) ([]G
 			&i.Content,
 			pq.Array(&i.BookNames),
 			pq.Array(&i.Outcomes),
-			pq.Array(&i.Branches),
-			pq.Array(&i.Semesters),
-			pq.Array(&i.Credits),
+			&i.Specifics,
 		); err != nil {
 			return nil, err
 		}

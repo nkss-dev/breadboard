@@ -1,9 +1,17 @@
 -- name: GetCourse :one
 SELECT
-    c.*,
-    CAST(ARRAY(SELECT bs.branch FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS branches,
-    CAST(ARRAY(SELECT bs.semester FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS semesters,
-    CAST(ARRAY(SELECT bs.credits FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS credits
+    c.*, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'branch', bs.branch,
+                'semester', bs.semester,
+                'credits', bs.credits
+            ))
+        FROM
+            branch_specifics AS bs
+        WHERE
+            bs.code = c.code
+    ) AS specifics
 FROM
     course AS c
 WHERE
@@ -11,19 +19,35 @@ WHERE
 
 -- name: GetCourses :many
 SELECT
-    c.*,
-    CAST(ARRAY(SELECT bs.branch FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS branches,
-    CAST(ARRAY(SELECT bs.semester FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS semesters,
-    CAST(ARRAY(SELECT bs.credits FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS credits
+    c.*, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'branch', bs.branch,
+                'semester', bs.semester,
+                'credits', bs.credits
+            ))
+        FROM
+            branch_specifics AS bs
+        WHERE
+            bs.code = c.code
+    ) AS specifics
 FROM
     course AS c;
 
 -- name: GetCoursesByBranch :many
 SELECT
-    c.*,
-    CAST(ARRAY(SELECT bs.branch FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS branches,
-    CAST(ARRAY(SELECT bs.semester FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS semesters,
-    CAST(ARRAY(SELECT bs.credits FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS credits
+    c.*, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'branch', bs.branch,
+                'semester', bs.semester,
+                'credits', bs.credits
+            ))
+        FROM
+            branch_specifics AS bs
+        WHERE
+            bs.code = c.code
+    ) AS specifics
 FROM
     course AS c
 WHERE
@@ -31,10 +55,18 @@ WHERE
 
 -- name: GetCoursesByBranchAndSemester :many
 SELECT
-    c.*,
-    CAST(ARRAY(SELECT bs.branch FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS branches,
-    CAST(ARRAY(SELECT bs.semester FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS semesters,
-    CAST(ARRAY(SELECT bs.credits FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS credits
+    c.*, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'branch', bs.branch,
+                'semester', bs.semester,
+                'credits', bs.credits
+            ))
+        FROM
+            branch_specifics AS bs
+        WHERE
+            bs.code = c.code
+    ) AS specifics
 FROM
     course AS c
 WHERE
@@ -42,10 +74,18 @@ WHERE
 
 -- name: GetCoursesBySemester :many
 SELECT
-    c.*,
-    CAST(ARRAY(SELECT bs.branch FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS branches,
-    CAST(ARRAY(SELECT bs.semester FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS semesters,
-    CAST(ARRAY(SELECT bs.credits FROM branch_specifics AS bs WHERE bs.code = c.code) AS VARCHAR[]) AS credits
+    c.*, (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT(
+                'branch', bs.branch,
+                'semester', bs.semester,
+                'credits', bs.credits
+            ))
+        FROM
+            branch_specifics AS bs
+        WHERE
+            bs.code = c.code
+    ) AS specifics
 FROM
     course AS c
 WHERE
