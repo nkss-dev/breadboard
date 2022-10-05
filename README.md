@@ -1,6 +1,6 @@
 # NKSS-backend
 
-A wrapper for [NKSSS](https://github.com/NIT-KKR-Student-Support-System "NIT-KKR Student Support System")'s database.
+A RESTful API wrapper for [NKSSS](https://github.com/NIT-KKR-Student-Support-System "NIT-KKR Student Support System")'s database.
 
 ## Running a local instance
 
