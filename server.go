@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 type server struct {
@@ -35,7 +36,13 @@ func NewServer() *server {
 
 // Run executes the app to listen on a given port and serve the routers.
 func (s *server) Run() {
-	log.Fatalln(http.ListenAndServe(":"+os.Getenv("PORT"), s.router))
+	c := cors.New(cors.Options{
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedOrigins:   []string{"http://localhost:3000"},
+	})
+	log.Fatalln(http.ListenAndServe(":"+os.Getenv("PORT"), c.Handler(s.router)))
 }
 
 // setRouters maps endpoints to the functions they must route to.
