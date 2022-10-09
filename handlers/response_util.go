@@ -18,7 +18,6 @@ func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/vnd.api+json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(status)
 	w.Write(response)
 }
@@ -28,7 +27,6 @@ func RespondError(w http.ResponseWriter, status int, detail string) {
 		"errors": {{Title: http.StatusText(status), Detail: detail}},
 	})
 	w.Header().Set("Content-Type", "application/vnd.api+json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(status)
 	w.Write(response)
 }
