@@ -35,37 +35,6 @@ type Admin struct {
 	RollNumber int64  `json:"roll_number"`
 }
 
-// ConstructClub translates the row returned by sqlc into
-// the struct Club for a better strucutre
-func ConstructClub(raw_group query.GetClubRow) (group Club) {
-	group.Name = raw_group.Name
-	group.Alias = raw_group.Alias.String
-	group.Branch = raw_group.Branch
-	group.Kind = raw_group.Kind
-	group.Description = raw_group.Description
-	group.Members = raw_group.Members
-
-	var faculties []Faculty
-	for i, name := range raw_group.FacultyNames {
-		faculties = append(faculties, Faculty{Name: name, Mobile: raw_group.FacultyMobiles[i]})
-	}
-	group.Faculty = faculties
-
-	socials := make(map[string]interface{})
-	for i, social_type := range raw_group.SocialTypes {
-		socials[social_type] = raw_group.SocialLinks[i]
-	}
-	group.Socials = socials
-
-	var admins []Admin
-	for i, position := range raw_group.AdminPositions {
-		admins = append(admins, Admin{Position: position, RollNumber: raw_group.AdminRolls[i]})
-	}
-	group.Admins = admins
-
-	return group
-}
-
 // CreateClubAdmin creates a new admin for a group.
 func CreateClubAdmin(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
@@ -329,7 +298,7 @@ func GetClub(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		group_row, err := queries.GetClub(ctx, vars["name"])
+		group, err := queries.GetClub(ctx, vars["name"])
 		if err == sql.ErrNoRows {
 			RespondError(w, 404, "No groups found!")
 			return
@@ -339,7 +308,6 @@ func GetClub(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		group := ConstructClub(group_row)
 		RespondJSON(w, 200, group)
 	}
 }
@@ -349,20 +317,14 @@ func GetClubs(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
-		group_rows, err := queries.GetClubs(ctx)
+		groups, err := queries.GetClubs(ctx)
 		if err == sql.ErrNoRows {
 			RespondError(w, 404, "No groups found!")
 			return
 		}
 		if err != nil {
 			RespondError(w, 500, "Something went wrong while fetching details from our database")
-			log.Println(err)
 			return
-		}
-
-		var groups []Club
-		for _, group_row := range group_rows {
-			groups = append(groups, ConstructClub(query.GetClubRow(group_row)))
 		}
 
 		RespondJSON(w, 200, groups)

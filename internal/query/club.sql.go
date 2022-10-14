@@ -8,6 +8,7 @@ package query
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	"github.com/lib/pq"
 )
@@ -166,34 +167,48 @@ func (q *Queries) DeleteClubSocial(ctx context.Context, arg DeleteClubSocialPara
 
 const getClub = `-- name: GetClub :one
 SELECT
-    c.name, c.alias, c.branch, c.kind, c.description,
-    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_names,
-    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT cs.platform_type FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_types,
-    CAST(ARRAY(SELECT cs.link FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_links,
-    CAST(ARRAY(SELECT ca.position FROM club_admin AS ca WHERE c.name = ca.club_name) AS text[]) AS admin_positions,
-    CAST(ARRAY(SELECT ca.roll_number FROM club_admin AS ca WHERE c.name = ca.club_name) AS bigint[]) AS admin_rolls,
-    CAST(ARRAY(SELECT cm.roll_number FROM club_member AS cm WHERE c.name = cm.club_name) AS bigint[]) AS members
+    name, alias, branch, kind, description,
+    (
+        SELECT
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile)), '[]')::JSON
+        FROM
+            faculty AS f
+        JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
+        WHERE
+            cf.club_name = club.name
+    ) AS faculties,
+    (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link))
+        FROM
+            club_social AS cs
+        WHERE
+            cs.club_name = club.name
+    ) AS socials,
+    (
+        SELECT
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('position', ca.position, 'roll', ca.roll_number)), '[]')::JSON
+        FROM
+            club_admin AS ca
+        WHERE
+            ca.club_name = club.name
+    ) AS admins
 FROM
-    club AS c
+    club
 WHERE
-    c.name = $1
-    OR c.alias = $1
+    club.name = $1
+    OR club.alias = $1
 `
 
 type GetClubRow struct {
-	Name           string         `json:"name"`
-	Alias          sql.NullString `json:"alias"`
-	Branch         []string       `json:"branch"`
-	Kind           string         `json:"kind"`
-	Description    string         `json:"description"`
-	FacultyNames   []string       `json:"faculty_names"`
-	FacultyMobiles []string       `json:"faculty_mobiles"`
-	SocialTypes    []string       `json:"social_types"`
-	SocialLinks    []string       `json:"social_links"`
-	AdminPositions []string       `json:"admin_positions"`
-	AdminRolls     []int64        `json:"admin_rolls"`
-	Members        []int64        `json:"members"`
+	Name        string          `json:"name"`
+	Alias       sql.NullString  `json:"alias"`
+	Branch      []string        `json:"branch"`
+	Kind        string          `json:"kind"`
+	Description string          `json:"description"`
+	Faculties   json.RawMessage `json:"faculties"`
+	Socials     json.RawMessage `json:"socials"`
+	Admins      json.RawMessage `json:"admins"`
 }
 
 func (q *Queries) GetClub(ctx context.Context, name string) (GetClubRow, error) {
@@ -205,13 +220,9 @@ func (q *Queries) GetClub(ctx context.Context, name string) (GetClubRow, error) 
 		pq.Array(&i.Branch),
 		&i.Kind,
 		&i.Description,
-		pq.Array(&i.FacultyNames),
-		pq.Array(&i.FacultyMobiles),
-		pq.Array(&i.SocialTypes),
-		pq.Array(&i.SocialLinks),
-		pq.Array(&i.AdminPositions),
-		pq.Array(&i.AdminRolls),
-		pq.Array(&i.Members),
+		&i.Faculties,
+		&i.Socials,
+		&i.Admins,
 	)
 	return i, err
 }
@@ -407,31 +418,47 @@ func (q *Queries) GetClubSocials(ctx context.Context, clubName string) ([]GetClu
 
 const getClubs = `-- name: GetClubs :many
 SELECT
-    c.name, c.alias, c.branch, c.kind, c.description,
-    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_names,
-    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT cs.platform_type FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_types,
-    CAST(ARRAY(SELECT cs.link FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_links,
-    CAST(ARRAY(SELECT ca.position FROM club_admin AS ca WHERE c.name = ca.club_name) AS text[]) AS admin_positions,
-    CAST(ARRAY(SELECT ca.roll_number FROM club_admin AS ca WHERE c.name = ca.club_name) AS bigint[]) AS admin_rolls,
-    CAST(ARRAY(SELECT cm.roll_number FROM club_member AS cm WHERE c.name = cm.club_name) AS bigint[]) AS members
+    name, alias, branch, kind, description,
+    (
+        SELECT
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile)), '[]')::JSON
+        FROM
+            faculty AS f
+        JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
+        WHERE
+            cf.club_name = club.name
+    ) AS faculties,
+    (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link))
+        FROM
+            club_social AS cs
+        WHERE
+            cs.club_name = club.name
+    ) AS socials,
+    (
+        SELECT
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('position', ca.position, 'roll', ca.roll_number)), '[]')::JSON
+        FROM
+            club_admin AS ca
+        WHERE
+            ca.club_name = club.name
+    ) AS admins
 FROM
-    club AS c
+    club
+ORDER BY
+    club.name
 `
 
 type GetClubsRow struct {
-	Name           string         `json:"name"`
-	Alias          sql.NullString `json:"alias"`
-	Branch         []string       `json:"branch"`
-	Kind           string         `json:"kind"`
-	Description    string         `json:"description"`
-	FacultyNames   []string       `json:"faculty_names"`
-	FacultyMobiles []string       `json:"faculty_mobiles"`
-	SocialTypes    []string       `json:"social_types"`
-	SocialLinks    []string       `json:"social_links"`
-	AdminPositions []string       `json:"admin_positions"`
-	AdminRolls     []int64        `json:"admin_rolls"`
-	Members        []int64        `json:"members"`
+	Name        string          `json:"name"`
+	Alias       sql.NullString  `json:"alias"`
+	Branch      []string        `json:"branch"`
+	Kind        string          `json:"kind"`
+	Description string          `json:"description"`
+	Faculties   json.RawMessage `json:"faculties"`
+	Socials     json.RawMessage `json:"socials"`
+	Admins      json.RawMessage `json:"admins"`
 }
 
 func (q *Queries) GetClubs(ctx context.Context) ([]GetClubsRow, error) {
@@ -449,13 +476,9 @@ func (q *Queries) GetClubs(ctx context.Context) ([]GetClubsRow, error) {
 			pq.Array(&i.Branch),
 			&i.Kind,
 			&i.Description,
-			pq.Array(&i.FacultyNames),
-			pq.Array(&i.FacultyMobiles),
-			pq.Array(&i.SocialTypes),
-			pq.Array(&i.SocialLinks),
-			pq.Array(&i.AdminPositions),
-			pq.Array(&i.AdminRolls),
-			pq.Array(&i.Members),
+			&i.Faculties,
+			&i.Socials,
+			&i.Admins,
 		); err != nil {
 			return nil, err
 		}

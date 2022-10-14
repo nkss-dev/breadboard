@@ -62,32 +62,70 @@ WHERE
 
 -- name: GetClub :one
 SELECT
-    c.*,
-    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_names,
-    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT cs.platform_type FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_types,
-    CAST(ARRAY(SELECT cs.link FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_links,
-    CAST(ARRAY(SELECT ca.position FROM club_admin AS ca WHERE c.name = ca.club_name) AS text[]) AS admin_positions,
-    CAST(ARRAY(SELECT ca.roll_number FROM club_admin AS ca WHERE c.name = ca.club_name) AS bigint[]) AS admin_rolls,
-    CAST(ARRAY(SELECT cm.roll_number FROM club_member AS cm WHERE c.name = cm.club_name) AS bigint[]) AS members
+    *,
+    (
+        SELECT
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile)), '[]')::JSON
+        FROM
+            faculty AS f
+        JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
+        WHERE
+            cf.club_name = club.name
+    ) AS faculties,
+    (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link))
+        FROM
+            club_social AS cs
+        WHERE
+            cs.club_name = club.name
+    ) AS socials,
+    (
+        SELECT
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('position', ca.position, 'roll', ca.roll_number)), '[]')::JSON
+        FROM
+            club_admin AS ca
+        WHERE
+            ca.club_name = club.name
+    ) AS admins
 FROM
-    club AS c
+    club
 WHERE
-    c.name = $1
-    OR c.alias = $1;
+    club.name = $1
+    OR club.alias = $1;
 
 -- name: GetClubs :many
 SELECT
-    c.*,
-    CAST(ARRAY(SELECT f.name FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_names,
-    CAST(ARRAY(SELECT f.mobile FROM faculty AS f JOIN club_faculty AS cf ON f.emp_id = cf.emp_id WHERE c.name = cf.club_name) AS text[]) AS faculty_mobiles,
-    CAST(ARRAY(SELECT cs.platform_type FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_types,
-    CAST(ARRAY(SELECT cs.link FROM club_social AS cs WHERE c.name = cs.club_name) AS text[]) AS social_links,
-    CAST(ARRAY(SELECT ca.position FROM club_admin AS ca WHERE c.name = ca.club_name) AS text[]) AS admin_positions,
-    CAST(ARRAY(SELECT ca.roll_number FROM club_admin AS ca WHERE c.name = ca.club_name) AS bigint[]) AS admin_rolls,
-    CAST(ARRAY(SELECT cm.roll_number FROM club_member AS cm WHERE c.name = cm.club_name) AS bigint[]) AS members
+    *,
+    (
+        SELECT
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile)), '[]')::JSON
+        FROM
+            faculty AS f
+        JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
+        WHERE
+            cf.club_name = club.name
+    ) AS faculties,
+    (
+        SELECT
+            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link))
+        FROM
+            club_social AS cs
+        WHERE
+            cs.club_name = club.name
+    ) AS socials,
+    (
+        SELECT
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('position', ca.position, 'roll', ca.roll_number)), '[]')::JSON
+        FROM
+            club_admin AS ca
+        WHERE
+            ca.club_name = club.name
+    ) AS admins
 FROM
-    club AS c;
+    club
+ORDER BY
+    club.name;
 
 -- name: GetClubAdmins :many
 SELECT
