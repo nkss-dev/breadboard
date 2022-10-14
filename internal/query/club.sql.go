@@ -170,7 +170,7 @@ SELECT
     name, alias, branch, kind, description,
     (
         SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile)), '[]')::JSON
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSON
         FROM
             faculty AS f
         JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
@@ -179,7 +179,7 @@ SELECT
     ) AS faculties,
     (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link))
+            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type)
         FROM
             club_social AS cs
         WHERE
@@ -421,7 +421,7 @@ SELECT
     name, alias, branch, kind, description,
     (
         SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile)), '[]')::JSON
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSON
         FROM
             faculty AS f
         JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
@@ -430,7 +430,7 @@ SELECT
     ) AS faculties,
     (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link))
+            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type)
         FROM
             club_social AS cs
         WHERE
