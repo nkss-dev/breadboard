@@ -82,9 +82,15 @@ SELECT
     ) AS socials,
     (
         SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('position', ca.position, 'roll', ca.roll_number)), '[]')::JSON
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+                'position', ca.position,
+                'name', s.name,
+                'phone', s.mobile,
+                'email', s.email
+            )), '[]')::JSON
         FROM
             club_admin AS ca
+        JOIN student AS s ON ca.roll_number = s.roll_number
         WHERE
             ca.club_name = club.name
     ) AS admins
@@ -116,9 +122,15 @@ SELECT
     ) AS socials,
     (
         SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('position', ca.position, 'roll', ca.roll_number)), '[]')::JSON
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+                'position', ca.position,
+                'name', s.name,
+                'phone', s.mobile,
+                'email', s.email
+            )), '[]')::JSON
         FROM
             club_admin AS ca
+        JOIN student AS s ON ca.roll_number = s.roll_number
         WHERE
             ca.club_name = club.name
     ) AS admins
