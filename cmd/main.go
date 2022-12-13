@@ -12,7 +12,7 @@ import (
 
 func init() {
 	// Load the environment variables from files (if any)
-	envs, _ := filepath.Glob(".env*")
+	envs, _ := filepath.Glob("*.env")
 	if len(envs) > 0 {
 		if err := godotenv.Load(envs...); err != nil {
 			log.Fatalln("Error while loading .env --> ", err)
