@@ -59,6 +59,7 @@ func (s *server) setRouters() {
 
 	// Courses
 	s.router.HandleFunc("/courses", h.GetCourses(s.db)).Methods("GET")
+	s.router.HandleFunc("/courses", m.Authenticator(h.CreateCourse(s.db))).Methods("POST")
 	s.router.HandleFunc("/courses/{code}", h.GetCourse(s.db)).Methods("GET")
 
 	// Clubs

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -11,6 +12,22 @@ import (
 	"github.com/gorilla/mux"
 	"golang.org/x/exp/slices"
 )
+
+func CreateCourse(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		var course query.CreateCourseParams
+		json.NewDecoder(r.Body).Decode(&course)
+
+		err := queries.CreateCourse(ctx, course)
+		if err == sql.ErrNoRows {
+			RespondError(w, 404, "Course not found in the database")
+			return
+		}
+		RespondJSON(w, 201, course)
+	}
+}
 
 // GetCourse is a handler for retrieving a single course via the `code` argument.
 func GetCourse(db *sql.DB) http.HandlerFunc {
@@ -59,7 +76,10 @@ func GetCourses(db *sql.DB) http.HandlerFunc {
 		// !TODO: Make code idempotent
 		if semester == 0 && branch == "" {
 			courses, err := queries.GetCourses(ctx)
-			if err == sql.ErrNoRows || len(courses) == 0 {
+			if err != nil && err != sql.ErrNoRows {
+				RespondError(w, 500, err.Error())
+				return
+			} else if err == sql.ErrNoRows || len(courses) == 0 {
 				RespondError(w, 404, "Courses not found in the database")
 				return
 			}

@@ -1,3 +1,18 @@
+-- name: CreateCourse :exec
+INSERT INTO course (
+    code,
+    title,
+    prereq,
+    kind,
+    objectives,
+    content,
+    book_names,
+    outcomes
+)
+VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8
+);
+
 -- name: GetCourse :one
 SELECT
     c.*, (

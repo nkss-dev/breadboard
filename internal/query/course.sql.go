@@ -12,6 +12,47 @@ import (
 	"github.com/lib/pq"
 )
 
+const createCourse = `-- name: CreateCourse :exec
+INSERT INTO course (
+    code,
+    title,
+    prereq,
+    kind,
+    objectives,
+    content,
+    book_names,
+    outcomes
+)
+VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8
+)
+`
+
+type CreateCourseParams struct {
+	Code       string   `json:"code"`
+	Title      string   `json:"title"`
+	Prereq     []string `json:"prereq"`
+	Kind       string   `json:"kind"`
+	Objectives []string `json:"objectives"`
+	Content    []string `json:"content"`
+	BookNames  []string `json:"book_names"`
+	Outcomes   []string `json:"outcomes"`
+}
+
+func (q *Queries) CreateCourse(ctx context.Context, arg CreateCourseParams) error {
+	_, err := q.db.ExecContext(ctx, createCourse,
+		arg.Code,
+		arg.Title,
+		pq.Array(arg.Prereq),
+		arg.Kind,
+		pq.Array(arg.Objectives),
+		pq.Array(arg.Content),
+		pq.Array(arg.BookNames),
+		pq.Array(arg.Outcomes),
+	)
+	return err
+}
+
 const getCourse = `-- name: GetCourse :one
 SELECT
     c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes, (
