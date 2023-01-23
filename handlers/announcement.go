@@ -118,73 +118,78 @@ func parseSpan(a *html.Node) (text string, link string) {
 	return text, link
 }
 
+//scrapes announcements from official NIT website
+func scrapeAnnouncements() (announcements []Announcement) {
+	// Request the HTML page
+    response, err := http.Get("https://nitkkr.ac.in/?page_id=621")
+	if err != nil {
+		//RespondError(w, 404, "The source web-page for scraping was not found")
+		return announcements
+	}
+	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		//RespondError(w, response.StatusCode, "")
+		return announcements
+	}
+
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(response.Body)
+	if err != nil {
+		//RespondError(w, 502, "Server could not parse the source HTML document")
+		return announcements
+	}
+
+	// Find the announcements
+	doc.Find("div.bg-white").Find("p").Each(func(i int, item *goquery.Selection) {
+		for _, node := range item.Nodes {
+			for n := node.FirstChild; n != nil; n = n.NextSibling {
+				if n.Type != html.ElementNode {
+					continue
+				}
+				if n.Data != "a" && n.Data != "span" {
+					continue
+				}
+
+				// Loop to previous siblings until a text node is found
+				var date, PrevSibling string
+				for prev := n.PrevSibling; prev != nil; prev = prev.PrevSibling {
+					if prev.Data == "span" {
+						PrevSibling = getTextInSpan(prev)
+					} else if prev.Type == html.TextNode {
+						PrevSibling = prev.Data
+					}
+
+					if PrevSibling != "" {
+						break
+					}
+				}
+				date = strings.TrimSpace(PrevSibling)
+
+				var title, link string
+				if n.Data == "a" {
+					title, link = parseA(n)
+				} else if n.Data == "span" {
+					title, link = parseSpan(n)
+				}
+
+				tags := fetchTags(title)
+				if title != "" && link != "" {
+					announcements = append(announcements, Announcement{Date: date, Title: title, Link: link, Tags: tags})
+				}
+			}
+		}
+	})
+
+	return announcements
+}
+
 // GetAnnouncements returns all the announcements from a specified URL.
 //
 // It is a handler function which scrapes the URL and retrieves elements
 // to convert them into the Announcement type.
 func GetAnnouncements() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Request the HTML page
-		response, err := http.Get("http://nitkkr.ac.in/sub_courses.php?id=80&id4=52")
-		if err != nil {
-			RespondError(w, 404, "The source web-page for scraping was not found")
-			return
-		}
-		defer response.Body.Close()
-		if response.StatusCode != 200 {
-			RespondError(w, response.StatusCode, "")
-			return
-		}
-
-		// Load the HTML document
-		doc, err := goquery.NewDocumentFromReader(response.Body)
-		if err != nil {
-			RespondError(w, 502, "Server could not parse the source HTML document")
-			return
-		}
-
-		// Find the announcements
-		var announcements []Announcement
-		doc.Find("div.bg-white").Find("p").Each(func(i int, item *goquery.Selection) {
-			for _, node := range item.Nodes {
-				for n := node.FirstChild; n != nil; n = n.NextSibling {
-					if n.Type != html.ElementNode {
-						continue
-					}
-					if n.Data != "a" && n.Data != "span" {
-						continue
-					}
-
-					// Loop to previous siblings until a text node is found
-					var date, PrevSibling string
-					for prev := n.PrevSibling; prev != nil; prev = prev.PrevSibling {
-						if prev.Data == "span" {
-							PrevSibling = getTextInSpan(prev)
-						} else if prev.Type == html.TextNode {
-							PrevSibling = prev.Data
-						}
-
-						if PrevSibling != "" {
-							break
-						}
-					}
-					date = strings.TrimSpace(PrevSibling)
-
-					var title, link string
-					if n.Data == "a" {
-						title, link = parseA(n)
-					} else if n.Data == "span" {
-						title, link = parseSpan(n)
-					}
-
-					tags := fetchTags(title)
-					if title != "" && link != "" {
-						announcements = append(announcements, Announcement{Date: date, Title: title, Link: link, Tags: tags})
-					}
-				}
-			}
-		})
-
-		RespondJSON(w, 200, announcements)
+	    var announcements = scrapeAnnouncements()
+        RespondJSON(w, 200, announcements)
 	}
 }
