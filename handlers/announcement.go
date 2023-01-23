@@ -140,7 +140,7 @@ func scrapeAnnouncements() (announcements []Announcement) {
 	}
 
 	// Find the announcements
-	doc.Find("div.bg-white").Find("p").Each(func(i int, item *goquery.Selection) {
+	doc.Find("div.comman-inner-section").Find("p").Each(func(i int, item *goquery.Selection) {
 		for _, node := range item.Nodes {
 			for n := node.FirstChild; n != nil; n = n.NextSibling {
 				if n.Type != html.ElementNode {
