@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
     "time"
+    "fmt"
 
 	"nkssbackend/internal/query"
 	"github.com/PuerkitoBio/goquery"
@@ -190,14 +191,28 @@ func scrapeAnnouncements() (announcements []Announcement) {
 	return announcements
 }
 
-func insertNewAnnouncement(db *sql.DB) {
+// insertNewAnnouncements saves announcements to database
+//
+// It first calls scrapeAnnouncements() and then saves the results after
+// some formatting
+func insertNewAnnouncements(db *sql.DB) {
     queries := query.New(db)
 	ctx := context.Background()
 	var announcements = scrapeAnnouncements()
     for i := range announcements {
-        announcements[i].Date =  strings.Replace(announcements[i].Date,".","-",-1)
-        announcements[i].Date = strings.Replace(announcements[i].Date,"/","-",-1)
-        t, _ := time.Parse("02-01-2006", announcements[i].Date)
+        announcements[i].Date =  strings.Replace(announcements[i].Date,".","-",3)
+        announcements[i].Date = strings.Replace(announcements[i].Date,"/","-",3)
+        announcements[i].Date = strings.Replace(announcements[i].Date,"__","",2)
+        if announcements[i].Date == "1-12-2021" {
+            announcements[i].Date = "01-12-2021"
+        }
+        if announcements[i].Date == "07-05-019" {
+            announcements[i].Date = "07-05-2019"
+        }
+        t, x := time.Parse("02-01-2006", announcements[i].Date)
+        if x != nil {
+            fmt.Println(x)
+        }
         params := query.InsertAcademicAnnouncementParams {
 			DateOfCreation: t,
 			TitleLink: announcements[i].Link,
@@ -210,13 +225,19 @@ func insertNewAnnouncement(db *sql.DB) {
     }
 }
 
-// GetAnnouncements returns all the announcements from a specified URL.
+// GetAnnouncements returns all the announcements stored in database
 //
-// It is a wrapper function around scrapeAnnouncements
+// It is a wrapper function around
 func GetAnnouncements(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-        insertNewAnnouncement(db)
-	    var announcements = scrapeAnnouncements()
+        //insertNewAnnouncements(db)
+        ctx := context.Background()
+        queries := query.New(db)
+        announcements, err := queries.GetAcademicAnnouncements(ctx)
+        if err == sql.ErrNoRows {
+            RespondError(w, 404, "Announcements not found in the database")
+            return
+        }
         RespondJSON(w, 200, announcements)
 	}
 }

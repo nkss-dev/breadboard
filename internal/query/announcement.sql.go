@@ -13,7 +13,7 @@ import (
 const getAcademicAnnouncements = `-- name: GetAcademicAnnouncements :exec
 SELECT date_of_creation, title, title_link, kind
 FROM academic_announcement
-ORDER BY date_of_creation
+ORDER BY date_of_creation DESC
 `
 
 type GetAcademicAnnouncementsRow struct {
@@ -23,9 +23,22 @@ type GetAcademicAnnouncementsRow struct {
 	Kind           string    `json:"kind"`
 }
 
-func (q *Queries) GetAcademicAnnouncements(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, getAcademicAnnouncements)
-	return err
+func (q *Queries) GetAcademicAnnouncements(ctx context.Context) ([]GetAcademicAnnouncementsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAcademicAnnouncements)
+    var items []GetAcademicAnnouncementsRow
+	for rows.Next() {
+		var i GetAcademicAnnouncementsRow
+		if err := rows.Scan(
+			&i.DateOfCreation,
+			&i.Title,
+			&i.TitleLink,
+			&i.Kind,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+    }
+	return items, err
 }
 
 const insertAcademicAnnouncement = `-- name: InsertAcademicAnnouncement :exec
