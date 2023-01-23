@@ -55,7 +55,7 @@ func (s *server) setRouters() {
 	s.router.Handle("/status/student/discord", h.GetDiscordLinkStatus(s.db)).Methods("GET")
 
 	// Announcements
-	s.router.HandleFunc("/announcements", h.GetAnnouncements()).Methods("GET")
+	s.router.HandleFunc("/announcements", h.GetAnnouncements(s.db)).Methods("GET")
 
 	// Courses
 	s.router.HandleFunc("/courses", h.GetCourses(s.db)).Methods("GET")

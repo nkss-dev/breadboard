@@ -5,7 +5,11 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"context"
+	"database/sql"
+    "time"
 
+	"nkssbackend/internal/query"
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
 )
@@ -118,7 +122,10 @@ func parseSpan(a *html.Node) (text string, link string) {
 	return text, link
 }
 
-//scrapes announcements from official NIT website
+// scrapeAnnouncements returns all the announcements from a specified URL.
+//
+// It scrapes the URL and retrieves elements
+// to convert them into the Announcement type.
 func scrapeAnnouncements() (announcements []Announcement) {
 	// Request the HTML page
     response, err := http.Get("https://nitkkr.ac.in/?page_id=621")
@@ -183,12 +190,33 @@ func scrapeAnnouncements() (announcements []Announcement) {
 	return announcements
 }
 
+func insertNewAnnouncement(db *sql.DB) {
+    queries := query.New(db)
+	ctx := context.Background()
+	var announcements = scrapeAnnouncements()
+    for i := range announcements {
+        strings.Replace(announcements[i].Date,".","-",-1)
+        strings.Replace(announcements[i].Date,"/","-",-1)
+        format := "2023-01-23"
+        realdate, _ := time.Parse(announcements[i].Date, format)
+        params := query.InsertAcademicAnnouncementParams {
+			DateOfCreation: realdate,
+			TitleLink: announcements[i].Link,
+			Title: announcements[i].Title,
+		}
+        err := queries.InsertAcademicAnnouncement(ctx, params)
+        if err != nil {
+			return
+		}
+    }
+}
+
 // GetAnnouncements returns all the announcements from a specified URL.
 //
-// It is a handler function which scrapes the URL and retrieves elements
-// to convert them into the Announcement type.
-func GetAnnouncements() http.HandlerFunc {
+// It is a wrapper function around scrapeAnnouncements
+func GetAnnouncements(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+        insertNewAnnouncement(db)
 	    var announcements = scrapeAnnouncements()
         RespondJSON(w, 200, announcements)
 	}
