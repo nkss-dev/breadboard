@@ -195,12 +195,11 @@ func insertNewAnnouncement(db *sql.DB) {
 	ctx := context.Background()
 	var announcements = scrapeAnnouncements()
     for i := range announcements {
-        strings.Replace(announcements[i].Date,".","-",-1)
-        strings.Replace(announcements[i].Date,"/","-",-1)
-        format := "2023-01-23"
-        realdate, _ := time.Parse(announcements[i].Date, format)
+        announcements[i].Date =  strings.Replace(announcements[i].Date,".","-",-1)
+        announcements[i].Date = strings.Replace(announcements[i].Date,"/","-",-1)
+        t, _ := time.Parse("02-01-2006", announcements[i].Date)
         params := query.InsertAcademicAnnouncementParams {
-			DateOfCreation: realdate,
+			DateOfCreation: t,
 			TitleLink: announcements[i].Link,
 			Title: announcements[i].Title,
 		}
