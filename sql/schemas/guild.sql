@@ -45,5 +45,5 @@ CREATE TABLE IF NOT EXISTS event (
     event_types  VARCHAR(10)[] NOT NULL,
     channel_id   BIGINT        NOT NULL,
     message      VARCHAR,
-    PRIMARY KEY (guild_id, event_type)
+    PRIMARY KEY (guild_id, event_types)
 );
