@@ -9,5 +9,6 @@ CREATE TABLE IF NOT EXISTS academic_announcement (
         'academic',
         'result',
         'exam'
-    ))
+    )),
+    PRIMARY KEY (date_of_creation, title)
 );
