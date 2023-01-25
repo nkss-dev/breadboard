@@ -132,19 +132,19 @@ func scrapeAnnouncements() (announcements []Announcement) {
     response, err := http.Get("https://nitkkr.ac.in/?page_id=621")
 	if err != nil {
 		//RespondError(w, 404, "The source web-page for scraping was not found")
-		return announcements
+		return
 	}
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
 		//RespondError(w, response.StatusCode, "")
-		return announcements
+		return
 	}
 
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(response.Body)
 	if err != nil {
 		//RespondError(w, 502, "Server could not parse the source HTML document")
-		return announcements
+		return
 	}
 
 	// Find the announcements
