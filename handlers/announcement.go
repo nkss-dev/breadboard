@@ -191,6 +191,23 @@ func scrapeAnnouncements() (announcements []Announcement) {
 	return announcements
 }
 
+//parseDate() attempts to convert obtained date to time.Time
+//
+//It also has some case-specific checks since scraped data doesn't have
+//uniformity
+func parseDate(date string) (parsedDate time.Time, err error) {
+    date = strings.Replace(date,".","-",3)
+    date = strings.Replace(date,"/","-",3)
+    date = strings.Replace(date,"__","",2)
+    if date == "1-12-2021" {
+        date = "01-12-2021"
+    }
+    if date == "07-05-019" {
+        date = "07-05-2019"
+    }
+    return time.Parse("02-01-2006", date)
+}
+
 // insertNewAnnouncements saves announcements to database
 //
 // It first calls scrapeAnnouncements() and then saves the results after
@@ -200,16 +217,7 @@ func insertNewAnnouncements(db *sql.DB) {
 	ctx := context.Background()
 	var announcements = scrapeAnnouncements()
     for i := range announcements {
-        announcements[i].Date =  strings.Replace(announcements[i].Date,".","-",3)
-        announcements[i].Date = strings.Replace(announcements[i].Date,"/","-",3)
-        announcements[i].Date = strings.Replace(announcements[i].Date,"__","",2)
-        if announcements[i].Date == "1-12-2021" {
-            announcements[i].Date = "01-12-2021"
-        }
-        if announcements[i].Date == "07-05-019" {
-            announcements[i].Date = "07-05-2019"
-        }
-        t, x := time.Parse("02-01-2006", announcements[i].Date)
+        t, x := parseDate(announcements[i].Date)
         if x != nil {
             fmt.Println(x)
         }
