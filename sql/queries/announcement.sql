@@ -7,7 +7,8 @@ VALUES (
     $2,
     $3,
     'academic'
-);
+) ON CONFLICT (date_of_creation, title)
+DO NOTHING;
 
 -- name: GetAcademicAnnouncements :exec
 SELECT date_of_creation, title, title_link, kind

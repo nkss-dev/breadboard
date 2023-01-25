@@ -37,7 +37,8 @@ VALUES (
     $2,
     $3,
     'academic'
-)
+) ON CONFLICT (date_of_creation, title)
+DO NOTHING
 `
 
 type InsertAcademicAnnouncementParams struct {
