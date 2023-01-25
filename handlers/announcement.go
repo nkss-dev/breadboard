@@ -233,6 +233,16 @@ func insertNewAnnouncements(db *sql.DB) {
     }
 }
 
+// FetchAnnouncements updates the records in the database
+//
+// This should be used sparingly
+func FetchAnnouncements(db *sql.DB) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        insertNewAnnouncements(db)
+        RespondJSON(w, 200, "Inserted records")
+    }
+}
+
 // GetAnnouncements returns all the announcements stored in database
 //
 // It is a wrapper function around
