@@ -1,4 +1,4 @@
--- name: InsertAcademicAnnouncement :exec
+-- name: CreateAcademicAnnouncement :exec
 INSERT INTO academic_announcement (
     date_of_creation, title, title_link, kind
 )
@@ -10,7 +10,7 @@ VALUES (
 ) ON CONFLICT (date_of_creation, title)
 DO NOTHING;
 
--- name: GetAcademicAnnouncements :exec
+-- name: GetAcademicAnnouncements :many
 SELECT date_of_creation, title, title_link, kind
 FROM academic_announcement
 ORDER BY date_of_creation DESC;
