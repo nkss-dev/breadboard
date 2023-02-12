@@ -213,34 +213,21 @@ func parseDate(date string) (parsedDate time.Time, err error) {
 //
 // It first calls scrapeAnnouncements() and then saves the results after
 // some formatting
-func insertNewAnnouncements(db *sql.DB) {
+func fetchAnnouncements(db *sql.DB) {
 	queries := query.New(db)
 	ctx := context.Background()
 	var announcements = scrapeAnnouncements()
-	for i := range announcements {
-		t, x := parseDate(announcements[i].Date)
-		if x != nil {
-			fmt.Println(x)
-		}
-		params := query.InsertAcademicAnnouncementParams{
-			DateOfCreation: t,
-			TitleLink:      announcements[i].Link,
-			Title:          announcements[i].Title,
-		}
-		err := queries.InsertAcademicAnnouncement(ctx, params)
+	for _, announcement := range announcements {
+		date, err := parseDate(announcement.Date)
 		if err != nil {
-			return
+			fmt.Println(date, err)
 		}
-	}
-}
-
-// FetchAnnouncements updates the records in the database
-//
-// This should be used sparingly
-func FetchAnnouncements(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		insertNewAnnouncements(db)
-		RespondJSON(w, 200, "Inserted records")
+		params := query.CreateAcademicAnnouncementParams{
+			DateOfCreation: date,
+			TitleLink:      announcement.Link,
+			Title:          announcement.Title,
+		}
+		queries.CreateAcademicAnnouncement(ctx, params)
 	}
 }
 
@@ -248,11 +235,14 @@ func FetchAnnouncements(db *sql.DB) http.HandlerFunc {
 //
 // It is a wrapper function around
 func GetAnnouncements(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
-		//insertNewAnnouncements(db)
-		ctx := context.Background()
-		queries := query.New(db)
 		announcements, err := queries.GetAcademicAnnouncements(ctx)
+		if err == sql.ErrNoRows || len(announcements) == 0 {
+			fetchAnnouncements(db)
+		}
+		announcements, err = queries.GetAcademicAnnouncements(ctx)
 		if err == sql.ErrNoRows {
 			RespondError(w, 404, "Announcements not found in the database")
 			return
