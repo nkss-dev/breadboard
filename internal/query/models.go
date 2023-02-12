@@ -6,6 +6,7 @@ package query
 
 import (
 	"database/sql"
+	"encoding/json"
 )
 
 type AffiliatedGuild struct {
@@ -37,17 +38,28 @@ type BranchSpecific struct {
 }
 
 type Club struct {
-	Name        string         `json:"name"`
-	Alias       sql.NullString `json:"alias"`
-	Branch      []string       `json:"branch"`
-	Kind        string         `json:"kind"`
-	Description string         `json:"description"`
+	Name             string         `json:"name"`
+	Alias            sql.NullString `json:"alias"`
+	Category         string         `json:"category"`
+	ShortDescription string         `json:"short_description"`
+	IsOfficial       bool           `json:"is_official"`
 }
 
 type ClubAdmin struct {
 	ClubName   string `json:"club_name"`
 	Position   string `json:"position"`
 	RollNumber string `json:"roll_number"`
+}
+
+type ClubDetail struct {
+	ClubName     string   `json:"club_name"`
+	AboutUs      string   `json:"about_us"`
+	WhyUs        string   `json:"why_us"`
+	RoleOfSoph   string   `json:"role_of_soph"`
+	RoleOfJunior string   `json:"role_of_junior"`
+	RoleOfSenior string   `json:"role_of_senior"`
+	Admins       []string `json:"admins"`
+	Branch       []string `json:"branch"`
 }
 
 type ClubDiscord struct {
@@ -162,18 +174,19 @@ type ModRole struct {
 }
 
 type Student struct {
-	RollNumber string         `json:"roll_number"`
-	Section    string         `json:"section"`
-	Name       string         `json:"name"`
-	Gender     sql.NullString `json:"gender"`
-	Mobile     sql.NullString `json:"mobile"`
-	BirthDate  sql.NullTime   `json:"birth_date"`
-	Email      string         `json:"email"`
-	Batch      int16          `json:"batch"`
-	HostelID   string         `json:"hostel_id"`
-	RoomID     sql.NullString `json:"room_id"`
-	DiscordID  sql.NullInt64  `json:"discord_id"`
-	IsVerified bool           `json:"is_verified"`
+	RollNumber string          `json:"roll_number"`
+	Section    string          `json:"section"`
+	Name       string          `json:"name"`
+	Gender     sql.NullString  `json:"gender"`
+	Mobile     sql.NullString  `json:"mobile"`
+	BirthDate  sql.NullTime    `json:"birth_date"`
+	Email      string          `json:"email"`
+	Batch      int16           `json:"batch"`
+	HostelID   string          `json:"hostel_id"`
+	RoomID     sql.NullString  `json:"room_id"`
+	DiscordID  sql.NullInt64   `json:"discord_id"`
+	Clubs      json.RawMessage `json:"clubs"`
+	IsVerified bool            `json:"is_verified"`
 }
 
 type Warden struct {
