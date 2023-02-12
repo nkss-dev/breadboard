@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS course (
     prereq      VARCHAR(7)[],             /* prereq. of this course in course code format */ 
     kind        CHAR(3)     NOT NULL,
     objectives  VARCHAR[]   NOT NULL,
-    content     VARCHAR     NOT NULL,
+    content     VARCHAR[]   NOT NULL,
     book_names  VARCHAR[]   NOT NULL,
     outcomes    VARCHAR[]   NOT NULL
 );
