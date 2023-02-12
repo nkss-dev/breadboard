@@ -22,5 +22,6 @@ CREATE TABLE IF NOT EXISTS student (
     hostel_id    VARCHAR(4)  NOT NULL REFERENCES hostel(id),
     room_id      VARCHAR(6)  CHECK(room_id LIKE '%_-___'),
     discord_id   BIGINT      UNIQUE,
+    clubs        JSONB       NOT NULL,
     is_verified  BOOLEAN     DEFAULT false NOT NULL
 );
