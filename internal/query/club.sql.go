@@ -195,6 +195,7 @@ SELECT
     club.name,
     COALESCE(club.alias, club.name) AS short_name,
     club.category,
+    club.email,
     club.is_official,
     COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
         'about_us', cd.about_us,
@@ -248,6 +249,7 @@ type GetClubRow struct {
 	Name        string          `json:"name"`
 	ShortName   string          `json:"short_name"`
 	Category    string          `json:"category"`
+	Email       string          `json:"email"`
 	IsOfficial  bool            `json:"is_official"`
 	Description json.RawMessage `json:"description"`
 	Admins      json.RawMessage `json:"admins"`
@@ -263,6 +265,7 @@ func (q *Queries) GetClub(ctx context.Context, name string) (GetClubRow, error) 
 		&i.Name,
 		&i.ShortName,
 		&i.Category,
+		&i.Email,
 		&i.IsOfficial,
 		&i.Description,
 		&i.Admins,
@@ -405,6 +408,7 @@ SELECT
     COALESCE(alias, name) AS short_name,
     category,
     short_description,
+    email,
     is_official
 FROM
     club
@@ -417,6 +421,7 @@ type GetClubsRow struct {
 	ShortName        string `json:"short_name"`
 	Category         string `json:"category"`
 	ShortDescription string `json:"short_description"`
+	Email            string `json:"email"`
 	IsOfficial       bool   `json:"is_official"`
 }
 
@@ -434,6 +439,7 @@ func (q *Queries) GetClubs(ctx context.Context) ([]GetClubsRow, error) {
 			&i.ShortName,
 			&i.Category,
 			&i.ShortDescription,
+			&i.Email,
 			&i.IsOfficial,
 		); err != nil {
 			return nil, err

@@ -41,6 +41,7 @@ type Club struct {
 	Name             string         `json:"name"`
 	Alias            sql.NullString `json:"alias"`
 	Category         string         `json:"category"`
+	Email            string         `json:"email"`
 	ShortDescription string         `json:"short_description"`
 	IsOfficial       bool           `json:"is_official"`
 }

@@ -84,6 +84,7 @@ SELECT
     club.name,
     COALESCE(club.alias, club.name) AS short_name,
     club.category,
+    club.email,
     club.is_official,
     COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
         'about_us', cd.about_us,
@@ -138,6 +139,7 @@ SELECT
     COALESCE(alias, name) AS short_name,
     category,
     short_description,
+    email,
     is_official
 FROM
     club

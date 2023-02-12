@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS club (
     name               VARCHAR(64)   PRIMARY KEY,
     alias              VARCHAR(16)   UNIQUE,
     category           VARCHAR(32)   NOT NULL,
+    email              VARCHAR(64)   NOT NULL,
     short_description  VARCHAR(256)  NOT NULL,
     is_official        BOOLEAN       DEFAULT false NOT NULL,
     CONSTRAINT ck_category CHECK (
