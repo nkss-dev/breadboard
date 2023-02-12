@@ -203,7 +203,7 @@ SELECT
         'role_of_sophomore', cd.role_of_soph,
         'role_of_junior', cd.role_of_junior,
         'role_of_senior', cd.role_of_senior
-    )), '{}'::JSON) AS description,
+    )), '{}')::JSON AS description,
     (
         SELECT
             COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
@@ -211,7 +211,7 @@ SELECT
                 'name', s.name,
                 'phone', s.mobile,
                 'email', s.email
-            ) ORDER BY s.name), '[]'::JSON)
+            ) ORDER BY s.name), '[]')::JSON
         FROM
             student AS s
         WHERE
@@ -220,7 +220,7 @@ SELECT
     cd.branch,
     (
         SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]'::JSON)
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSON
         FROM
             faculty AS f
         JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
@@ -251,10 +251,10 @@ type GetClubRow struct {
 	Category         string          `json:"category"`
 	ShortDescription string          `json:"short_description"`
 	IsOfficial       bool            `json:"is_official"`
-	Description      interface{}     `json:"description"`
-	Admins           interface{}     `json:"admins"`
+	Description      json.RawMessage `json:"description"`
+	Admins           json.RawMessage `json:"admins"`
 	Branch           []string        `json:"branch"`
-	Faculties        interface{}     `json:"faculties"`
+	Faculties        json.RawMessage `json:"faculties"`
 	Socials          json.RawMessage `json:"socials"`
 }
 
