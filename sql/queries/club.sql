@@ -102,38 +102,12 @@ WHERE
 
 -- name: GetClubs :many
 SELECT
-    *,
-    (
-        SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSON
-        FROM
-            faculty AS f
-        JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
-        WHERE
-            cf.club_name = club.name
-    ) AS faculties,
-    (
-        SELECT
-            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type)
-        FROM
-            club_social AS cs
-        WHERE
-            cs.club_name = club.name
-    ) AS socials,
-    (
-        SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
-                'position', ca.position,
-                'name', s.name,
-                'phone', s.mobile,
-                'email', s.email
-            )), '[]')::JSON
-        FROM
-            club_admin AS ca
-        JOIN student AS s ON ca.roll_number = s.roll_number
-        WHERE
-            ca.club_name = club.name
-    ) AS admins
+    name,
+    COALESCE(alias, name) AS short_name,
+    category,
+    short_description,
+    email,
+    is_official
 FROM
     club
 ORDER BY

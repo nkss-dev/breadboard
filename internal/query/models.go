@@ -33,15 +33,16 @@ type BranchSpecific struct {
 	Code     string  `json:"code"`
 	Branch   string  `json:"branch"`
 	Semester int16   `json:"semester"`
-	Credits  []int32 `json:"credits"`
+	Credits  []int16 `json:"credits"`
 }
 
 type Club struct {
-	Name        string         `json:"name"`
-	Alias       sql.NullString `json:"alias"`
-	Branch      []string       `json:"branch"`
-	Kind        string         `json:"kind"`
-	Description string         `json:"description"`
+	Name             string         `json:"name"`
+	Alias            sql.NullString `json:"alias"`
+	Category         string         `json:"category"`
+	Email            string         `json:"email"`
+	ShortDescription string         `json:"short_description"`
+	IsOfficial       bool           `json:"is_official"`
 }
 
 type ClubAdmin struct {
