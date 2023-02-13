@@ -1,4 +1,4 @@
-module nkssbackend
+module breadboard
 
 go 1.18
 

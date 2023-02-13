@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"nkssbackend/internal/query"
+	"breadboard/internal/query"
 
 	"github.com/gorilla/mux"
 )

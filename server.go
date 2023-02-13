@@ -1,4 +1,4 @@
-package nkssbackend
+package breadboard
 
 import (
 	"database/sql"
@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	h "nkssbackend/handlers"
-	"nkssbackend/internal/database"
-	m "nkssbackend/middleware"
+	h "breadboard/handlers"
+	"breadboard/internal/database"
+	m "breadboard/middleware"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
