@@ -82,25 +82,25 @@ WHERE
 -- name: GetClub :one
 SELECT
     club.name,
-    COALESCE(club.alias, club.name) AS short_name,
+    COALESCE(club.alias, '') AS alias,
     club.category,
     club.email,
     club.is_official,
-    COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+    COALESCE(JSONB_BUILD_OBJECT(
         'about_us', cd.about_us,
         'why_us', cd.why_us,
         'role_of_sophomore', cd.role_of_soph,
         'role_of_junior', cd.role_of_junior,
         'role_of_senior', cd.role_of_senior
-    )), '{}')::JSON AS description,
+    ), '{}')::JSONB AS description,
     (
         SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
+            COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT(
                 'position', s.clubs -> club.name,
                 'name', s.name,
                 'phone', s.mobile,
                 'email', s.email
-            ) ORDER BY s.name), '[]')::JSON
+            ) ORDER BY s.name), '[]')::JSONB
         FROM
             student AS s
         WHERE
@@ -109,7 +109,7 @@ SELECT
     cd.branch,
     (
         SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSON
+            COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSONB
         FROM
             faculty AS f
         JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
@@ -118,7 +118,7 @@ SELECT
     ) AS faculties,
     (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type)
+            COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type), '[]')::JSONB
         FROM
             club_social AS cs
         WHERE
