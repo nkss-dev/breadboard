@@ -23,4 +23,5 @@ CREATE TABLE IF NOT EXISTS student (
     room_id      VARCHAR(6)  CHECK(room_id LIKE '%_-___'),
     discord_id   BIGINT      UNIQUE,
     is_verified  BOOLEAN     DEFAULT false NOT NULL
+    clubs        JSONB       DEFAULT '{}'::JSONB NOT NULL,
 );

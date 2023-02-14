@@ -66,7 +66,6 @@ func (s *server) setRouters() {
 	s.router.Handle("/clubs", h.GetClubs(s.db)).Methods("GET")
 	s.router.Handle("/clubs/{name}", h.GetClub(s.db)).Methods("GET")
 
-	s.router.Handle("/clubs/{name}/admins", h.GetClubAdmins(s.db)).Methods("GET")
 	s.router.Handle("/clubs/{name}/admins", m.Authenticator(h.CreateClubAdmin(s.db))).Methods("POST")
 	s.router.Handle("/clubs/{name}/admins/{roll}", m.Authenticator(h.DeleteClubAdmin(s.db))).Methods("DELETE")
 

@@ -16,6 +16,17 @@ CREATE TABLE IF NOT EXISTS club_admin (
     roll_number  CHAR(8)     PRIMARY KEY REFERENCES student(roll_number)
 );
 
+CREATE TABLE IF NOT EXISTS club_details (
+    club_name       VARCHAR(64)  PRIMARY KEY REFERENCES club(name),
+    about_us        VARCHAR      NOT NULL,
+    why_us          VARCHAR      NOT NULL,
+    role_of_soph    VARCHAR      NOT NULL,
+    role_of_junior  VARCHAR      NOT NULL,
+    role_of_senior  VARCHAR      NOT NULL,
+    admins          CHAR(8)[]    NOT NULL,
+    branch          CHAR(2)[]    NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS club_discord (
     club_name       VARCHAR(64) PRIMARY KEY REFERENCES club(name),
     guild_id        BIGINT      UNIQUE NOT NULL REFERENCES guild(id),

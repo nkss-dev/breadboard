@@ -304,6 +304,7 @@ func GetClub(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		if err != nil {
+			fmt.Println(err)
 			RespondError(w, 500, "Something went wrong while fetching details from our database")
 			return
 		}
@@ -328,22 +329,6 @@ func GetClubs(db *sql.DB) http.HandlerFunc {
 		}
 
 		RespondJSON(w, 200, groups)
-	}
-}
-
-// GetClubAdmins retrieves the admins of a group from the database.
-func GetClubAdmins(db *sql.DB) http.HandlerFunc {
-	ctx := context.Background()
-	queries := query.New(db)
-	return func(w http.ResponseWriter, r *http.Request) {
-		group_name := mux.Vars(r)["name"]
-		admins, err := queries.GetClubAdmins(ctx, group_name)
-		if err != nil {
-			RespondError(w, 500, "Something went wrong while fetching details from our database")
-			return
-		}
-
-		RespondJSON(w, 200, admins)
 	}
 }
 
