@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS club_admin (
 );
 
 CREATE TABLE IF NOT EXISTS club_details (
-    club_name       VARCHAR(64)  NOT NULL REFERENCES club(name),
+    club_name       VARCHAR(64)  PRIMARY KEY REFERENCES club(name),
     about_us        VARCHAR      NOT NULL,
     why_us          VARCHAR      NOT NULL,
     role_of_soph    VARCHAR      NOT NULL,
