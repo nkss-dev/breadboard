@@ -57,11 +57,11 @@ const getCourse = `-- name: GetCourse :one
 SELECT
     c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes, (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT(
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
                 'branch', bs.branch,
                 'semester', bs.semester,
                 'credits', bs.credits
-            ))
+            )), '[]')::JSON
         FROM
             branch_specifics AS bs
         WHERE
@@ -106,11 +106,11 @@ const getCourses = `-- name: GetCourses :many
 SELECT
     c.code, c.title, c.prereq, c.kind, c.objectives, c.content, c.book_names, c.outcomes, (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT(
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
                 'branch', bs.branch,
                 'semester', bs.semester,
                 'credits', bs.credits
-            ))
+            )), '[]')::JSON
         FROM
             branch_specifics AS bs
         WHERE

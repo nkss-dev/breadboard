@@ -17,11 +17,11 @@ VALUES (
 SELECT
     c.*, (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT(
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
                 'branch', bs.branch,
                 'semester', bs.semester,
                 'credits', bs.credits
-            ))
+            )), '[]')::JSON
         FROM
             branch_specifics AS bs
         WHERE
@@ -36,11 +36,11 @@ WHERE
 SELECT
     c.*, (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT(
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
                 'branch', bs.branch,
                 'semester', bs.semester,
                 'credits', bs.credits
-            ))
+            )), '[]')::JSON
         FROM
             branch_specifics AS bs
         WHERE
