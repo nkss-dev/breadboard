@@ -215,6 +215,8 @@ func parseDate(date string) (parsedDate time.Time, err error) {
 //
 // It first calls scrapeAnnouncements() and then saves the results after
 // some formatting
+//
+// TODO: try to use sqlc or some other intermediate to store this query
 func fetchAnnouncements(db *sql.DB) {
     query := queryskeletion
 	ctx := context.Background()
