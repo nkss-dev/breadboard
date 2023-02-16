@@ -50,3 +50,15 @@ func (q *Queries) GetAcademicAnnouncements(ctx context.Context) ([]GetAcademicAn
 	}
 	return items, nil
 }
+
+const getLatestAnnouncementDate = `-- name: GetLatestAnnouncementDate :one
+SELECT MAX(DISTINCT date_of_creation)
+FROM academic_announcement
+`
+
+func (q *Queries) GetLatestAnnouncementDate(ctx context.Context) (interface{}, error) {
+	row := q.db.QueryRowContext(ctx, getLatestAnnouncementDate)
+	var max interface{}
+	err := row.Scan(&max)
+	return max, err
+}
