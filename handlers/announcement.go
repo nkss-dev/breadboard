@@ -259,7 +259,7 @@ func GetAnnouncements(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		announcements, err := queries.GetAcademicAnnouncements(ctx)
 		if err == sql.ErrNoRows || len(announcements) == 0 {
-			fetchAnnouncements(db)
+			FetchAnnouncements(db)
 		}
 		announcements, err = queries.GetAcademicAnnouncements(ctx)
 		if err == sql.ErrNoRows {
