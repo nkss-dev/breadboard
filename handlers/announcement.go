@@ -218,23 +218,33 @@ func parseDate(date string) (parsedDate time.Time, err error) {
 //
 // TODO: try to use sqlc or some other intermediate to store this query
 func fetchAnnouncements(db *sql.DB) {
-    query := queryskeletion
+    insertquery := queryskeletion
 	ctx := context.Background()
+	queries := query.New(db)
+    latestdateinterface, nodatepresent := queries.GetLatestAnnouncementDate(ctx)
+    if nodatepresent != nil {
+        fmt.Println(nodatepresent)
+    }
+    latestdate, _ := parseDate(fmt.Sprint(latestdateinterface))
 	var announcements = scrapeAnnouncements()
 	for _, announcement := range announcements {
 		date, err := parseDate(announcement.Date)
 		if err != nil {
 			fmt.Println(date, err)
 		} else {
+            if nodatepresent != nil && date.Before(latestdate) {
+                fmt.Println("Detected old announcement, assuming it is in database already")
+                break;
+            }
             addition := "('" + date.Format("2006-01-02") + "', '" + announcement.Title + "', '" + announcement.Link + "', " + " 'academic') "
-            if query != queryskeletion {
+            if insertquery != queryskeletion {
                 addition = ", " + addition
             }
-            query += addition
+            insertquery += addition
         }
     }
-    query += " ON CONFLICT (date_of_creation, title) DO NOTHING"
-    _, inserterr := db.ExecContext(ctx, query)
+    insertquery += " ON CONFLICT (date_of_creation, title) DO NOTHING"
+    _, inserterr := db.ExecContext(ctx, insertquery)
     if inserterr != nil {
         fmt.Println(inserterr)
     }
