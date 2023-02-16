@@ -23,6 +23,8 @@ type Announcement struct {
 	Tags  []string `json:"tags"`
 }
 
+const queryskeletion = "INSERT INTO academic_announcement (date_of_creation, title, title_link, kind) VALUES "
+
 // fetchTags returns the tags for a given string.
 //
 // It retrieves tags from the given string using RegEx for each
@@ -214,21 +216,26 @@ func parseDate(date string) (parsedDate time.Time, err error) {
 // It first calls scrapeAnnouncements() and then saves the results after
 // some formatting
 func fetchAnnouncements(db *sql.DB) {
-	queries := query.New(db)
+    query := queryskeletion
 	ctx := context.Background()
 	var announcements = scrapeAnnouncements()
 	for _, announcement := range announcements {
 		date, err := parseDate(announcement.Date)
 		if err != nil {
 			fmt.Println(date, err)
-		}
-		params := query.CreateAcademicAnnouncementParams{
-			DateOfCreation: date,
-			TitleLink:      announcement.Link,
-			Title:          announcement.Title,
-		}
-		queries.CreateAcademicAnnouncement(ctx, params)
-	}
+		} else {
+            addition := "('" + date.Format("2006-01-02") + "', '" + announcement.Title + "', '" + announcement.Link + "', " + " 'academic') "
+            if query != queryskeletion {
+                addition = ", " + addition
+            }
+            query += addition
+        }
+    }
+    query += " ON CONFLICT (date_of_creation, title) DO NOTHING"
+    _, inserterr := db.ExecContext(ctx, query)
+    if inserterr != nil {
+        fmt.Println(inserterr)
+    }
 }
 
 // GetAnnouncements returns all the announcements stored in database
