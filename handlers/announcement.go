@@ -217,7 +217,7 @@ func parseDate(date string) (parsedDate time.Time, err error) {
 // some formatting
 //
 // TODO: try to use sqlc or some other intermediate to store this query
-func fetchAnnouncements(db *sql.DB) {
+func FetchAnnouncements(db *sql.DB) {
     insertquery := queryskeletion
 	ctx := context.Background()
 	queries := query.New(db)
