@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+    "time"
 
 	h "breadboard/handlers"
 	"breadboard/internal/database"
@@ -13,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
+    "github.com/go-co-op/gocron"
 )
 
 type server struct {
@@ -28,6 +30,13 @@ func NewServer() *server {
 	}
 	// !TODO: Make separate interface to initialise database
 	database.Init(db)
+
+    // Initialize cronjob for fetching announcements
+    cron := gocron.NewScheduler(time.UTC)
+    cron.Every(1).Day().At("00:00").Do(func() {
+       h.FetchAnnouncements(db)
+    })
+    cron.StartAsync()
 
 	s := server{db: db, router: mux.NewRouter().StrictSlash(true)}
 	s.setRouters()
@@ -55,7 +64,7 @@ func (s *server) setRouters() {
 	s.router.Handle("/status/student/discord", h.GetDiscordLinkStatus(s.db)).Methods("GET")
 
 	// Announcements
-	s.router.HandleFunc("/announcements", h.GetAnnouncements()).Methods("GET")
+	s.router.HandleFunc("/announcements", h.GetAnnouncements(s.db)).Methods("GET")
 
 	// Courses
 	s.router.HandleFunc("/courses", h.GetCourses(s.db)).Methods("GET")

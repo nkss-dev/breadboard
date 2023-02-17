@@ -1,10 +1,16 @@
 package handlers
 
 import (
+	"context"
+	"database/sql"
+	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
+
+	"breadboard/internal/query"
 
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
@@ -16,6 +22,8 @@ type Announcement struct {
 	Link  string   `json:"link"`
 	Tags  []string `json:"tags"`
 }
+
+const query_prefix = "INSERT INTO academic_announcement (date_of_creation, title, title_link, kind) VALUES "
 
 // fetchTags returns the tags for a given string.
 //
@@ -118,73 +126,154 @@ func parseSpan(a *html.Node) (text string, link string) {
 	return text, link
 }
 
-// GetAnnouncements returns all the announcements from a specified URL.
+// scrapeAnnouncements returns all the announcements from a specified URL.
 //
-// It is a handler function which scrapes the URL and retrieves elements
+// It scrapes the URL and retrieves elements
 // to convert them into the Announcement type.
-func GetAnnouncements() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Request the HTML page
-		response, err := http.Get("http://nitkkr.ac.in/sub_courses.php?id=80&id4=52")
-		if err != nil {
-			RespondError(w, 404, "The source web-page for scraping was not found")
-			return
-		}
-		defer response.Body.Close()
-		if response.StatusCode != 200 {
-			RespondError(w, response.StatusCode, "")
-			return
-		}
+func scrapeAnnouncements() (announcements []Announcement) {
+	// Request the HTML page
+	response, err := http.Get("https://nitkkr.ac.in/?page_id=621")
+	if err != nil {
+		//RespondError(w, 404, "The source web-page for scraping was not found")
+		return
+	}
+	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		//RespondError(w, response.StatusCode, "")
+		return
+	}
 
-		// Load the HTML document
-		doc, err := goquery.NewDocumentFromReader(response.Body)
-		if err != nil {
-			RespondError(w, 502, "Server could not parse the source HTML document")
-			return
-		}
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(response.Body)
+	if err != nil {
+		//RespondError(w, 502, "Server could not parse the source HTML document")
+		return
+	}
 
-		// Find the announcements
-		var announcements []Announcement
-		doc.Find("div.bg-white").Find("p").Each(func(i int, item *goquery.Selection) {
-			for _, node := range item.Nodes {
-				for n := node.FirstChild; n != nil; n = n.NextSibling {
-					if n.Type != html.ElementNode {
-						continue
-					}
-					if n.Data != "a" && n.Data != "span" {
-						continue
-					}
+	// Find the announcements
+	doc.Find("div.comman-inner-section").Find("p").Each(func(i int, item *goquery.Selection) {
+		for _, node := range item.Nodes {
+			for n := node.FirstChild; n != nil; n = n.NextSibling {
+				if n.Type != html.ElementNode {
+					continue
+				}
+				if n.Data != "a" && n.Data != "span" {
+					continue
+				}
 
-					// Loop to previous siblings until a text node is found
-					var date, PrevSibling string
-					for prev := n.PrevSibling; prev != nil; prev = prev.PrevSibling {
-						if prev.Data == "span" {
-							PrevSibling = getTextInSpan(prev)
-						} else if prev.Type == html.TextNode {
-							PrevSibling = prev.Data
-						}
-
-						if PrevSibling != "" {
-							break
-						}
-					}
-					date = strings.TrimSpace(PrevSibling)
-
-					var title, link string
-					if n.Data == "a" {
-						title, link = parseA(n)
-					} else if n.Data == "span" {
-						title, link = parseSpan(n)
+				// Loop to previous siblings until a text node is found
+				var date, PrevSibling string
+				for prev := n.PrevSibling; prev != nil; prev = prev.PrevSibling {
+					if prev.Data == "span" {
+						PrevSibling = getTextInSpan(prev)
+					} else if prev.Type == html.TextNode {
+						PrevSibling = prev.Data
 					}
 
-					tags := fetchTags(title)
-					if title != "" && link != "" {
-						announcements = append(announcements, Announcement{Date: date, Title: title, Link: link, Tags: tags})
+					if PrevSibling != "" {
+						break
 					}
 				}
-			}
-		})
+				date = strings.TrimSpace(PrevSibling)
 
+				var title, link string
+				if n.Data == "a" {
+					title, link = parseA(n)
+				} else if n.Data == "span" {
+					title, link = parseSpan(n)
+				}
+
+				tags := fetchTags(title)
+				if title != "" && link != "" {
+					announcements = append(announcements, Announcement{Date: date, Title: title, Link: link, Tags: tags})
+				}
+			}
+		}
+	})
+
+	return announcements
+}
+
+// parseDate() attempts to convert obtained date to time.Time
+//
+// It also has some case-specific checks since scraped data doesn't have
+// uniformity
+func parseDate(date string) (parsedDate time.Time, err error) {
+	date = strings.Replace(date, ".", "-", 3)
+	date = strings.Replace(date, "/", "-", 3)
+	date = strings.Replace(date, "__", "", 2)
+	if date == "1-12-2021" {
+		date = "01-12-2021"
+	}
+	if date == "07-05-019" {
+		date = "07-05-2019"
+	}
+	return time.Parse("02-01-2006", date)
+}
+
+// insertNewAnnouncements saves announcements to database
+//
+// It first calls scrapeAnnouncements() and then saves the results after
+// some formatting
+//
+// TODO: try to use sqlc or some other intermediate to store this query
+func FetchAnnouncements(db *sql.DB) {
+	insert_query := query_prefix
+	ctx := context.Background()
+	queries := query.New(db)
+	latest_date, err := queries.GetLatestAnnouncementDate(ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var announcements = scrapeAnnouncements()
+	for _, announcement := range announcements {
+		date, err := parseDate(announcement.Date)
+		if err != nil {
+			fmt.Println(date, err)
+		} else {
+			if err != nil && date.Before(latest_date) {
+				fmt.Println("Detected old announcement, assuming it is in database already")
+				break
+			}
+			addition := strings.Join([]string{
+				"('",
+				date.Format("2006-01-02"),
+				"', '",
+				announcement.Title,
+				"', '",
+				announcement.Link,
+				"',  'academic') ",
+			}, "")
+			if insert_query != query_prefix {
+				addition = ", " + addition
+			}
+			insert_query += addition
+		}
+	}
+	insert_query += " ON CONFLICT (date_of_creation, title) DO NOTHING"
+	_, inserterr := db.ExecContext(ctx, insert_query)
+	if inserterr != nil {
+		fmt.Println(inserterr)
+	}
+}
+
+// GetAnnouncements returns all the announcements stored in database
+//
+// It is a wrapper function around
+func GetAnnouncements(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+	return func(w http.ResponseWriter, r *http.Request) {
+		announcements, err := queries.GetAcademicAnnouncements(ctx)
+		if err == sql.ErrNoRows || len(announcements) == 0 {
+			FetchAnnouncements(db)
+		}
+		announcements, err = queries.GetAcademicAnnouncements(ctx)
+		if err == sql.ErrNoRows {
+			RespondError(w, 404, "Announcements not found in the database")
+			return
+		}
 		RespondJSON(w, 200, announcements)
 	}
 }

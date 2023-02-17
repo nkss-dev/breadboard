@@ -10,6 +10,7 @@ packages:
       - "./sql/schemas/guild.sql"
       - "./sql/schemas/club.sql"
       - "./sql/schemas/course.sql"
+      - "./sql/schemas/announcement.sql"
     engine: "postgresql"
     emit_json_tags: true
     json_tags_case_style: "snake"
