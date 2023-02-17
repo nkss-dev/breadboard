@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"nkssbackend/internal/query"
+	"breadboard/internal/query"
 
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
@@ -23,7 +23,7 @@ type Announcement struct {
 	Tags  []string `json:"tags"`
 }
 
-const queryskeletion = "INSERT INTO academic_announcement (date_of_creation, title, title_link, kind) VALUES "
+const query_prefix = "INSERT INTO academic_announcement (date_of_creation, title, title_link, kind) VALUES "
 
 // fetchTags returns the tags for a given string.
 //
@@ -218,36 +218,44 @@ func parseDate(date string) (parsedDate time.Time, err error) {
 //
 // TODO: try to use sqlc or some other intermediate to store this query
 func FetchAnnouncements(db *sql.DB) {
-    insertquery := queryskeletion
+	insert_query := query_prefix
 	ctx := context.Background()
 	queries := query.New(db)
-    latestdateinterface, nodatepresent := queries.GetLatestAnnouncementDate(ctx)
-    if nodatepresent != nil {
-        fmt.Println(nodatepresent)
-    }
-    latestdate, _ := parseDate(fmt.Sprint(latestdateinterface))
+	latest_date, err := queries.GetLatestAnnouncementDate(ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	var announcements = scrapeAnnouncements()
 	for _, announcement := range announcements {
 		date, err := parseDate(announcement.Date)
 		if err != nil {
 			fmt.Println(date, err)
 		} else {
-            if nodatepresent != nil && date.Before(latestdate) {
-                fmt.Println("Detected old announcement, assuming it is in database already")
-                break;
-            }
-            addition := "('" + date.Format("2006-01-02") + "', '" + announcement.Title + "', '" + announcement.Link + "', " + " 'academic') "
-            if insertquery != queryskeletion {
-                addition = ", " + addition
-            }
-            insertquery += addition
-        }
-    }
-    insertquery += " ON CONFLICT (date_of_creation, title) DO NOTHING"
-    _, inserterr := db.ExecContext(ctx, insertquery)
-    if inserterr != nil {
-        fmt.Println(inserterr)
-    }
+			if err != nil && date.Before(latest_date) {
+				fmt.Println("Detected old announcement, assuming it is in database already")
+				break
+			}
+			addition := strings.Join([]string{
+				"('",
+				date.Format("2006-01-02"),
+				"', '",
+				announcement.Title,
+				"', '",
+				announcement.Link,
+				"',  'academic') ",
+			}, "")
+			if insert_query != query_prefix {
+				addition = ", " + addition
+			}
+			insert_query += addition
+		}
+	}
+	insert_query += " ON CONFLICT (date_of_creation, title) DO NOTHING"
+	_, inserterr := db.ExecContext(ctx, insert_query)
+	if inserterr != nil {
+		fmt.Println(inserterr)
+	}
 }
 
 // GetAnnouncements returns all the announcements stored in database
