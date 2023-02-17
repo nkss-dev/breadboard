@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"nkssbackend"
+	"breadboard"
 
 	"github.com/joho/godotenv"
 )
@@ -29,7 +29,7 @@ func init() {
 }
 
 func main() {
-	server := nkssbackend.NewServer()
+	server := breadboard.NewServer()
 	log.Println("Listening at http://localhost:" + os.Getenv("PORT"))
 	server.Run()
 }

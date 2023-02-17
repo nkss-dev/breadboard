@@ -1,12 +1,19 @@
 -- name: CreateClubAdmin :exec
-INSERT INTO club_admin (
-    club_name, position, roll_number
+WITH new_admin AS (
+    UPDATE
+        club
+    SET
+        admins = ARRAY_APPEND(admins, @roll_number)
+    WHERE
+        club.name = @name
+        OR alias = @name
 )
-VALUES (
-    (SELECT name from club WHERE name = $1 or alias = $1),
-    $2,
-    $3
-);
+UPDATE
+    student
+SET
+    clubs = clubs || CONCAT('{', @name::VARCHAR, ':', @position::VARCHAR, '}')::JSONB
+WHERE
+    roll_number = @roll_number::CHAR(8);
 
 -- name: CreateClubFaculty :exec
 INSERT INTO club_faculty (
@@ -37,13 +44,25 @@ VALUES (
 );
 
 -- name: DeleteClubAdmin :exec
-DELETE FROM club_admin
+WITH delete_admin AS (
+    UPDATE
+        student
+    SET
+        clubs = clubs - $1
+    WHERE
+        roll_number = $2
+)
+UPDATE
+    club
+SET
+    admins = ARRAY_REMOVE(admins, @roll_number::CHAR(8))
 WHERE
-    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
-    AND roll_number = $2;
+    club.name = @name
+    OR club.alias = @name;
 
 -- name: DeleteClubFaculty :exec
-DELETE FROM club_faculty cf
+DELETE FROM
+    club_faculty AS cf
 WHERE
     cf.club_name = (SELECT c.name FROM club c WHERE c.name = $1 OR c.alias = $1)
     AND cf.emp_id = $2;
@@ -62,10 +81,35 @@ WHERE
 
 -- name: GetClub :one
 SELECT
-    *,
+    club.name,
+    COALESCE(club.alias, '') AS alias,
+    club.category,
+    club.email,
+    club.is_official,
+    COALESCE(JSONB_BUILD_OBJECT(
+        'about_us', cd.about_us,
+        'why_us', cd.why_us,
+        'role_of_sophomore', cd.role_of_soph,
+        'role_of_junior', cd.role_of_junior,
+        'role_of_senior', cd.role_of_senior
+    ), '{}')::JSONB AS description,
     (
         SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSON
+            COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT(
+                'position', s.clubs -> club.name,
+                'name', s.name,
+                'phone', s.mobile,
+                'email', s.email
+            ) ORDER BY s.name), '[]')::JSONB
+        FROM
+            student AS s
+        WHERE
+            s.roll_number = ANY(cd.admins)
+    ) AS admins,
+    cd.branch,
+    (
+        SELECT
+            COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSONB
         FROM
             faculty AS f
         JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
@@ -74,80 +118,33 @@ SELECT
     ) AS faculties,
     (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type)
+            COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type), '[]')::JSONB
         FROM
             club_social AS cs
         WHERE
             cs.club_name = club.name
-    ) AS socials,
-    (
-        SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
-                'position', ca.position,
-                'name', s.name,
-                'phone', s.mobile,
-                'email', s.email
-            )), '[]')::JSON
-        FROM
-            club_admin AS ca
-        JOIN student AS s ON ca.roll_number = s.roll_number
-        WHERE
-            ca.club_name = club.name
-    ) AS admins
+    ) AS socials
 FROM
     club
+JOIN
+    club_details AS cd
+    ON club.name = cd.club_name
 WHERE
     club.name = $1
     OR club.alias = $1;
 
 -- name: GetClubs :many
 SELECT
-    *,
-    (
-        SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSON
-        FROM
-            faculty AS f
-        JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
-        WHERE
-            cf.club_name = club.name
-    ) AS faculties,
-    (
-        SELECT
-            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type)
-        FROM
-            club_social AS cs
-        WHERE
-            cs.club_name = club.name
-    ) AS socials,
-    (
-        SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
-                'position', ca.position,
-                'name', s.name,
-                'phone', s.mobile,
-                'email', s.email
-            )), '[]')::JSON
-        FROM
-            club_admin AS ca
-        JOIN student AS s ON ca.roll_number = s.roll_number
-        WHERE
-            ca.club_name = club.name
-    ) AS admins
+    name,
+    COALESCE(alias, name) AS short_name,
+    category,
+    short_description,
+    email,
+    is_official
 FROM
     club
 ORDER BY
     club.name;
-
--- name: GetClubAdmins :many
-SELECT
-    s.*, admin.position
-FROM
-    student s
-    JOIN club_admin admin ON s.roll_number = admin.roll_number
-WHERE
-    admin.club_name = $1
-    OR $1 = (SELECT alias FROM club WHERE name = admin.club_name);
 
 -- name: GetClubFaculty :many
 SELECT

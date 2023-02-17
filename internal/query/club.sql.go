@@ -7,21 +7,27 @@ package query
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 
 	"github.com/lib/pq"
 )
 
 const createClubAdmin = `-- name: CreateClubAdmin :exec
-INSERT INTO club_admin (
-    club_name, position, roll_number
+WITH new_admin AS (
+    UPDATE
+        club
+    SET
+        admins = ARRAY_APPEND(admins, $3)
+    WHERE
+        club.name = $1
+        OR alias = $1
 )
-VALUES (
-    (SELECT name from club WHERE name = $1 or alias = $1),
-    $2,
-    $3
-)
+UPDATE
+    student
+SET
+    clubs = clubs || CONCAT('{', $1::VARCHAR, ':', $2::VARCHAR, '}')::JSONB
+WHERE
+    roll_number = $3::CHAR(8)
 `
 
 type CreateClubAdminParams struct {
@@ -98,24 +104,43 @@ func (q *Queries) CreateClubSocial(ctx context.Context, arg CreateClubSocialPara
 }
 
 const deleteClubAdmin = `-- name: DeleteClubAdmin :exec
-DELETE FROM club_admin
+WITH delete_admin AS (
+    UPDATE
+        student
+    SET
+        clubs = clubs - $1
+    WHERE
+        roll_number = $2
+)
+UPDATE
+    club
+SET
+    admins = ARRAY_REMOVE(admins, $3::CHAR(8))
 WHERE
-    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
-    AND roll_number = $2
+    club.name = $4
+    OR club.alias = $4
 `
 
 type DeleteClubAdminParams struct {
-	Name       string `json:"name"`
-	RollNumber string `json:"roll_number"`
+	Clubs        json.RawMessage `json:"clubs"`
+	RollNumber   string          `json:"roll_number"`
+	RollNumber_2 string          `json:"roll_number_2"`
+	Name         string          `json:"name"`
 }
 
 func (q *Queries) DeleteClubAdmin(ctx context.Context, arg DeleteClubAdminParams) error {
-	_, err := q.db.ExecContext(ctx, deleteClubAdmin, arg.Name, arg.RollNumber)
+	_, err := q.db.ExecContext(ctx, deleteClubAdmin,
+		arg.Clubs,
+		arg.RollNumber,
+		arg.RollNumber_2,
+		arg.Name,
+	)
 	return err
 }
 
 const deleteClubFaculty = `-- name: DeleteClubFaculty :exec
-DELETE FROM club_faculty cf
+DELETE FROM
+    club_faculty AS cf
 WHERE
     cf.club_name = (SELECT c.name FROM club c WHERE c.name = $1 OR c.alias = $1)
     AND cf.emp_id = $2
@@ -167,10 +192,35 @@ func (q *Queries) DeleteClubSocial(ctx context.Context, arg DeleteClubSocialPara
 
 const getClub = `-- name: GetClub :one
 SELECT
-    name, alias, branch, kind, description,
+    club.name,
+    COALESCE(club.alias, '') AS alias,
+    club.category,
+    club.email,
+    club.is_official,
+    COALESCE(JSONB_BUILD_OBJECT(
+        'about_us', cd.about_us,
+        'why_us', cd.why_us,
+        'role_of_sophomore', cd.role_of_soph,
+        'role_of_junior', cd.role_of_junior,
+        'role_of_senior', cd.role_of_senior
+    ), '{}')::JSONB AS description,
     (
         SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSON
+            COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT(
+                'position', s.clubs -> club.name,
+                'name', s.name,
+                'phone', s.mobile,
+                'email', s.email
+            ) ORDER BY s.name), '[]')::JSONB
+        FROM
+            student AS s
+        WHERE
+            s.roll_number = ANY(cd.admins)
+    ) AS admins,
+    cd.branch,
+    (
+        SELECT
+            COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSONB
         FROM
             faculty AS f
         JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
@@ -179,28 +229,17 @@ SELECT
     ) AS faculties,
     (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type)
+            COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type), '[]')::JSONB
         FROM
             club_social AS cs
         WHERE
             cs.club_name = club.name
-    ) AS socials,
-    (
-        SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
-                'position', ca.position,
-                'name', s.name,
-                'phone', s.mobile,
-                'email', s.email
-            )), '[]')::JSON
-        FROM
-            club_admin AS ca
-        JOIN student AS s ON ca.roll_number = s.roll_number
-        WHERE
-            ca.club_name = club.name
-    ) AS admins
+    ) AS socials
 FROM
     club
+JOIN
+    club_details AS cd
+    ON club.name = cd.club_name
 WHERE
     club.name = $1
     OR club.alias = $1
@@ -208,13 +247,15 @@ WHERE
 
 type GetClubRow struct {
 	Name        string          `json:"name"`
-	Alias       sql.NullString  `json:"alias"`
+	Alias       string          `json:"alias"`
+	Category    string          `json:"category"`
+	Email       string          `json:"email"`
+	IsOfficial  bool            `json:"is_official"`
+	Description json.RawMessage `json:"description"`
+	Admins      json.RawMessage `json:"admins"`
 	Branch      []string        `json:"branch"`
-	Kind        string          `json:"kind"`
-	Description string          `json:"description"`
 	Faculties   json.RawMessage `json:"faculties"`
 	Socials     json.RawMessage `json:"socials"`
-	Admins      json.RawMessage `json:"admins"`
 }
 
 func (q *Queries) GetClub(ctx context.Context, name string) (GetClubRow, error) {
@@ -223,78 +264,16 @@ func (q *Queries) GetClub(ctx context.Context, name string) (GetClubRow, error) 
 	err := row.Scan(
 		&i.Name,
 		&i.Alias,
-		pq.Array(&i.Branch),
-		&i.Kind,
+		&i.Category,
+		&i.Email,
+		&i.IsOfficial,
 		&i.Description,
+		&i.Admins,
+		pq.Array(&i.Branch),
 		&i.Faculties,
 		&i.Socials,
-		&i.Admins,
 	)
 	return i, err
-}
-
-const getClubAdmins = `-- name: GetClubAdmins :many
-SELECT
-    s.roll_number, s.section, s.name, s.gender, s.mobile, s.birth_date, s.email, s.batch, s.hostel_id, s.room_id, s.discord_id, s.is_verified, admin.position
-FROM
-    student s
-    JOIN club_admin admin ON s.roll_number = admin.roll_number
-WHERE
-    admin.club_name = $1
-    OR $1 = (SELECT alias FROM club WHERE name = admin.club_name)
-`
-
-type GetClubAdminsRow struct {
-	RollNumber string         `json:"roll_number"`
-	Section    string         `json:"section"`
-	Name       string         `json:"name"`
-	Gender     sql.NullString `json:"gender"`
-	Mobile     sql.NullString `json:"mobile"`
-	BirthDate  sql.NullTime   `json:"birth_date"`
-	Email      string         `json:"email"`
-	Batch      int16          `json:"batch"`
-	HostelID   string         `json:"hostel_id"`
-	RoomID     sql.NullString `json:"room_id"`
-	DiscordID  sql.NullInt64  `json:"discord_id"`
-	IsVerified bool           `json:"is_verified"`
-	Position   string         `json:"position"`
-}
-
-func (q *Queries) GetClubAdmins(ctx context.Context, clubName string) ([]GetClubAdminsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getClubAdmins, clubName)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetClubAdminsRow
-	for rows.Next() {
-		var i GetClubAdminsRow
-		if err := rows.Scan(
-			&i.RollNumber,
-			&i.Section,
-			&i.Name,
-			&i.Gender,
-			&i.Mobile,
-			&i.BirthDate,
-			&i.Email,
-			&i.Batch,
-			&i.HostelID,
-			&i.RoomID,
-			&i.DiscordID,
-			&i.IsVerified,
-			&i.Position,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getClubFaculty = `-- name: GetClubFaculty :many
@@ -338,7 +317,7 @@ func (q *Queries) GetClubFaculty(ctx context.Context, clubName string) ([]GetClu
 
 const getClubMembers = `-- name: GetClubMembers :many
 SELECT
-    s.roll_number, s.section, s.name, s.gender, s.mobile, s.birth_date, s.email, s.batch, s.hostel_id, s.room_id, s.discord_id, s.is_verified
+    s.roll_number, s.section, s.name, s.gender, s.mobile, s.birth_date, s.email, s.batch, s.hostel_id, s.room_id, s.discord_id, s.clubs, s.is_verified
 FROM
     student s
     JOIN club_member member ON s.roll_number = member.roll_number
@@ -368,6 +347,7 @@ func (q *Queries) GetClubMembers(ctx context.Context, clubName string) ([]Studen
 			&i.HostelID,
 			&i.RoomID,
 			&i.DiscordID,
+			&i.Clubs,
 			&i.IsVerified,
 		); err != nil {
 			return nil, err
@@ -424,38 +404,12 @@ func (q *Queries) GetClubSocials(ctx context.Context, clubName string) ([]GetClu
 
 const getClubs = `-- name: GetClubs :many
 SELECT
-    name, alias, branch, kind, description,
-    (
-        SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT('name', f.name, 'phone', f.mobile) ORDER BY f.name), '[]')::JSON
-        FROM
-            faculty AS f
-        JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
-        WHERE
-            cf.club_name = club.name
-    ) AS faculties,
-    (
-        SELECT
-            JSON_AGG(JSON_BUILD_OBJECT('platform', cs.platform_type, 'link', cs.link) ORDER BY cs.platform_type)
-        FROM
-            club_social AS cs
-        WHERE
-            cs.club_name = club.name
-    ) AS socials,
-    (
-        SELECT
-            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
-                'position', ca.position,
-                'name', s.name,
-                'phone', s.mobile,
-                'email', s.email
-            )), '[]')::JSON
-        FROM
-            club_admin AS ca
-        JOIN student AS s ON ca.roll_number = s.roll_number
-        WHERE
-            ca.club_name = club.name
-    ) AS admins
+    name,
+    COALESCE(alias, name) AS short_name,
+    category,
+    short_description,
+    email,
+    is_official
 FROM
     club
 ORDER BY
@@ -463,14 +417,12 @@ ORDER BY
 `
 
 type GetClubsRow struct {
-	Name        string          `json:"name"`
-	Alias       sql.NullString  `json:"alias"`
-	Branch      []string        `json:"branch"`
-	Kind        string          `json:"kind"`
-	Description string          `json:"description"`
-	Faculties   json.RawMessage `json:"faculties"`
-	Socials     json.RawMessage `json:"socials"`
-	Admins      json.RawMessage `json:"admins"`
+	Name             string `json:"name"`
+	ShortName        string `json:"short_name"`
+	Category         string `json:"category"`
+	ShortDescription string `json:"short_description"`
+	Email            string `json:"email"`
+	IsOfficial       bool   `json:"is_official"`
 }
 
 func (q *Queries) GetClubs(ctx context.Context) ([]GetClubsRow, error) {
@@ -484,13 +436,11 @@ func (q *Queries) GetClubs(ctx context.Context) ([]GetClubsRow, error) {
 		var i GetClubsRow
 		if err := rows.Scan(
 			&i.Name,
-			&i.Alias,
-			pq.Array(&i.Branch),
-			&i.Kind,
-			&i.Description,
-			&i.Faculties,
-			&i.Socials,
-			&i.Admins,
+			&i.ShortName,
+			&i.Category,
+			&i.ShortDescription,
+			&i.Email,
+			&i.IsOfficial,
 		); err != nil {
 			return nil, err
 		}

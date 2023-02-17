@@ -1,4 +1,4 @@
-package nkssbackend
+package breadboard
 
 import (
 	"database/sql"
@@ -7,9 +7,9 @@ import (
 	"os"
     "time"
 
-	h "nkssbackend/handlers"
-	"nkssbackend/internal/database"
-	m "nkssbackend/middleware"
+	h "breadboard/handlers"
+	"breadboard/internal/database"
+	m "breadboard/middleware"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -75,7 +75,6 @@ func (s *server) setRouters() {
 	s.router.Handle("/clubs", h.GetClubs(s.db)).Methods("GET")
 	s.router.Handle("/clubs/{name}", h.GetClub(s.db)).Methods("GET")
 
-	s.router.Handle("/clubs/{name}/admins", h.GetClubAdmins(s.db)).Methods("GET")
 	s.router.Handle("/clubs/{name}/admins", m.Authenticator(h.CreateClubAdmin(s.db))).Methods("POST")
 	s.router.Handle("/clubs/{name}/admins/{roll}", m.Authenticator(h.DeleteClubAdmin(s.db))).Methods("DELETE")
 
