@@ -6,7 +6,7 @@ package query
 
 import (
 	"database/sql"
-  "encoding/json"
+	"encoding/json"
 	"time"
 )
 
@@ -119,7 +119,7 @@ type Course struct {
 	Prereq     []string `json:"prereq"`
 	Kind       string   `json:"kind"`
 	Objectives []string `json:"objectives"`
-  Content    []string `json:"content"`
+	Content    []string `json:"content"`
 	BookNames  []string `json:"book_names"`
 	Outcomes   []string `json:"outcomes"`
 }
