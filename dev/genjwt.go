@@ -4,11 +4,21 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	m "breadboard/middleware"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load the environment variables from files (if any)
+	envs, _ := filepath.Glob("*.env")
+	if len(envs) > 0 {
+		if err := godotenv.Load(envs...); err != nil {
+			log.Fatalln("Error while loading .env --> ", err)
+		}
+	}
 	HMACSecret := []byte(os.Getenv("HMAC_SECRET"))
 	if HMACSecret == nil {
 		log.Fatalln("HMAC_SECRET is not set")
