@@ -6,18 +6,25 @@ CREATE TABLE IF NOT EXISTS club (
     short_description  VARCHAR(256)  NOT NULL,
     is_official        BOOLEAN       DEFAULT false NOT NULL,
     CONSTRAINT ck_category CHECK (
-        category IN ('Cultural Club', 'Technical Club', 'Technical Society', 'Magazine')
+        category IN (
+            'Committee',
+            'Crew',
+            'Cultural Club',
+            'Magazine',
+            'Technical Club',
+            'Technical Society'
+        )
     )
 );
 
 CREATE TABLE IF NOT EXISTS club_admin (
-    club_name    VARCHAR(64) NOT NULL REFERENCES club(name),
+    club_name    VARCHAR(64) NOT NULL REFERENCES club(name) ON UPDATE CASCADE,
     position     VARCHAR(20) NOT NULL,
     roll_number  CHAR(8)     PRIMARY KEY REFERENCES student(roll_number)
 );
 
 CREATE TABLE IF NOT EXISTS club_details (
-    club_name       VARCHAR(64)  PRIMARY KEY REFERENCES club(name),
+    club_name       VARCHAR(64)  PRIMARY KEY REFERENCES club(name) ON UPDATE CASCADE,
     about_us        VARCHAR      NOT NULL,
     why_us          VARCHAR      NOT NULL,
     role_of_soph    VARCHAR      NOT NULL,
@@ -28,7 +35,7 @@ CREATE TABLE IF NOT EXISTS club_details (
 );
 
 CREATE TABLE IF NOT EXISTS club_discord (
-    club_name       VARCHAR(64) PRIMARY KEY REFERENCES club(name),
+    club_name       VARCHAR(64) PRIMARY KEY REFERENCES club(name) ON UPDATE CASCADE,
     guild_id        BIGINT      UNIQUE NOT NULL REFERENCES guild(id),
     freshman_role   BIGINT      UNIQUE NOT NULL,
     sophomore_role  BIGINT      UNIQUE NOT NULL,
@@ -38,19 +45,19 @@ CREATE TABLE IF NOT EXISTS club_discord (
 );
 
 CREATE TABLE IF NOT EXISTS club_faculty (
-    club_name   VARCHAR(64) REFERENCES club(name),
+    club_name   VARCHAR(64) REFERENCES club(name) ON UPDATE CASCADE,
     emp_id      INT         REFERENCES faculty(emp_id),
     PRIMARY KEY (club_name, emp_id)
 );
 
 CREATE TABLE IF NOT EXISTS club_member (
-    club_name    VARCHAR(64) REFERENCES club(name),
+    club_name    VARCHAR(64) REFERENCES club(name) ON UPDATE CASCADE,
     roll_number  CHAR(8)     REFERENCES student(roll_number),
     PRIMARY KEY (club_name, roll_number)
 );
 
 CREATE TABLE IF NOT EXISTS club_social (
-    club_name      VARCHAR(64) REFERENCES club(name),
+    club_name      VARCHAR(64) REFERENCES club(name) ON UPDATE CASCADE,
     platform_type  VARCHAR(15),
     link           VARCHAR     NOT NULL,
     PRIMARY KEY (club_name, platform_type)
