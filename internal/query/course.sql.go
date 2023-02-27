@@ -26,6 +26,7 @@ INSERT INTO course (
 VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8
 )
+ON CONFLICT (code) DO NOTHING
 `
 
 type CreateCourseParams struct {
@@ -49,6 +50,35 @@ func (q *Queries) CreateCourse(ctx context.Context, arg CreateCourseParams) erro
 		pq.Array(arg.Content),
 		pq.Array(arg.BookNames),
 		pq.Array(arg.Outcomes),
+	)
+	return err
+}
+
+const createSpecifics = `-- name: CreateSpecifics :exec
+INSERT INTO branch_specifics (
+    code,
+    branch,
+    semester,
+    credits
+)
+VALUES (
+    $1, $2, $3, $4
+)
+`
+
+type CreateSpecificsParams struct {
+	Code     string  `json:"code"`
+	Branch   string  `json:"branch"`
+	Semester int16   `json:"semester"`
+	Credits  []int16 `json:"credits"`
+}
+
+func (q *Queries) CreateSpecifics(ctx context.Context, arg CreateSpecificsParams) error {
+	_, err := q.db.ExecContext(ctx, createSpecifics,
+		arg.Code,
+		arg.Branch,
+		arg.Semester,
+		pq.Array(arg.Credits),
 	)
 	return err
 }

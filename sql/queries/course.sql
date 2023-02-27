@@ -11,6 +11,18 @@ INSERT INTO course (
 )
 VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8
+)
+ON CONFLICT (code) DO NOTHING;
+
+-- name: CreateSpecifics :exec
+INSERT INTO branch_specifics (
+    code,
+    branch,
+    semester,
+    credits
+)
+VALUES (
+    $1, $2, $3, $4
 );
 
 -- name: GetCourse :one

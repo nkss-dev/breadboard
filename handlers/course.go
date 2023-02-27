@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -13,17 +14,61 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+type BranchSpecifics struct {
+	Branch   string
+	Semester int16
+	Credits  []int16
+}
+
+type Course struct {
+	Code       string
+	Title      string
+	Prereq     []string
+	Kind       string
+	Objectives []string
+	Content    []string
+	BookNames  []string `json:"book_names"`
+	Outcomes   []string
+	Specifics  []BranchSpecifics
+}
+
 func CreateCourse(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
-		var course query.CreateCourseParams
+		var course Course
 		json.NewDecoder(r.Body).Decode(&course)
 
-		err := queries.CreateCourse(ctx, course)
-		if err == sql.ErrNoRows {
-			RespondError(w, 404, "Course not found in the database")
+		var queryParam = query.CreateCourseParams{
+			Code:       course.Code,
+			Title:      course.Title,
+			Prereq:     course.Prereq,
+			Kind:       course.Kind,
+			Objectives: course.Objectives,
+			Content:    course.Content,
+			BookNames:  course.BookNames,
+			Outcomes:   course.Outcomes,
+		}
+		err := queries.CreateCourse(ctx, queryParam)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while inserting the course to our database")
 			return
+		}
+
+		for _, specific := range course.Specifics {
+			var queryParam = query.CreateSpecificsParams{
+				Code:     course.Code,
+				Branch:   specific.Branch,
+				Semester: specific.Semester,
+				Credits:  specific.Credits,
+			}
+			err := queries.CreateSpecifics(ctx, queryParam)
+			if err != nil {
+				log.Println(err)
+				RespondError(w, 500, "Something went wrong while inserting the course specifics to our database")
+				return
+			}
 		}
 		RespondJSON(w, 201, course)
 	}
