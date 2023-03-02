@@ -171,8 +171,8 @@ func GetCourses(db *sql.DB) http.HandlerFunc {
 func fetchCourse(coursePaths []string) (courses []string) {
 	ctx := context.Background()
 	client := github.NewClient(nil)
-	owner := "GetPsyched"
-	repo := "workflow-test"
+	owner := "NIT-KKR-Student-Support-System"
+	repo := "atlas"
 
 	for _, coursePath := range coursePaths {
 		fileContents, _, _, err := client.Repositories.GetContents(ctx, owner, repo, coursePath, nil)
