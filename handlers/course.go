@@ -4,14 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"breadboard/internal/query"
 
+	"github.com/google/go-github/github"
 	"github.com/gorilla/mux"
 	"golang.org/x/exp/slices"
+	"gopkg.in/yaml.v2"
 )
 
 type BranchSpecifics struct {
@@ -36,41 +40,51 @@ func CreateCourse(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
-		var course Course
-		json.NewDecoder(r.Body).Decode(&course)
+		var coursePaths []string
+		json.NewDecoder(r.Body).Decode(&coursePaths)
 
-		var queryParam = query.CreateCourseParams{
-			Code:       course.Code,
-			Title:      course.Title,
-			Prereq:     course.Prereq,
-			Kind:       course.Kind,
-			Objectives: course.Objectives,
-			Content:    course.Content,
-			BookNames:  course.BookNames,
-			Outcomes:   course.Outcomes,
-		}
-		err := queries.CreateCourse(ctx, queryParam)
-		if err != nil {
-			log.Println(err)
-			RespondError(w, 500, "Something went wrong while inserting the course to our database")
-			return
-		}
+		courseMarkdowns := fetchCourse(coursePaths)
 
-		for _, specific := range course.Specifics {
-			var queryParam = query.CreateSpecificsParams{
-				Code:     course.Code,
-				Branch:   specific.Branch,
-				Semester: specific.Semester,
-				Credits:  specific.Credits,
-			}
-			err := queries.CreateSpecifics(ctx, queryParam)
+		for _, courseMarkdown := range courseMarkdowns {
+			course, err := parseMarkdown(courseMarkdown)
 			if err != nil {
-				log.Println(err)
-				RespondError(w, 500, "Something went wrong while inserting the course specifics to our database")
+				RespondError(w, 400, "Failed to parse the markdown file. Error: "+err.Error())
 				return
 			}
+
+			var queryParam = query.CreateCourseParams{
+				Code:       course.Code,
+				Title:      course.Title,
+				Prereq:     course.Prereq,
+				Kind:       course.Kind,
+				Objectives: course.Objectives,
+				Content:    course.Content,
+				BookNames:  course.BookNames,
+				Outcomes:   course.Outcomes,
+			}
+			err = queries.CreateCourse(ctx, queryParam)
+			if err != nil {
+				log.Println(err)
+				RespondError(w, 500, "Something went wrong while inserting the course to our database")
+				return
+			}
+
+			for _, specific := range course.Specifics {
+				var queryParam = query.CreateSpecificsParams{
+					Code:     course.Code,
+					Branch:   specific.Branch,
+					Semester: specific.Semester,
+					Credits:  specific.Credits,
+				}
+				err := queries.CreateSpecifics(ctx, queryParam)
+				if err != nil {
+					log.Println(err)
+					RespondError(w, 500, "Something went wrong while inserting the course specifics to our database")
+					return
+				}
+			}
 		}
-		RespondJSON(w, 201, course)
+		RespondJSON(w, 201, "")
 	}
 }
 
@@ -152,4 +166,56 @@ func GetCourses(db *sql.DB) http.HandlerFunc {
 			RespondJSON(w, 200, courses)
 		}
 	}
+}
+
+func fetchCourse(coursePaths []string) (courses []string) {
+	ctx := context.Background()
+	client := github.NewClient(nil)
+	owner := "GetPsyched"
+	repo := "workflow-test"
+
+	for _, coursePath := range coursePaths {
+		fileContents, _, _, err := client.Repositories.GetContents(ctx, owner, repo, coursePath, nil)
+		if err != nil {
+			log.Println("Error getting file contents:", err)
+			continue
+		}
+		course, err := fileContents.GetContent()
+		if err != nil {
+			log.Println("Error getting file contents:", err)
+			continue
+		}
+		courses = append(courses, course)
+	}
+	return courses
+}
+
+func parseMarkdown(md string) (Course, error) {
+	var course Course
+
+	parts := strings.SplitN(md, "---\n", 3)
+	if len(parts) < 3 {
+		return course, fmt.Errorf("invalid markdown format")
+	}
+	err := yaml.Unmarshal([]byte(parts[1]), &course)
+	if err != nil {
+		return course, err
+	}
+
+	fields := strings.SplitN(parts[2], "\n# ", 5)
+
+	for _, objective := range strings.Split(fields[1], "\n- ")[1:] {
+		course.Objectives = append(course.Objectives, strings.Trim(objective, "\n"))
+	}
+	for _, unit := range strings.Split(fields[2], "## Unit ")[1:] {
+		course.Content = append(course.Content, strings.Trim(unit[1:], "\n"))
+	}
+	for _, bookName := range strings.Split(fields[2], "\n- ")[1:] {
+		course.BookNames = append(course.BookNames, strings.Trim(bookName, "\n"))
+	}
+	for _, outcome := range strings.Split(fields[2], "\n- ")[1:] {
+		course.Outcomes = append(course.Outcomes, strings.Trim(outcome, "\n"))
+	}
+
+	return course, nil
 }

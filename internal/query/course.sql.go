@@ -26,7 +26,16 @@ INSERT INTO course (
 VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8
 )
-ON CONFLICT (code) DO NOTHING
+ON CONFLICT (code)
+DO
+    UPDATE SET
+        title = $2,
+        prereq = $3,
+        kind = $4,
+        objectives = $5,
+        content = $6,
+        book_names = $7,
+        outcomes = $8
 `
 
 type CreateCourseParams struct {
@@ -64,6 +73,11 @@ INSERT INTO branch_specifics (
 VALUES (
     $1, $2, $3, $4
 )
+ON CONFLICT (code, branch)
+DO
+    UPDATE SET
+        semester = $3,
+        credits = $4
 `
 
 type CreateSpecificsParams struct {
