@@ -210,10 +210,10 @@ func parseMarkdown(md string) (Course, error) {
 	for _, unit := range strings.Split(fields[2], "## Unit ")[1:] {
 		course.Content = append(course.Content, strings.Trim(unit[1:], "\n"))
 	}
-	for _, bookName := range strings.Split(fields[2], "\n- ")[1:] {
+	for _, bookName := range strings.Split(fields[3], "\n- ")[1:] {
 		course.BookNames = append(course.BookNames, strings.Trim(bookName, "\n"))
 	}
-	for _, outcome := range strings.Split(fields[2], "\n- ")[1:] {
+	for _, outcome := range strings.Split(fields[4], "\n- ")[1:] {
 		course.Outcomes = append(course.Outcomes, strings.Trim(outcome, "\n"))
 	}
 
