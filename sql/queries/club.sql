@@ -84,6 +84,7 @@ SELECT
     club.name,
     COALESCE(club.alias, '') AS alias,
     club.category,
+    club.short_description,
     club.email,
     club.is_official,
     COALESCE(JSONB_BUILD_OBJECT(

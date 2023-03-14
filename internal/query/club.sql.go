@@ -195,6 +195,7 @@ SELECT
     club.name,
     COALESCE(club.alias, '') AS alias,
     club.category,
+    club.short_description,
     club.email,
     club.is_official,
     COALESCE(JSONB_BUILD_OBJECT(
@@ -246,16 +247,17 @@ WHERE
 `
 
 type GetClubRow struct {
-	Name        string          `json:"name"`
-	Alias       string          `json:"alias"`
-	Category    string          `json:"category"`
-	Email       string          `json:"email"`
-	IsOfficial  bool            `json:"is_official"`
-	Description json.RawMessage `json:"description"`
-	Admins      json.RawMessage `json:"admins"`
-	Branch      []string        `json:"branch"`
-	Faculties   json.RawMessage `json:"faculties"`
-	Socials     json.RawMessage `json:"socials"`
+	Name             string          `json:"name"`
+	Alias            string          `json:"alias"`
+	Category         string          `json:"category"`
+	ShortDescription string          `json:"short_description"`
+	Email            string          `json:"email"`
+	IsOfficial       bool            `json:"is_official"`
+	Description      json.RawMessage `json:"description"`
+	Admins           json.RawMessage `json:"admins"`
+	Branch           []string        `json:"branch"`
+	Faculties        json.RawMessage `json:"faculties"`
+	Socials          json.RawMessage `json:"socials"`
 }
 
 func (q *Queries) GetClub(ctx context.Context, name string) (GetClubRow, error) {
@@ -265,6 +267,7 @@ func (q *Queries) GetClub(ctx context.Context, name string) (GetClubRow, error) 
 		&i.Name,
 		&i.Alias,
 		&i.Category,
+		&i.ShortDescription,
 		&i.Email,
 		&i.IsOfficial,
 		&i.Description,
@@ -317,7 +320,7 @@ func (q *Queries) GetClubFaculty(ctx context.Context, clubName string) ([]GetClu
 
 const getClubMembers = `-- name: GetClubMembers :many
 SELECT
-    s.roll_number, s.section, s.name, s.gender, s.mobile, s.birth_date, s.email, s.batch, s.hostel_id, s.room_id, s.discord_id, s.clubs, s.is_verified
+    s.roll_number, s.section, s.name, s.gender, s.mobile, s.birth_date, s.email, s.batch, s.hostel_id, s.room_id, s.discord_id, s.is_verified, s.clubs
 FROM
     student s
     JOIN club_member member ON s.roll_number = member.roll_number
@@ -347,8 +350,8 @@ func (q *Queries) GetClubMembers(ctx context.Context, clubName string) ([]Studen
 			&i.HostelID,
 			&i.RoomID,
 			&i.DiscordID,
-			&i.Clubs,
 			&i.IsVerified,
+			&i.Clubs,
 		); err != nil {
 			return nil, err
 		}
