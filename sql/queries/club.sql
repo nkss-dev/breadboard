@@ -97,6 +97,7 @@ SELECT
         SELECT
             COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT(
                 'position', s.clubs -> COALESCE(club.alias, club.name),
+                'roll', s.roll_number,
                 'name', s.name,
                 'phone', s.mobile,
                 'email', s.email
