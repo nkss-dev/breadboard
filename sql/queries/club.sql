@@ -1,17 +1,16 @@
 -- name: CreateClubAdmin :exec
 WITH new_admin AS (
     UPDATE
-        club
+        club_details
     SET
         admins = ARRAY_APPEND(admins, @roll_number)
     WHERE
-        club.name = @name
-        OR alias = @name
+        club_details.club_name = (SELECT club.name FROM club WHERE club.name = @name OR club.alias = @name)
 )
 UPDATE
     student
 SET
-    clubs = clubs || CONCAT('{', @name::VARCHAR, ':', @position::VARCHAR, '}')::JSONB
+    clubs = clubs || JSONB_BUILD_OBJECT(@name::VARCHAR, @position::VARCHAR)
 WHERE
     roll_number = @roll_number::CHAR(8);
 
@@ -97,7 +96,7 @@ SELECT
     (
         SELECT
             COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT(
-                'position', s.clubs -> club.name,
+                'position', s.clubs -> COALESCE(club.alias, club.name),
                 'name', s.name,
                 'phone', s.mobile,
                 'email', s.email
