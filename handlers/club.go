@@ -395,7 +395,7 @@ func UpdateClubSocials(db *sql.DB) http.HandlerFunc {
 		params := query.UpdateClubSocialsParams{
 			PlatformType: vars["type"],
 			Link:         link,
-			ClubName:     vars["name"],
+			Name:         vars["name"],
 		}
 		err := queries.UpdateClubSocials(ctx, params)
 		if err != nil {

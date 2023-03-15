@@ -19,7 +19,7 @@ INSERT INTO club_faculty (
     club_name, emp_id
 )
 VALUES (
-    (SELECT c.name from club c WHERE c.name = $1 or c.alias = $1),
+    (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
     $2
 );
 
@@ -28,16 +28,16 @@ INSERT INTO club_member (
     club_name, roll_number
 )
 VALUES (
-    (SELECT name from club WHERE name = $1 or alias = $1),
+    (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
     $2
 );
 
 -- name: CreateClubSocial :exec
 INSERT INTO club_social (
-    name, platform_type, link
+    club_name, platform_type, link
 )
 VALUES (
-    (SELECT c.name from club c WHERE c.name = $1 or c.alias = $1),
+    (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
     $2,
     $3
 );
@@ -174,8 +174,7 @@ SELECT
 FROM
     club_social
 WHERE
-    club_name = $1
-    OR $1 = (SELECT alias FROM club WHERE name = club_name);
+    club_name = (SELECT c.name FROM club AS c WHERE c.name = $1 or c.alias = $1);
 
 -- name: UpdateClubSocials :exec
 UPDATE
@@ -184,5 +183,4 @@ SET
     link = $2
 WHERE
     platform_type = $1
-    AND club_name = $3
-    OR $3 = (SELECT alias FROM club WHERE name = club_name);
+    AND club_name = (SELECT c.name FROM club AS c WHERE c.name = $3 or c.alias = $3);

@@ -45,7 +45,7 @@ INSERT INTO club_faculty (
     club_name, emp_id
 )
 VALUES (
-    (SELECT c.name from club c WHERE c.name = $1 or c.alias = $1),
+    (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
     $2
 )
 `
@@ -65,7 +65,7 @@ INSERT INTO club_member (
     club_name, roll_number
 )
 VALUES (
-    (SELECT name from club WHERE name = $1 or alias = $1),
+    (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
     $2
 )
 `
@@ -82,10 +82,10 @@ func (q *Queries) CreateClubMember(ctx context.Context, arg CreateClubMemberPara
 
 const createClubSocial = `-- name: CreateClubSocial :exec
 INSERT INTO club_social (
-    name, platform_type, link
+    club_name, platform_type, link
 )
 VALUES (
-    (SELECT c.name from club c WHERE c.name = $1 or c.alias = $1),
+    (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
     $2,
     $3
 )
@@ -373,8 +373,7 @@ SELECT
 FROM
     club_social
 WHERE
-    club_name = $1
-    OR $1 = (SELECT alias FROM club WHERE name = club_name)
+    club_name = (SELECT c.name FROM club AS c WHERE c.name = $1 or c.alias = $1)
 `
 
 type GetClubSocialsRow struct {
@@ -382,8 +381,8 @@ type GetClubSocialsRow struct {
 	Link         string `json:"link"`
 }
 
-func (q *Queries) GetClubSocials(ctx context.Context, clubName string) ([]GetClubSocialsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getClubSocials, clubName)
+func (q *Queries) GetClubSocials(ctx context.Context, name string) ([]GetClubSocialsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getClubSocials, name)
 	if err != nil {
 		return nil, err
 	}
@@ -465,17 +464,16 @@ SET
     link = $2
 WHERE
     platform_type = $1
-    AND club_name = $3
-    OR $3 = (SELECT alias FROM club WHERE name = club_name)
+    AND club_name = (SELECT c.name FROM club AS c WHERE c.name = $3 or c.alias = $3)
 `
 
 type UpdateClubSocialsParams struct {
 	PlatformType string `json:"platform_type"`
 	Link         string `json:"link"`
-	ClubName     string `json:"club_name"`
+	Name         string `json:"name"`
 }
 
 func (q *Queries) UpdateClubSocials(ctx context.Context, arg UpdateClubSocialsParams) error {
-	_, err := q.db.ExecContext(ctx, updateClubSocials, arg.PlatformType, arg.Link, arg.ClubName)
+	_, err := q.db.ExecContext(ctx, updateClubSocials, arg.PlatformType, arg.Link, arg.Name)
 	return err
 }
