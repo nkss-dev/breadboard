@@ -56,12 +56,6 @@ type Club struct {
 	IsOfficial       bool           `json:"is_official"`
 }
 
-type ClubAdmin struct {
-	ClubName   string `json:"club_name"`
-	Position   string `json:"position"`
-	RollNumber string `json:"roll_number"`
-}
-
 type ClubDetail struct {
 	ClubName     string   `json:"club_name"`
 	AboutUs      string   `json:"about_us"`

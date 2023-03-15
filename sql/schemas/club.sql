@@ -17,12 +17,6 @@ CREATE TABLE IF NOT EXISTS club (
     )
 );
 
-CREATE TABLE IF NOT EXISTS club_admin (
-    club_name    VARCHAR(64) NOT NULL REFERENCES club(name) ON UPDATE CASCADE,
-    position     VARCHAR(20) NOT NULL,
-    roll_number  CHAR(8)     PRIMARY KEY REFERENCES student(roll_number)
-);
-
 CREATE TABLE IF NOT EXISTS club_details (
     club_name       VARCHAR(64)  PRIMARY KEY REFERENCES club(name) ON UPDATE CASCADE,
     about_us        VARCHAR      NOT NULL,
