@@ -41,9 +41,12 @@ CREATE TABLE IF NOT EXISTS affiliated_guild (
 );
 
 CREATE TABLE IF NOT EXISTS event (
-    guild_id     BIGINT        REFERENCES guild(id),
-    event_types  VARCHAR(10)[] NOT NULL,
-    channel_id   BIGINT        NOT NULL,
-    message      VARCHAR,
-    PRIMARY KEY (guild_id, event_types)
+    guild_id    BIGINT       REFERENCES guild(id),
+    event_type  VARCHAR(5)  NOT NULL,
+    channel_id  BIGINT       NOT NULL,
+    message     VARCHAR,
+    PRIMARY KEY (guild_id, event_type),
+    CONSTRAINT ck_event_type CHECK (
+        event_type IN ('ban', 'kick', 'leave')
+    )
 );

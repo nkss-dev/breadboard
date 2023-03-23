@@ -119,10 +119,10 @@ type Course struct {
 }
 
 type Event struct {
-	GuildID    int64          `json:"guild_id"`
-	EventTypes []string       `json:"event_types"`
-	ChannelID  int64          `json:"channel_id"`
-	Message    sql.NullString `json:"message"`
+	GuildID   int64          `json:"guild_id"`
+	EventType string         `json:"event_type"`
+	ChannelID int64          `json:"channel_id"`
+	Message   sql.NullString `json:"message"`
 }
 
 type Faculty struct {
