@@ -118,13 +118,6 @@ type Course struct {
 	Outcomes   []string `json:"outcomes"`
 }
 
-type Event struct {
-	GuildID   int64          `json:"guild_id"`
-	EventType string         `json:"event_type"`
-	ChannelID int64          `json:"channel_id"`
-	Message   sql.NullString `json:"message"`
-}
-
 type Faculty struct {
 	EmpID          int32          `json:"emp_id"`
 	Name           string         `json:"name"`
@@ -148,6 +141,13 @@ type Guild struct {
 	MuteRole  sql.NullInt64 `json:"mute_role"`
 	EditLog   sql.NullInt64 `json:"edit_log"`
 	DeleteLog sql.NullInt64 `json:"delete_log"`
+}
+
+type GuildEvent struct {
+	GuildID   int64          `json:"guild_id"`
+	EventType string         `json:"event_type"`
+	ChannelID int64          `json:"channel_id"`
+	Message   sql.NullString `json:"message"`
 }
 
 type GuildRole struct {

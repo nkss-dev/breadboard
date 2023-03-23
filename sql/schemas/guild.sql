@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS affiliated_guild (
     guest_role       BIGINT    NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS event (
+CREATE TABLE IF NOT EXISTS guild_event (
     guild_id    BIGINT       REFERENCES guild(id),
     event_type  VARCHAR(5)  NOT NULL,
     channel_id  BIGINT       NOT NULL,
