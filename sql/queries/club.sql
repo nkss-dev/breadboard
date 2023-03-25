@@ -52,12 +52,11 @@ WITH delete_admin AS (
         roll_number = $2
 )
 UPDATE
-    club
+    club_details AS cd
 SET
     admins = ARRAY_REMOVE(admins, @roll_number::CHAR(8))
 WHERE
-    club.name = @name
-    OR club.alias = @name;
+    cd.club_name = (SELECT club.name FROM club WHERE club.name = @name OR club.alias = @name);
 
 -- name: DeleteClubFaculty :exec
 DELETE FROM
