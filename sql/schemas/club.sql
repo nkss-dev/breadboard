@@ -31,11 +31,8 @@ CREATE TABLE IF NOT EXISTS club_details (
 CREATE TABLE IF NOT EXISTS club_discord (
     club_name       VARCHAR(64) PRIMARY KEY REFERENCES club(name) ON UPDATE CASCADE,
     guild_id        BIGINT      UNIQUE NOT NULL REFERENCES guild(id),
-    freshman_role   BIGINT      UNIQUE NOT NULL,
-    sophomore_role  BIGINT      UNIQUE NOT NULL,
-    junior_role     BIGINT      UNIQUE NOT NULL,
-    senior_role     BIGINT      UNIQUE NOT NULL,
-    guest_role      BIGINT      UNIQUE NOT NULL
+    guest_role      BIGINT      UNIQUE,
+    member_role     BIGINT      UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS club_faculty (
@@ -63,8 +60,8 @@ CREATE OR REPLACE VIEW club_discord_user AS
         s.discord_id,
         c.name, c.alias,
         cd.guild_id, (SELECT link FROM club_social WHERE platform_type = 'discord') AS guild_invite,
-        cd.freshman_role, cd.sophomore_role, cd.junior_role, cd.senior_role,
-        cd.guest_role
+        cd.guest_role,
+        cd.member_role
     FROM
         club_member AS cm
     JOIN club AS c ON c.name = cm.club_name

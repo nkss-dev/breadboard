@@ -68,27 +68,21 @@ type ClubDetail struct {
 }
 
 type ClubDiscord struct {
-	ClubName      string `json:"club_name"`
-	GuildID       int64  `json:"guild_id"`
-	FreshmanRole  int64  `json:"freshman_role"`
-	SophomoreRole int64  `json:"sophomore_role"`
-	JuniorRole    int64  `json:"junior_role"`
-	SeniorRole    int64  `json:"senior_role"`
-	GuestRole     int64  `json:"guest_role"`
+	ClubName   string        `json:"club_name"`
+	GuildID    int64         `json:"guild_id"`
+	GuestRole  sql.NullInt64 `json:"guest_role"`
+	MemberRole sql.NullInt64 `json:"member_role"`
 }
 
 type ClubDiscordUser struct {
-	Batch         int16          `json:"batch"`
-	DiscordID     sql.NullInt64  `json:"discord_id"`
-	Name          string         `json:"name"`
-	Alias         sql.NullString `json:"alias"`
-	GuildID       int64          `json:"guild_id"`
-	GuildInvite   string         `json:"guild_invite"`
-	FreshmanRole  int64          `json:"freshman_role"`
-	SophomoreRole int64          `json:"sophomore_role"`
-	JuniorRole    int64          `json:"junior_role"`
-	SeniorRole    int64          `json:"senior_role"`
-	GuestRole     int64          `json:"guest_role"`
+	Batch       int16          `json:"batch"`
+	DiscordID   sql.NullInt64  `json:"discord_id"`
+	Name        string         `json:"name"`
+	Alias       sql.NullString `json:"alias"`
+	GuildID     int64          `json:"guild_id"`
+	GuildInvite string         `json:"guild_invite"`
+	GuestRole   sql.NullInt64  `json:"guest_role"`
+	MemberRole  sql.NullInt64  `json:"member_role"`
 }
 
 type ClubFaculty struct {
