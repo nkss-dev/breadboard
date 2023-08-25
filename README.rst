@@ -19,6 +19,11 @@ Running a local instance
 
     - ``PORT`` refers to the port number that you wish to host the backend at.
 
+3. **Install dependencies:** You need the following deps to run this project:
+    - `go` 1.18
+
+    You can either install these deps externally or simply run `nix develop` to enter a shell environment with all the dependencies installed.
+
 3. **Run the project:** ``go run cmd/main.go``
 
 Features
