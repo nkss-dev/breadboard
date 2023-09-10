@@ -24,13 +24,21 @@ VALUES (
 );
 
 -- name: CreateClubMember :exec
-INSERT INTO club_member (
-    club_name, roll_number
+WITH new_member AS (
+    INSERT INTO club_member (
+        club_name, roll_number
+    )
+    VALUES (
+        (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
+        $2
+    )
 )
-VALUES (
-    (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
-    $2
-);
+UPDATE
+    student
+SET
+    clubs = clubs || JSONB_BUILD_OBJECT(@name::VARCHAR, "Member")
+WHERE
+    roll_number = @roll_number::CHAR(8);
 
 -- name: CreateClubSocial :exec
 INSERT INTO club_social (
@@ -66,10 +74,18 @@ WHERE
     AND cf.emp_id = $2;
 
 -- name: DeleteClubMember :exec
-DELETE FROM club_member
+WITH delete_member AS (
+    UPDATE
+        student
+    SET
+        clubs = clubs - $1
+    WHERE
+        roll_number = $2
+)
+DELETE FROM club_member AS cm
 WHERE
-    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
-    AND roll_number = $2;
+    cm.club_name = (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1)
+    AND cm.roll_number = $2;
 
 -- name: DeleteClubSocial :exec
 DELETE FROM club_social

@@ -61,22 +61,37 @@ func (q *Queries) CreateClubFaculty(ctx context.Context, arg CreateClubFacultyPa
 }
 
 const createClubMember = `-- name: CreateClubMember :exec
-INSERT INTO club_member (
-    club_name, roll_number
+WITH new_member AS (
+    INSERT INTO club_member (
+        club_name, roll_number
+    )
+    VALUES (
+        (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
+        $2
+    )
 )
-VALUES (
-    (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
-    $2
-)
+UPDATE
+    student
+SET
+    clubs = clubs || JSONB_BUILD_OBJECT($3::VARCHAR, "Member")
+WHERE
+    roll_number = $4::CHAR(8)
 `
 
 type CreateClubMemberParams struct {
-	Name       string `json:"name"`
-	RollNumber string `json:"roll_number"`
+	Name         string `json:"name"`
+	RollNumber   string `json:"roll_number"`
+	Name_2       string `json:"name_2"`
+	RollNumber_2 string `json:"roll_number_2"`
 }
 
 func (q *Queries) CreateClubMember(ctx context.Context, arg CreateClubMemberParams) error {
-	_, err := q.db.ExecContext(ctx, createClubMember, arg.Name, arg.RollNumber)
+	_, err := q.db.ExecContext(ctx, createClubMember,
+		arg.Name,
+		arg.RollNumber,
+		arg.Name_2,
+		arg.RollNumber_2,
+	)
 	return err
 }
 
@@ -155,10 +170,18 @@ func (q *Queries) DeleteClubFaculty(ctx context.Context, arg DeleteClubFacultyPa
 }
 
 const deleteClubMember = `-- name: DeleteClubMember :exec
-DELETE FROM club_member
+WITH delete_member AS (
+    UPDATE
+        student
+    SET
+        clubs = clubs - $1
+    WHERE
+        roll_number = $2
+)
+DELETE FROM club_member AS cm
 WHERE
-    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
-    AND roll_number = $2
+    cm.club_name = (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1)
+    AND cm.roll_number = $2
 `
 
 type DeleteClubMemberParams struct {
