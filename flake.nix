@@ -11,9 +11,7 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [
-            go
-          ];
+          nativeBuildInputs = with pkgs; [ go sqlc ];
         };
       }        
     );
