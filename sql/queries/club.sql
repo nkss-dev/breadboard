@@ -36,7 +36,7 @@ WITH new_member AS (
 UPDATE
     student
 SET
-    clubs = clubs || JSONB_BUILD_OBJECT(@name::VARCHAR, "Member")
+    clubs = clubs || JSONB_BUILD_OBJECT(@name::VARCHAR, @position::VARCHAR)
 WHERE
     roll_number = @roll_number::CHAR(8);
 

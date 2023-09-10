@@ -73,15 +73,16 @@ WITH new_member AS (
 UPDATE
     student
 SET
-    clubs = clubs || JSONB_BUILD_OBJECT($3::VARCHAR, "Member")
+    clubs = clubs || JSONB_BUILD_OBJECT($3::VARCHAR, $4::VARCHAR)
 WHERE
-    roll_number = $4::CHAR(8)
+    roll_number = $5::CHAR(8)
 `
 
 type CreateClubMemberParams struct {
 	Name         string `json:"name"`
 	RollNumber   string `json:"roll_number"`
 	Name_2       string `json:"name_2"`
+	Position     string `json:"position"`
 	RollNumber_2 string `json:"roll_number_2"`
 }
 
@@ -90,6 +91,7 @@ func (q *Queries) CreateClubMember(ctx context.Context, arg CreateClubMemberPara
 		arg.Name,
 		arg.RollNumber,
 		arg.Name_2,
+		arg.Position,
 		arg.RollNumber_2,
 	)
 	return err

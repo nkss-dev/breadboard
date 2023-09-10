@@ -137,6 +137,7 @@ func CreateClubMember(db *sql.DB) http.HandlerFunc {
 		params := query.CreateClubMemberParams{
 			Name:       group_name,
 			RollNumber: rollStr,
+			Position: "Member",
 		}
 		err = queries.CreateClubMember(ctx, params)
 		if err != nil {
