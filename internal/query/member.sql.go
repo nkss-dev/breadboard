@@ -39,3 +39,21 @@ func (q *Queries) CreateClubMember(ctx context.Context, arg CreateClubMemberPara
 	)
 	return err
 }
+
+const deleteClubMember = `-- name: DeleteClubMember :exec
+DELETE FROM
+    club_member
+WHERE
+    club_member.club_name = (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1)
+    AND club_member.roll_number = $2
+`
+
+type DeleteClubMemberParams struct {
+	ClubNameOrAlias string `json:"club_name_or_alias"`
+	RollNumber      string `json:"roll_number"`
+}
+
+func (q *Queries) DeleteClubMember(ctx context.Context, arg DeleteClubMemberParams) error {
+	_, err := q.db.ExecContext(ctx, deleteClubMember, arg.ClubNameOrAlias, arg.RollNumber)
+	return err
+}

@@ -242,30 +242,36 @@ func DeleteClubFaculty(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// DeleteClubMember deletes an existing member of a group.
+// DeleteClubMember deletes an existing member of a club.
 func DeleteClubMember(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
+
+	type DeleteClubMemberParams struct {
+		ClubNameOrAlias string `json:"club_name_or_alias"`
+		RollNumber      string `json:"roll_number"`
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		roll, err := strconv.Atoi(vars["roll"])
-		if err != nil {
-			RespondError(w, 400, "Roll paramter must only contain digits")
-			return
+		clubMember := DeleteClubMemberParams{
+			ClubNameOrAlias: mux.Vars(r)["name"],
+			RollNumber:      mux.Vars(r)["roll"],
 		}
 
+		// TODO: add parameter validation middleware.
+
 		params := query.DeleteClubMemberParams{
-			Name:       vars["name"],
-			RollNumber: vars["roll"],
+			ClubNameOrAlias: clubMember.ClubNameOrAlias,
+			RollNumber:      clubMember.RollNumber,
 		}
-		err = queries.DeleteClubMember(ctx, params)
+		err := queries.DeleteClubMember(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while deleting details from our database")
 			return
 		}
 
-		RespondJSON(w, 200, "Removed '"+fmt.Sprint(roll)+"' as a member of "+vars["name"]+" successfully!")
+		RespondJSON(w, 200, "Successfully removed '"+clubMember.RollNumber+"' from "+clubMember.ClubNameOrAlias)
 	}
 }
 

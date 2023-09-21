@@ -56,20 +56,6 @@ WHERE
     cf.club_name = (SELECT c.name FROM club c WHERE c.name = $1 OR c.alias = $1)
     AND cf.emp_id = $2;
 
--- name: DeleteClubMember :exec
-WITH delete_member AS (
-    UPDATE
-        student
-    SET
-        clubs = clubs - $1
-    WHERE
-        roll_number = $2
-)
-DELETE FROM club_member AS cm
-WHERE
-    cm.club_name = (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1)
-    AND cm.roll_number = $2;
-
 -- name: DeleteClubSocial :exec
 DELETE FROM club_social
 WHERE
