@@ -1,19 +1,3 @@
--- name: CreateClubAdmin :exec
-WITH new_admin AS (
-    UPDATE
-        club_details
-    SET
-        admins = ARRAY_APPEND(admins, @roll_number)
-    WHERE
-        club_details.club_name = (SELECT club.name FROM club WHERE club.name = @name OR club.alias = @name)
-)
-UPDATE
-    student
-SET
-    clubs = clubs || JSONB_BUILD_OBJECT(@name::VARCHAR, @position::VARCHAR)
-WHERE
-    roll_number = @roll_number::VARCHAR(9);
-
 -- name: CreateClubFaculty :exec
 INSERT INTO club_faculty (
     club_name, emp_id
@@ -32,22 +16,6 @@ VALUES (
     $2,
     $3
 );
-
--- name: DeleteClubAdmin :exec
-WITH delete_admin AS (
-    UPDATE
-        student
-    SET
-        clubs = clubs - $1
-    WHERE
-        roll_number = $2
-)
-UPDATE
-    club_details AS cd
-SET
-    admins = ARRAY_REMOVE(admins, @roll_number::VARCHAR(9))
-WHERE
-    cd.club_name = (SELECT club.name FROM club WHERE club.name = @name OR club.alias = @name);
 
 -- name: DeleteClubFaculty :exec
 DELETE FROM
@@ -80,7 +48,7 @@ SELECT
     (
         SELECT
             COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT(
-                'position', s.clubs -> COALESCE(club.alias, club.name),
+                'position', club_member.position,
                 'roll', s.roll_number,
                 'name', s.name,
                 'phone', s.mobile,
@@ -88,8 +56,9 @@ SELECT
             ) ORDER BY s.name), '[]')::JSONB
         FROM
             student AS s
+            JOIN club_member ON s.roll_number = club_member.roll_number AND club.name = club_member.club_name
         WHERE
-            s.roll_number = ANY(cd.admins)
+            s.roll_number = ANY(SELECT roll_number FROM club_member WHERE club_name = club.name AND position != 'Member')
     ) AS admins,
     cd.branch,
     (

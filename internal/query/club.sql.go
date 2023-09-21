@@ -12,34 +12,6 @@ import (
 	"github.com/lib/pq"
 )
 
-const createClubAdmin = `-- name: CreateClubAdmin :exec
-WITH new_admin AS (
-    UPDATE
-        club_details
-    SET
-        admins = ARRAY_APPEND(admins, $3)
-    WHERE
-        club_details.club_name = (SELECT club.name FROM club WHERE club.name = $1 OR club.alias = $1)
-)
-UPDATE
-    student
-SET
-    clubs = clubs || JSONB_BUILD_OBJECT($1::VARCHAR, $2::VARCHAR)
-WHERE
-    roll_number = $3::VARCHAR(9)
-`
-
-type CreateClubAdminParams struct {
-	Name       string `json:"name"`
-	Position   string `json:"position"`
-	RollNumber string `json:"roll_number"`
-}
-
-func (q *Queries) CreateClubAdmin(ctx context.Context, arg CreateClubAdminParams) error {
-	_, err := q.db.ExecContext(ctx, createClubAdmin, arg.Name, arg.Position, arg.RollNumber)
-	return err
-}
-
 const createClubFaculty = `-- name: CreateClubFaculty :exec
 INSERT INTO club_faculty (
     club_name, emp_id
@@ -79,40 +51,6 @@ type CreateClubSocialParams struct {
 
 func (q *Queries) CreateClubSocial(ctx context.Context, arg CreateClubSocialParams) error {
 	_, err := q.db.ExecContext(ctx, createClubSocial, arg.Name, arg.PlatformType, arg.Link)
-	return err
-}
-
-const deleteClubAdmin = `-- name: DeleteClubAdmin :exec
-WITH delete_admin AS (
-    UPDATE
-        student
-    SET
-        clubs = clubs - $1
-    WHERE
-        roll_number = $2
-)
-UPDATE
-    club_details AS cd
-SET
-    admins = ARRAY_REMOVE(admins, $3::VARCHAR(9))
-WHERE
-    cd.club_name = (SELECT club.name FROM club WHERE club.name = $4 OR club.alias = $4)
-`
-
-type DeleteClubAdminParams struct {
-	Clubs        json.RawMessage `json:"clubs"`
-	RollNumber   string          `json:"roll_number"`
-	RollNumber_2 string          `json:"roll_number_2"`
-	Name         string          `json:"name"`
-}
-
-func (q *Queries) DeleteClubAdmin(ctx context.Context, arg DeleteClubAdminParams) error {
-	_, err := q.db.ExecContext(ctx, deleteClubAdmin,
-		arg.Clubs,
-		arg.RollNumber,
-		arg.RollNumber_2,
-		arg.Name,
-	)
 	return err
 }
 
@@ -169,7 +107,7 @@ SELECT
     (
         SELECT
             COALESCE(JSONB_AGG(JSONB_BUILD_OBJECT(
-                'position', s.clubs -> COALESCE(club.alias, club.name),
+                'position', club_member.position,
                 'roll', s.roll_number,
                 'name', s.name,
                 'phone', s.mobile,
@@ -177,8 +115,9 @@ SELECT
             ) ORDER BY s.name), '[]')::JSONB
         FROM
             student AS s
+            JOIN club_member ON s.roll_number = club_member.roll_number AND club.name = club_member.club_name
         WHERE
-            s.roll_number = ANY(cd.admins)
+            s.roll_number = ANY(SELECT roll_number FROM club_member WHERE club_name = club.name AND position != 'Member')
     ) AS admins,
     cd.branch,
     (

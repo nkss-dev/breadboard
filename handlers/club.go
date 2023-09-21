@@ -22,59 +22,12 @@ type Club struct {
 	Kind        string                 `json:"kind"`
 	Description string                 `json:"description"`
 	Socials     map[string]interface{} `json:"socials"`
-	Admins      []Admin                `json:"admins"`
 	Members     []int64                `json:"members"`
 }
 
 type Faculty struct {
 	Name   string `json:"name"`
 	Mobile string `json:"mobile"`
-}
-
-type Admin struct {
-	Position   string `json:"position"`
-	RollNumber int64  `json:"roll_number"`
-}
-
-// CreateClubAdmin creates a new admin for a group.
-func CreateClubAdmin(db *sql.DB) http.HandlerFunc {
-	ctx := context.Background()
-	queries := query.New(db)
-	return func(w http.ResponseWriter, r *http.Request) {
-		group_name := mux.Vars(r)["name"]
-		vars := r.URL.Query()
-
-		position := vars.Get("position")
-		if position == "" {
-			RespondError(w, 400, "Required query param, position, missing")
-			return
-		}
-
-		rollStr := vars.Get("roll")
-		if rollStr == "" {
-			RespondError(w, 400, "Required query param, roll, missing")
-			return
-		}
-		roll, err := strconv.Atoi(rollStr)
-		if err != nil {
-			RespondError(w, 400, "Roll paramter must only contain digits")
-			return
-		}
-
-		params := query.CreateClubAdminParams{
-			Name:       group_name,
-			Position:   position,
-			RollNumber: rollStr,
-		}
-		err = queries.CreateClubAdmin(ctx, params)
-		if err != nil {
-			log.Println(err)
-			RespondError(w, 500, "Something went wrong while inserting details to our database")
-			return
-		}
-
-		RespondJSON(w, 200, "Added '"+fmt.Sprint(roll)+"' as the "+position+" of "+group_name+" successfully!")
-	}
 }
 
 // CreateClubFaculty creates a new faculty incharge for a group.
@@ -185,33 +138,6 @@ func CreateClubSocial(db *sql.DB) http.HandlerFunc {
 		}
 
 		RespondJSON(w, 200, "Added link of the "+platform_type+" handle for "+group_name+" successfully!")
-	}
-}
-
-// DeleteClubAdmin deletes an existing admin of a group.
-func DeleteClubAdmin(db *sql.DB) http.HandlerFunc {
-	ctx := context.Background()
-	queries := query.New(db)
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		roll, err := strconv.Atoi(vars["roll"])
-		if err != nil {
-			RespondError(w, 400, "Roll paramter must only contain digits")
-			return
-		}
-
-		params := query.DeleteClubAdminParams{
-			Name:       vars["name"],
-			RollNumber: vars["roll"],
-		}
-		err = queries.DeleteClubAdmin(ctx, params)
-		if err != nil {
-			log.Println(err)
-			RespondError(w, 500, "Something went wrong while deleting details from our database")
-			return
-		}
-
-		RespondJSON(w, 200, "Removed '"+fmt.Sprint(roll)+"' as an admin of "+vars["name"]+" successfully!")
 	}
 }
 
