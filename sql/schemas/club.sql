@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS club_details (
     role_of_soph    VARCHAR       NOT NULL,
     role_of_junior  VARCHAR       NOT NULL,
     role_of_senior  VARCHAR       NOT NULL,
-    admins          VARCHAR(9)[]  NOT NULL,
     branch          CHAR(2)[]     NOT NULL
 );
 
@@ -42,8 +41,10 @@ CREATE TABLE IF NOT EXISTS club_faculty (
 );
 
 CREATE TABLE IF NOT EXISTS club_member (
-    club_name    VARCHAR(64) REFERENCES club(name) ON UPDATE CASCADE,
-    roll_number  VARCHAR(9)  REFERENCES student(roll_number),
+    club_name     VARCHAR(64)   REFERENCES club(name) ON UPDATE CASCADE,
+    roll_number   VARCHAR(9)    REFERENCES student(roll_number),
+    position      VARCHAR(32)   DEFAULT 'Member' NOT NULL,
+    extra_groups  VARCHAR(32)[] NOT NULL,
     PRIMARY KEY (club_name, roll_number)
 );
 

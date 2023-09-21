@@ -63,7 +63,6 @@ type ClubDetail struct {
 	RoleOfSoph   string   `json:"role_of_soph"`
 	RoleOfJunior string   `json:"role_of_junior"`
 	RoleOfSenior string   `json:"role_of_senior"`
-	Admins       []string `json:"admins"`
 	Branch       []string `json:"branch"`
 }
 
@@ -91,8 +90,10 @@ type ClubFaculty struct {
 }
 
 type ClubMember struct {
-	ClubName   string `json:"club_name"`
-	RollNumber string `json:"roll_number"`
+	ClubName    string   `json:"club_name"`
+	RollNumber  string   `json:"roll_number"`
+	Position    string   `json:"position"`
+	ExtraGroups []string `json:"extra_groups"`
 }
 
 type ClubSocial struct {
