@@ -24,7 +24,9 @@ Running a local instance
 
     You can either install these deps externally or simply run `nix develop` to enter a shell environment with all the dependencies installed.
 
-3. **Run the project:** ``go run cmd/main.go``
+3. **Generate the required query files:** ``sqlc generate``
+
+4. **Run the project:** ``go run cmd/main.go``
 
 Features
 --------

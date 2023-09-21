@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"breadboard/internal/query"
+	query "breadboard/.sqlc-auto-gen"
 
 	"github.com/google/go-github/github"
 	"github.com/gorilla/mux"

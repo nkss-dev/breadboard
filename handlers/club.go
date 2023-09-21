@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"breadboard/internal/query"
+	query "breadboard/.sqlc-auto-gen"
 
 	"github.com/gorilla/mux"
 )

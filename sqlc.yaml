@@ -1,7 +1,7 @@
 version: 1
 packages:
   - name: "query"
-    path: "internal/query"
+    path: ".sqlc-auto-gen"
     queries:
       - "./database/queries"
       - "./database/queries/club"

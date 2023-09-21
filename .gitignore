@@ -1,1 +1,2 @@
 *.env
+.sqlc-auto-gen

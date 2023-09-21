@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"breadboard/internal/query"
+	query "breadboard/.sqlc-auto-gen"
 
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
