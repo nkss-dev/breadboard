@@ -6,7 +6,6 @@ package query
 
 import (
 	"database/sql"
-	"encoding/json"
 	"time"
 )
 
@@ -174,19 +173,18 @@ type ModRole struct {
 }
 
 type Student struct {
-	RollNumber string          `json:"roll_number"`
-	Section    string          `json:"section"`
-	Name       string          `json:"name"`
-	Gender     sql.NullString  `json:"gender"`
-	Mobile     sql.NullString  `json:"mobile"`
-	BirthDate  sql.NullTime    `json:"birth_date"`
-	Email      string          `json:"email"`
-	Batch      int16           `json:"batch"`
-	HostelID   string          `json:"hostel_id"`
-	RoomID     sql.NullString  `json:"room_id"`
-	DiscordID  sql.NullInt64   `json:"discord_id"`
-	IsVerified bool            `json:"is_verified"`
-	Clubs      json.RawMessage `json:"clubs"`
+	RollNumber string         `json:"roll_number"`
+	Section    string         `json:"section"`
+	Name       string         `json:"name"`
+	Gender     sql.NullString `json:"gender"`
+	Mobile     sql.NullString `json:"mobile"`
+	BirthDate  sql.NullTime   `json:"birth_date"`
+	Email      string         `json:"email"`
+	Batch      int16          `json:"batch"`
+	HostelID   string         `json:"hostel_id"`
+	RoomID     sql.NullString `json:"room_id"`
+	DiscordID  sql.NullInt64  `json:"discord_id"`
+	IsVerified bool           `json:"is_verified"`
 }
 
 type Warden struct {
