@@ -18,14 +18,14 @@ CREATE TABLE IF NOT EXISTS club (
 );
 
 CREATE TABLE IF NOT EXISTS club_details (
-    club_name       VARCHAR(64)  PRIMARY KEY REFERENCES club(name) ON UPDATE CASCADE,
-    about_us        VARCHAR      NOT NULL,
-    why_us          VARCHAR      NOT NULL,
-    role_of_soph    VARCHAR      NOT NULL,
-    role_of_junior  VARCHAR      NOT NULL,
-    role_of_senior  VARCHAR      NOT NULL,
-    admins          CHAR(8)[]    NOT NULL,
-    branch          CHAR(2)[]    NOT NULL
+    club_name       VARCHAR(64)   PRIMARY KEY REFERENCES club(name) ON UPDATE CASCADE,
+    about_us        VARCHAR       NOT NULL,
+    why_us          VARCHAR       NOT NULL,
+    role_of_soph    VARCHAR       NOT NULL,
+    role_of_junior  VARCHAR       NOT NULL,
+    role_of_senior  VARCHAR       NOT NULL,
+    admins          VARCHAR(9)[]  NOT NULL,
+    branch          CHAR(2)[]     NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS club_discord (
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS club_faculty (
 
 CREATE TABLE IF NOT EXISTS club_member (
     club_name    VARCHAR(64) REFERENCES club(name) ON UPDATE CASCADE,
-    roll_number  CHAR(8)     REFERENCES student(roll_number),
+    roll_number  VARCHAR(9)  REFERENCES student(roll_number),
     PRIMARY KEY (club_name, roll_number)
 );
 

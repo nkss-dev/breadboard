@@ -26,7 +26,7 @@ UPDATE
 SET
     clubs = clubs || JSONB_BUILD_OBJECT($1::VARCHAR, $2::VARCHAR)
 WHERE
-    roll_number = $3::CHAR(8)
+    roll_number = $3::VARCHAR(9)
 `
 
 type CreateClubAdminParams struct {
@@ -131,7 +131,7 @@ WITH delete_admin AS (
 UPDATE
     club_details AS cd
 SET
-    admins = ARRAY_REMOVE(admins, $3::CHAR(8))
+    admins = ARRAY_REMOVE(admins, $3::VARCHAR(9))
 WHERE
     cd.club_name = (SELECT club.name FROM club WHERE club.name = $4 OR club.alias = $4)
 `

@@ -12,7 +12,7 @@ UPDATE
 SET
     clubs = clubs || JSONB_BUILD_OBJECT(@name::VARCHAR, @position::VARCHAR)
 WHERE
-    roll_number = @roll_number::CHAR(8);
+    roll_number = @roll_number::VARCHAR(9);
 
 -- name: CreateClubFaculty :exec
 INSERT INTO club_faculty (
@@ -38,7 +38,7 @@ UPDATE
 SET
     clubs = clubs || JSONB_BUILD_OBJECT(@name::VARCHAR, @position::VARCHAR)
 WHERE
-    roll_number = @roll_number::CHAR(8);
+    roll_number = @roll_number::VARCHAR(9);
 
 -- name: CreateClubSocial :exec
 INSERT INTO club_social (
@@ -62,7 +62,7 @@ WITH delete_admin AS (
 UPDATE
     club_details AS cd
 SET
-    admins = ARRAY_REMOVE(admins, @roll_number::CHAR(8))
+    admins = ARRAY_REMOVE(admins, @roll_number::VARCHAR(9))
 WHERE
     cd.club_name = (SELECT club.name FROM club WHERE club.name = @name OR club.alias = @name);
 

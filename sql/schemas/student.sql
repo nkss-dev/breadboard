@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS warden (
 );
 
 CREATE TABLE IF NOT EXISTS student (
-    roll_number  CHAR(8)     PRIMARY KEY,
+    roll_number  VARCHAR(9)     PRIMARY KEY,
     section      VARCHAR(6)  NOT NULL CHECK(section SIMILAR TO '__-_[1-9][0-9]?'),
     name         VARCHAR(50) NOT NULL,
     gender       CHAR(1)     CHECK(gender IN ('M', 'F', 'O')),
