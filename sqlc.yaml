@@ -2,7 +2,9 @@ version: 1
 packages:
   - name: "query"
     path: "internal/query"
-    queries: "./sql/queries"
+    queries:
+      - "./sql/queries"
+      - "./sql/queries/club"
     schema:
       # These are listed separately so that the tables are created in a preferred order
       - "./sql/schemas/student.sql"

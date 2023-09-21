@@ -60,43 +60,6 @@ func (q *Queries) CreateClubFaculty(ctx context.Context, arg CreateClubFacultyPa
 	return err
 }
 
-const createClubMember = `-- name: CreateClubMember :exec
-WITH new_member AS (
-    INSERT INTO club_member (
-        club_name, roll_number
-    )
-    VALUES (
-        (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
-        $2
-    )
-)
-UPDATE
-    student
-SET
-    clubs = clubs || JSONB_BUILD_OBJECT($3::VARCHAR, $4::VARCHAR)
-WHERE
-    roll_number = $5::CHAR(8)
-`
-
-type CreateClubMemberParams struct {
-	Name         string `json:"name"`
-	RollNumber   string `json:"roll_number"`
-	Name_2       string `json:"name_2"`
-	Position     string `json:"position"`
-	RollNumber_2 string `json:"roll_number_2"`
-}
-
-func (q *Queries) CreateClubMember(ctx context.Context, arg CreateClubMemberParams) error {
-	_, err := q.db.ExecContext(ctx, createClubMember,
-		arg.Name,
-		arg.RollNumber,
-		arg.Name_2,
-		arg.Position,
-		arg.RollNumber_2,
-	)
-	return err
-}
-
 const createClubSocial = `-- name: CreateClubSocial :exec
 INSERT INTO club_social (
     club_name, platform_type, link

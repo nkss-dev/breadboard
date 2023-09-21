@@ -23,23 +23,6 @@ VALUES (
     $2
 );
 
--- name: CreateClubMember :exec
-WITH new_member AS (
-    INSERT INTO club_member (
-        club_name, roll_number
-    )
-    VALUES (
-        (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
-        $2
-    )
-)
-UPDATE
-    student
-SET
-    clubs = clubs || JSONB_BUILD_OBJECT(@name::VARCHAR, @position::VARCHAR)
-WHERE
-    roll_number = @roll_number::VARCHAR(9);
-
 -- name: CreateClubSocial :exec
 INSERT INTO club_social (
     club_name, platform_type, link

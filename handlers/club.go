@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -116,37 +117,38 @@ func CreateClubFaculty(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// CreateClubMember adds a new member to a group.
+// CreateClubMember adds a new member to a club.
 func CreateClubMember(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
-	return func(w http.ResponseWriter, r *http.Request) {
-		group_name := mux.Vars(r)["name"]
 
-		rollStr := r.URL.Query().Get("roll")
-		if rollStr == "" {
-			RespondError(w, 400, "Required query param, roll, missing")
-			return
-		}
-		roll, err := strconv.Atoi(rollStr)
-		if err != nil {
-			RespondError(w, 400, "Roll paramter must only contain digits")
-			return
-		}
+	type CreateClubMemberParams struct {
+		ClubNameOrAlias string   `json:"club_name_or_alias"`
+		RollNumber      string   `json:"roll_number"`
+		Position        string   `json:"position"`
+		ExtraGroups     []string `json:"extra_groups"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var clubMember CreateClubMemberParams
+		json.NewDecoder(r.Body).Decode(&clubMember)
+
+		// TODO: add parameter validation middleware.
 
 		params := query.CreateClubMemberParams{
-			Name:       group_name,
-			RollNumber: rollStr,
-			Position: "Member",
+			ClubNameOrAlias: clubMember.ClubNameOrAlias,
+			RollNumber:      clubMember.RollNumber,
+			Position:        clubMember.Position,
+			ExtraGroups:     clubMember.ExtraGroups,
 		}
-		err = queries.CreateClubMember(ctx, params)
+		err := queries.CreateClubMember(ctx, params)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while inserting details to our database")
 			return
 		}
 
-		RespondJSON(w, 200, "Added '"+fmt.Sprint(roll)+"' as a member of "+group_name+" successfully!")
+		RespondJSON(w, 200, "Successfully added '"+clubMember.RollNumber+"' to "+clubMember.ClubNameOrAlias+" as: "+clubMember.Position)
 	}
 }
 
