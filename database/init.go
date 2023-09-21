@@ -13,7 +13,7 @@ func Init(db *sql.DB) {
 	script := []string{}
 	for _, filename := range filenames {
 		// Read PostgreSQL script
-		path := filepath.Join("sql", "schemas", filename+".sql")
+		path := filepath.Join("database", "schemas", filename+".sql")
 		file, ioErr := os.ReadFile(path)
 		if ioErr != nil {
 			log.Fatalln(ioErr)

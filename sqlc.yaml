@@ -3,16 +3,16 @@ packages:
   - name: "query"
     path: "internal/query"
     queries:
-      - "./sql/queries"
-      - "./sql/queries/club"
+      - "./database/queries"
+      - "./database/queries/club"
     schema:
       # These are listed separately so that the tables are created in a preferred order
-      - "./sql/schemas/student.sql"
-      - "./sql/schemas/faculty.sql"
-      - "./sql/schemas/guild.sql"
-      - "./sql/schemas/club.sql"
-      - "./sql/schemas/course.sql"
-      - "./sql/schemas/announcement.sql"
+      - "./database/schemas/student.sql"
+      - "./database/schemas/faculty.sql"
+      - "./database/schemas/guild.sql"
+      - "./database/schemas/club.sql"
+      - "./database/schemas/course.sql"
+      - "./database/schemas/announcement.sql"
     engine: "postgresql"
     emit_json_tags: true
     json_tags_case_style: "snake"

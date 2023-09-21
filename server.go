@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
+	database "breadboard/database"
 	h "breadboard/handlers"
-	"breadboard/internal/database"
 	m "breadboard/middleware"
 
 	"github.com/go-co-op/gocron"
