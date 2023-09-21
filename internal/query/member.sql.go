@@ -57,3 +57,60 @@ func (q *Queries) DeleteClubMember(ctx context.Context, arg DeleteClubMemberPara
 	_, err := q.db.ExecContext(ctx, deleteClubMember, arg.ClubNameOrAlias, arg.RollNumber)
 	return err
 }
+
+const readClubMembers = `-- name: ReadClubMembers :many
+SELECT
+    student.roll_number,
+    student.name,
+    student.section,
+    student.batch,
+    student.email,
+    club_member.position,
+    club_member.extra_groups
+FROM
+    student
+    JOIN club_member ON student.roll_number = club_member.roll_number
+WHERE
+    club_member.club_name = (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1)
+`
+
+type ReadClubMembersRow struct {
+	RollNumber  string   `json:"roll_number"`
+	Name        string   `json:"name"`
+	Section     string   `json:"section"`
+	Batch       int16    `json:"batch"`
+	Email       string   `json:"email"`
+	Position    string   `json:"position"`
+	ExtraGroups []string `json:"extra_groups"`
+}
+
+func (q *Queries) ReadClubMembers(ctx context.Context, clubNameOrAlias string) ([]ReadClubMembersRow, error) {
+	rows, err := q.db.QueryContext(ctx, readClubMembers, clubNameOrAlias)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ReadClubMembersRow
+	for rows.Next() {
+		var i ReadClubMembersRow
+		if err := rows.Scan(
+			&i.RollNumber,
+			&i.Name,
+			&i.Section,
+			&i.Batch,
+			&i.Email,
+			&i.Position,
+			pq.Array(&i.ExtraGroups),
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

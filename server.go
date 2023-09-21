@@ -82,7 +82,7 @@ func (s *server) setRouters() {
 	s.router.Handle("/clubs/{name}/faculty", m.Authenticator(h.CreateClubFaculty(s.db))).Methods("POST")
 	s.router.Handle("/clubs/{name}/faculty/{fname}", m.Authenticator(h.DeleteClubFaculty(s.db))).Methods("DELETE")
 
-	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.GetClubMembers(s.db))).Methods("GET")
+	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.ReadClubMembers(s.db))).Methods("GET")
 	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.CreateClubMember(s.db))).Methods("POST")
 	s.router.Handle("/clubs/{name}/members/{roll}", m.Authenticator(h.DeleteClubMember(s.db))).Methods("DELETE")
 

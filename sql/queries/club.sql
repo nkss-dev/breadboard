@@ -141,16 +141,6 @@ WHERE
     cf.club_name = $1
     OR $1 = (SELECT alias FROM club WHERE name = cf.club_name);
 
--- name: GetClubMembers :many
-SELECT
-    s.*
-FROM
-    student s
-    JOIN club_member member ON s.roll_number = member.roll_number
-WHERE
-    member.club_name = $1
-    OR $1 = (SELECT alias FROM club WHERE name = member.club_name);
-
 -- name: GetClubSocials :many
 SELECT
     platform_type,

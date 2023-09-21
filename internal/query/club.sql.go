@@ -280,54 +280,6 @@ func (q *Queries) GetClubFaculty(ctx context.Context, clubName string) ([]GetClu
 	return items, nil
 }
 
-const getClubMembers = `-- name: GetClubMembers :many
-SELECT
-    s.roll_number, s.section, s.name, s.gender, s.mobile, s.birth_date, s.email, s.batch, s.hostel_id, s.room_id, s.discord_id, s.is_verified, s.clubs
-FROM
-    student s
-    JOIN club_member member ON s.roll_number = member.roll_number
-WHERE
-    member.club_name = $1
-    OR $1 = (SELECT alias FROM club WHERE name = member.club_name)
-`
-
-func (q *Queries) GetClubMembers(ctx context.Context, clubName string) ([]Student, error) {
-	rows, err := q.db.QueryContext(ctx, getClubMembers, clubName)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Student
-	for rows.Next() {
-		var i Student
-		if err := rows.Scan(
-			&i.RollNumber,
-			&i.Section,
-			&i.Name,
-			&i.Gender,
-			&i.Mobile,
-			&i.BirthDate,
-			&i.Email,
-			&i.Batch,
-			&i.HostelID,
-			&i.RoomID,
-			&i.DiscordID,
-			&i.IsVerified,
-			&i.Clubs,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getClubSocials = `-- name: GetClubSocials :many
 SELECT
     platform_type,

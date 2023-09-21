@@ -357,22 +357,6 @@ func GetClubFaculty(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetClubMembers retrieves the members of a group from the database.
-func GetClubMembers(db *sql.DB) http.HandlerFunc {
-	ctx := context.Background()
-	queries := query.New(db)
-	return func(w http.ResponseWriter, r *http.Request) {
-		group_name := mux.Vars(r)["name"]
-		members, err := queries.GetClubMembers(ctx, group_name)
-		if err != nil {
-			RespondError(w, 500, "Something went wrong while fetching details from our database")
-			return
-		}
-
-		RespondJSON(w, 200, members)
-	}
-}
-
 // GetClubSocials retrieves the social media links of a group from the database.
 func GetClubSocials(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()
@@ -386,6 +370,32 @@ func GetClubSocials(db *sql.DB) http.HandlerFunc {
 		}
 
 		RespondJSON(w, 200, socials)
+	}
+}
+
+// ReadClubMembers retrieves the members of a club.
+func ReadClubMembers(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+
+	type ReadClubMemberParams struct {
+		ClubNameOrAlias string `json:"club_name_or_alias"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		clubMember := ReadClubMemberParams{
+			ClubNameOrAlias: mux.Vars(r)["name"],
+		}
+
+		// TODO: add parameter validation middleware.
+
+		members, err := queries.ReadClubMembers(ctx, clubMember.ClubNameOrAlias)
+		if err != nil {
+			RespondError(w, 500, "Something went wrong while fetching details from our database")
+			return
+		}
+
+		RespondJSON(w, 200, members)
 	}
 }
 
