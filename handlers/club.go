@@ -399,6 +399,41 @@ func ReadClubMembers(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// UpdateClubMember updates a club member's details.
+func UpdateClubMember(db *sql.DB) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(db)
+
+	type UpdateClubMemberParams struct {
+		ClubNameOrAlias string   `json:"club_name_or_alias"`
+		RollNumber      string   `json:"roll_number"`
+		Position        string   `json:"position"`
+		ExtraGroups     []string `json:"extra_groups"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var clubMember UpdateClubMemberParams
+		json.NewDecoder(r.Body).Decode(&clubMember)
+
+		// TODO: add parameter validation middleware.
+
+		params := query.UpdateClubMemberParams{
+			ClubNameOrAlias: clubMember.ClubNameOrAlias,
+			RollNumber:      clubMember.RollNumber,
+			Position:        clubMember.Position,
+			ExtraGroups:     clubMember.ExtraGroups,
+		}
+		err := queries.UpdateClubMember(ctx, params)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while updating details to our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Successfully updated '"+clubMember.RollNumber+"' to "+clubMember.ClubNameOrAlias+" as: "+clubMember.Position)
+	}
+}
+
 // UpdateClubSocials updates the link of a social media handle for a group.
 func UpdateClubSocials(db *sql.DB) http.HandlerFunc {
 	ctx := context.Background()

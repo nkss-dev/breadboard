@@ -114,3 +114,31 @@ func (q *Queries) ReadClubMembers(ctx context.Context, clubNameOrAlias string) (
 	}
 	return items, nil
 }
+
+const updateClubMember = `-- name: UpdateClubMember :exec
+UPDATE
+    club_member
+SET
+    position = $1,
+    extra_groups = $2
+WHERE
+    roll_number = $3
+    AND club_name = (SELECT c.name FROM club AS c WHERE c.name = $4 OR c.alias = $4)
+`
+
+type UpdateClubMemberParams struct {
+	Position        string   `json:"position"`
+	ExtraGroups     []string `json:"extra_groups"`
+	RollNumber      string   `json:"roll_number"`
+	ClubNameOrAlias string   `json:"club_name_or_alias"`
+}
+
+func (q *Queries) UpdateClubMember(ctx context.Context, arg UpdateClubMemberParams) error {
+	_, err := q.db.ExecContext(ctx, updateClubMember,
+		arg.Position,
+		pq.Array(arg.ExtraGroups),
+		arg.RollNumber,
+		arg.ClubNameOrAlias,
+	)
+	return err
+}

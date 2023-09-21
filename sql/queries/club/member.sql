@@ -24,6 +24,16 @@ FROM
 WHERE
     club_member.club_name = (SELECT c.name FROM club AS c WHERE c.name = @club_name_or_alias OR c.alias = @club_name_or_alias);
 
+-- name: UpdateClubMember :exec
+UPDATE
+    club_member
+SET
+    position = @position,
+    extra_groups = @extra_groups
+WHERE
+    roll_number = @roll_number
+    AND club_name = (SELECT c.name FROM club AS c WHERE c.name = @club_name_or_alias OR c.alias = @club_name_or_alias);
+
 -- name: DeleteClubMember :exec
 DELETE FROM
     club_member
