@@ -1,0 +1,6 @@
+[phases.setup]
+  nixPkgs = ['...', 'sqlc']
+
+[phases.sqlc]
+  dependsOn = ['setup']
+  cmds = ['sqlc generate']
