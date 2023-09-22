@@ -49,7 +49,7 @@ func (s *server) Run() {
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedOrigins:   []string{"http://localhost:3000", "http://nksss.live", "https://nksss.live"},
+		AllowedOrigins:   []string{"http://localhost:3000", "https://nkss-website.up.railway.app"},
 	})
 	log.Fatalln(http.ListenAndServe(":"+os.Getenv("PORT"), c.Handler(s.router)))
 }
