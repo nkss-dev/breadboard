@@ -1,18 +1,24 @@
 {
-  description = "Breadboard development shell environment";
+  description = "breadboard's development environment";
 
   inputs = {
-    flake-utils.url = "github:numtide/flake-utils";
+    go-env.url = "https://flakehub.com/f/GetPsyched/go-env/0.1.0.tar.gz";
+    go-env.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = import nixpkgs { inherit system; };
-      in
-      {
-        devShells.default = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [ go sqlc ];
-        };
-      }        
-    );
+  outputs = inputs@{ nixpkgs, go-env, ... }:
+    let
+      system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
+      go-env-pkgs = go-env.outputs.packages.${system};
+    in
+    {
+      devShells.${system}.default = pkgs.mkShell {
+        buildInputs = [
+          pkgs.sqlc
+          go-env-pkgs.default
+          go-env-pkgs.vscode
+        ];
+      };
+    };
 }
