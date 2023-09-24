@@ -91,8 +91,5 @@ func (s *server) setRouters() {
 
 	// Students
 	s.router.Handle("/hostels", h.GetHostels(s.db)).Methods("GET")
-	s.router.Handle("/students/{roll}", m.Authenticator(h.GetStudent(s.db))).Methods("GET")
-
-	// Discord
-	s.router.Handle("/discord/users/{discord_id}", m.Authenticator(h.GetStudentByDiscordID(s.db))).Methods("GET")
+	s.router.Handle("/students/{id}", m.Authenticator(h.GetStudent(s.db))).Methods("GET")
 }
