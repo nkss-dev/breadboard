@@ -1,16 +1,16 @@
 NKSS Breadboard
 ===============
 
-.. image:: https://img.shields.io/github/go-mod/go-version/NIT-KKR-Student-Support-System/breadboard?logo=Go
+.. image:: https://img.shields.io/github/go-mod/go-version/nkss-dev/breadboard?logo=Go
     :target: https://go.dev
     :alt: Go version info
 
-A RESTful API wrapper for the database our project, `NKSSS <https://github.com/NIT-KKR-Student-Support-System>`_, relies on!
+A RESTful API wrapper for the database our project, `NKSS <https://github.com/nkss-dev>`_, relies on!
 
 Running a local instance
 ------------------------
 
-1. **Clone the repository:** ``git clone https://github.com/NIT-KKR-Student-Support-System/breadboard``
+1. **Clone the repository:** ``git clone https://github.com/nkss-dev/breadboard``
 
 2. **Setup initial configuration:** Populate ``sample.env`` with its corresponding values.
     - The ``HMAC_SECRET`` can be any string you like as long as you have a valid JWT token for it. To generate this token, please execute ``go run dev/genjwt.go <role> <rollno>`` in the root directory *after* setting this env variable.

@@ -57,7 +57,7 @@ func (s *server) Run() {
 // setRouters maps endpoints to the functions they must route to.
 func (s *server) setRouters() {
 	s.router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to NKSSS' API!"))
+		w.Write([]byte("Welcome to NKSS' API!"))
 	})
 
 	// Status
