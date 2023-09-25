@@ -10,20 +10,15 @@ on:
     branches: [ "main" ]
 
 jobs:
-  sqlc-generate:
+  go-build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
     - uses: sqlc-dev/setup-sqlc@v4
       with:
         sqlc-version: '1.21.0'
     - run: sqlc generate
-
-  go-build:
-    needs: sqlc-generate
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
 
     - name: Set up Go
       uses: actions/setup-go@v4
