@@ -80,6 +80,7 @@ func CreateClubMember(db *sql.DB) http.HandlerFunc {
 		RollNumber      string   `json:"roll_number"`
 		Position        string   `json:"position"`
 		ExtraGroups     []string `json:"extra_groups"`
+		Comments        string   `json:"comments"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -93,6 +94,7 @@ func CreateClubMember(db *sql.DB) http.HandlerFunc {
 			RollNumber:      clubMember.RollNumber,
 			Position:        clubMember.Position,
 			ExtraGroups:     clubMember.ExtraGroups,
+			Comments:        sql.NullString{String: clubMember.Comments, Valid: true},
 		}
 		err := queries.CreateClubMember(ctx, params)
 		if err != nil {
@@ -335,6 +337,7 @@ func UpdateClubMember(db *sql.DB) http.HandlerFunc {
 		RollNumber      string   `json:"roll_number"`
 		Position        string   `json:"position"`
 		ExtraGroups     []string `json:"extra_groups"`
+		Comments        string   `json:"comments"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -348,6 +351,7 @@ func UpdateClubMember(db *sql.DB) http.HandlerFunc {
 			RollNumber:      clubMember.RollNumber,
 			Position:        clubMember.Position,
 			ExtraGroups:     clubMember.ExtraGroups,
+			Comments:        sql.NullString{String: clubMember.Comments, Valid: true},
 		}
 		err := queries.UpdateClubMember(ctx, params)
 		if err != nil {

@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS club_member (
     roll_number   VARCHAR(9)    REFERENCES student(roll_number),
     position      VARCHAR(32)   DEFAULT 'Member' NOT NULL,
     extra_groups  VARCHAR(32)[] NOT NULL,
+    comments      VARCHAR,
     PRIMARY KEY (club_name, roll_number)
 );
 
