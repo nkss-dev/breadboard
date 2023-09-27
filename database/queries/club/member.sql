@@ -13,10 +13,11 @@ VALUES (
 -- name: ReadClubMembers :many
 SELECT
     student.roll_number,
-    student.name,
     student.section,
-    student.batch,
+    student.name,
+    COALESCE(student.mobile, '') AS phone,
     student.email,
+    student.batch,
     club_member.position,
     club_member.extra_groups,
     COALESCE(club_member.comments, '')
