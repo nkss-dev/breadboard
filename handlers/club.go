@@ -87,6 +87,8 @@ func CreateClubMember(db *sql.DB) http.HandlerFunc {
 		var clubMember CreateClubMemberParams
 		json.NewDecoder(r.Body).Decode(&clubMember)
 
+		clubMember.ClubNameOrAlias = mux.Vars(r)["name"]
+
 		// TODO: add parameter validation middleware.
 
 		params := query.CreateClubMemberParams{
@@ -343,6 +345,8 @@ func UpdateClubMember(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var clubMember UpdateClubMemberParams
 		json.NewDecoder(r.Body).Decode(&clubMember)
+
+		clubMember.ClubNameOrAlias = mux.Vars(r)["name"]
 
 		// TODO: add parameter validation middleware.
 
