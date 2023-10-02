@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -12,6 +11,8 @@ import (
 	query "breadboard/.sqlc-auto-gen"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Club struct {
@@ -31,9 +32,9 @@ type Faculty struct {
 }
 
 // CreateClubFaculty creates a new faculty incharge for a group.
-func CreateClubFaculty(db *sql.DB) http.HandlerFunc {
+func CreateClubFaculty(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		group_name := mux.Vars(r)["name"]
 		vars := r.URL.Query()
@@ -71,9 +72,9 @@ func CreateClubFaculty(db *sql.DB) http.HandlerFunc {
 }
 
 // CreateClubMember adds a new member to a club.
-func CreateClubMember(db *sql.DB) http.HandlerFunc {
+func CreateClubMember(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 
 	type CreateClubMemberParams struct {
 		ClubNameOrAlias string   `json:"club_name_or_alias"`
@@ -96,7 +97,7 @@ func CreateClubMember(db *sql.DB) http.HandlerFunc {
 			RollNumber:      clubMember.RollNumber,
 			Position:        clubMember.Position,
 			ExtraGroups:     clubMember.ExtraGroups,
-			Comments:        sql.NullString{String: clubMember.Comments, Valid: true},
+			Comments:        pgtype.Text{String: clubMember.Comments, Valid: true},
 		}
 		err := queries.CreateClubMember(ctx, params)
 		if err != nil {
@@ -110,9 +111,9 @@ func CreateClubMember(db *sql.DB) http.HandlerFunc {
 }
 
 // CreateClubSocial adds a new social media handle of a group.
-func CreateClubSocial(db *sql.DB) http.HandlerFunc {
+func CreateClubSocial(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		group_name := mux.Vars(r)["name"]
 		vars := r.URL.Query()
@@ -146,9 +147,9 @@ func CreateClubSocial(db *sql.DB) http.HandlerFunc {
 }
 
 // DeleteClubFaculty deletes an existing faculty incharge of a group.
-func DeleteClubFaculty(db *sql.DB) http.HandlerFunc {
+func DeleteClubFaculty(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
@@ -173,9 +174,9 @@ func DeleteClubFaculty(db *sql.DB) http.HandlerFunc {
 }
 
 // DeleteClubMember deletes an existing member of a club.
-func DeleteClubMember(db *sql.DB) http.HandlerFunc {
+func DeleteClubMember(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 
 	type DeleteClubMemberParams struct {
 		ClubNameOrAlias string `json:"club_name_or_alias"`
@@ -206,9 +207,9 @@ func DeleteClubMember(db *sql.DB) http.HandlerFunc {
 }
 
 // DeleteClubSocial deletes an existing social media handle of a group.
-func DeleteClubSocial(db *sql.DB) http.HandlerFunc {
+func DeleteClubSocial(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		params := query.DeleteClubSocialParams{
@@ -231,14 +232,14 @@ func DeleteClubSocial(db *sql.DB) http.HandlerFunc {
 //
 // This handler takes in a name argument which is first
 // checked as an alias and then as the name of a group.
-func GetClub(db *sql.DB) http.HandlerFunc {
+func GetClub(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
 		group, err := queries.GetClub(ctx, vars["name"])
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			RespondError(w, 404, "No groups found!")
 			return
 		}
@@ -253,12 +254,12 @@ func GetClub(db *sql.DB) http.HandlerFunc {
 }
 
 // GetClubs retrieves the group details from the database.
-func GetClubs(db *sql.DB) http.HandlerFunc {
+func GetClubs(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		groups, err := queries.GetClubs(ctx)
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			RespondError(w, 404, "No groups found!")
 			return
 		}
@@ -272,9 +273,9 @@ func GetClubs(db *sql.DB) http.HandlerFunc {
 }
 
 // GetClubFaculty retrieves the management faculty of a group from the database.
-func GetClubFaculty(db *sql.DB) http.HandlerFunc {
+func GetClubFaculty(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		group_name := mux.Vars(r)["name"]
 		faculty, err := queries.GetClubFaculty(ctx, group_name)
@@ -288,9 +289,9 @@ func GetClubFaculty(db *sql.DB) http.HandlerFunc {
 }
 
 // GetClubSocials retrieves the social media links of a group from the database.
-func GetClubSocials(db *sql.DB) http.HandlerFunc {
+func GetClubSocials(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		group_name := mux.Vars(r)["name"]
 		socials, err := queries.GetClubSocials(ctx, group_name)
@@ -304,9 +305,9 @@ func GetClubSocials(db *sql.DB) http.HandlerFunc {
 }
 
 // ReadClubMembers retrieves the members of a club.
-func ReadClubMembers(db *sql.DB) http.HandlerFunc {
+func ReadClubMembers(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 
 	type ReadClubMemberParams struct {
 		ClubNameOrAlias string `json:"club_name_or_alias"`
@@ -330,9 +331,9 @@ func ReadClubMembers(db *sql.DB) http.HandlerFunc {
 }
 
 // UpdateClubMember updates a club member's details.
-func UpdateClubMember(db *sql.DB) http.HandlerFunc {
+func UpdateClubMember(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 
 	type UpdateClubMemberParams struct {
 		ClubNameOrAlias string   `json:"club_name_or_alias"`
@@ -355,7 +356,7 @@ func UpdateClubMember(db *sql.DB) http.HandlerFunc {
 			RollNumber:      clubMember.RollNumber,
 			Position:        clubMember.Position,
 			ExtraGroups:     clubMember.ExtraGroups,
-			Comments:        sql.NullString{String: clubMember.Comments, Valid: true},
+			Comments:        pgtype.Text{String: clubMember.Comments, Valid: true},
 		}
 		err := queries.UpdateClubMember(ctx, params)
 		if err != nil {
@@ -369,9 +370,9 @@ func UpdateClubMember(db *sql.DB) http.HandlerFunc {
 }
 
 // UpdateClubSocials updates the link of a social media handle for a group.
-func UpdateClubSocials(db *sql.DB) http.HandlerFunc {
+func UpdateClubSocials(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		link := r.URL.Query().Get("link")

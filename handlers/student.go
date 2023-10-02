@@ -2,16 +2,17 @@ package handlers
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 	"strconv"
 
 	query "breadboard/.sqlc-auto-gen"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func GetDiscordLinkStatus(db *sql.DB) http.HandlerFunc {
+func GetDiscordLinkStatus(db *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -22,8 +23,8 @@ func GetDiscordLinkStatus(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		student, err := queries.GetDiscordLinkStatus(ctx, sql.NullInt64{Int64: int64(idInt), Valid: true})
-		if err == sql.ErrNoRows {
+		student, err := queries.GetDiscordLinkStatus(ctx, pgtype.Int8{Int64: int64(idInt), Valid: true})
+		if err == pgx.ErrNoRows {
 			RespondJSON(w, 404, false)
 		} else {
 			RespondJSON(w, 200, student)
@@ -32,9 +33,9 @@ func GetDiscordLinkStatus(db *sql.DB) http.HandlerFunc {
 }
 
 // GetHostels retrieves all the hostels and their meta data from the database.
-func GetHostels(db *sql.DB) http.HandlerFunc {
+func GetHostels(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		hostels, _ := queries.GetHostels(ctx)
 		RespondJSON(w, 200, hostels)
@@ -42,9 +43,9 @@ func GetHostels(db *sql.DB) http.HandlerFunc {
 }
 
 // GetStudent retrieves a single student's details based on their roll number, email, or Discord ID.
-func GetStudent(db *sql.DB) http.HandlerFunc {
+func GetStudent(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
@@ -55,7 +56,7 @@ func GetStudent(db *sql.DB) http.HandlerFunc {
 			Email:      id,
 			DiscordID:  int64(discordId),
 		})
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			RespondError(w, 404, "Student not found in the database")
 			return
 		}

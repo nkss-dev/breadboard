@@ -1,14 +1,16 @@
 package database
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jackc/pgx/v5"
 )
 
-func Init(db *sql.DB) {
+func Init(conn *pgx.Conn) {
 	filenames := []string{"announcement", "student", "faculty", "guild", "club", "course"}
 	script := []string{}
 	for _, filename := range filenames {
@@ -23,7 +25,7 @@ func Init(db *sql.DB) {
 		script = append(script, string(file))
 	}
 
-	_, err := db.Exec(strings.Join(script, "\n"))
+	_, err := conn.Exec(context.Background(), strings.Join(script, "\n"))
 	if err != nil {
 		log.Fatalln(err)
 	}

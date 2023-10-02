@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,6 +12,8 @@ import (
 	query "breadboard/.sqlc-auto-gen"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/net/html"
 )
 
@@ -198,7 +199,7 @@ func scrapeAnnouncements() (announcements []Announcement) {
 //
 // It also has some case-specific checks since scraped data doesn't have
 // uniformity
-func parseDate(date string) (parsedDate time.Time, err error) {
+func parseDate(date string) (parsedDate pgtype.Date, err error) {
 	date = strings.Replace(date, ".", "-", 3)
 	date = strings.Replace(date, "/", "-", 3)
 	date = strings.Replace(date, "__", "", 2)
@@ -208,7 +209,8 @@ func parseDate(date string) (parsedDate time.Time, err error) {
 	if date == "07-05-019" {
 		date = "07-05-2019"
 	}
-	return time.Parse("02-01-2006", date)
+	time, err := time.Parse("02-01-2006", date)
+	return pgtype.Date{Time: time}, err
 }
 
 // insertNewAnnouncements saves announcements to database
@@ -217,10 +219,10 @@ func parseDate(date string) (parsedDate time.Time, err error) {
 // some formatting
 //
 // TODO: try to use sqlc or some other intermediate to store this query
-func FetchAnnouncements(db *sql.DB) {
+func FetchAnnouncements(conn *pgx.Conn) {
 	insert_query := query_prefix
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	latest_date, err := queries.GetLatestAnnouncementDate(ctx)
 	if err != nil {
 		fmt.Println(err)
@@ -232,13 +234,13 @@ func FetchAnnouncements(db *sql.DB) {
 		if err != nil {
 			fmt.Println(date, err)
 		} else {
-			if err != nil && date.Before(latest_date) {
+			if err != nil && !date.Time.After(latest_date.Time) {
 				fmt.Println("Detected old announcement, assuming it is in database already")
 				break
 			}
 			addition := strings.Join([]string{
 				"('",
-				date.Format("2006-01-02"),
+				date.Time.Format("2006-01-02"),
 				"', '",
 				announcement.Title,
 				"', '",
@@ -252,7 +254,7 @@ func FetchAnnouncements(db *sql.DB) {
 		}
 	}
 	insert_query += " ON CONFLICT (date_of_creation, title) DO NOTHING"
-	_, inserterr := db.ExecContext(ctx, insert_query)
+	_, inserterr := conn.Exec(ctx, insert_query)
 	if inserterr != nil {
 		fmt.Println(inserterr)
 	}
@@ -261,16 +263,16 @@ func FetchAnnouncements(db *sql.DB) {
 // GetAnnouncements returns all the announcements stored in database
 //
 // It is a wrapper function around
-func GetAnnouncements(db *sql.DB) http.HandlerFunc {
+func GetAnnouncements(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		announcements, err := queries.GetAcademicAnnouncements(ctx)
-		if err == sql.ErrNoRows || len(announcements) == 0 {
-			FetchAnnouncements(db)
+		if err == pgx.ErrNoRows || len(announcements) == 0 {
+			FetchAnnouncements(conn)
 		}
 		announcements, err = queries.GetAcademicAnnouncements(ctx)
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			RespondError(w, 404, "Announcements not found in the database")
 			return
 		}

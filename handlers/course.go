@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v2"
 )
@@ -36,9 +36,9 @@ type Course struct {
 	Specifics  []BranchSpecifics
 }
 
-func CreateCourse(db *sql.DB) http.HandlerFunc {
+func CreateCourse(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		var coursePaths []string
 		json.NewDecoder(r.Body).Decode(&coursePaths)
@@ -89,14 +89,14 @@ func CreateCourse(db *sql.DB) http.HandlerFunc {
 }
 
 // GetCourse is a handler for retrieving a single course via the `code` argument.
-func GetCourse(db *sql.DB) http.HandlerFunc {
+func GetCourse(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
 		course, err := queries.GetCourse(ctx, vars["code"])
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			RespondError(w, 404, "Course not found in the database")
 			return
 		}
@@ -106,9 +106,9 @@ func GetCourse(db *sql.DB) http.HandlerFunc {
 
 // GetCourses is a handler for retrieving all the courses matching the given
 // query parameters. It outputs all the courses if no parameter is passed.
-func GetCourses(db *sql.DB) http.HandlerFunc {
+func GetCourses(conn *pgx.Conn) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(db)
+	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := r.URL.Query()
 		var semester int
@@ -135,31 +135,31 @@ func GetCourses(db *sql.DB) http.HandlerFunc {
 		// !TODO: Make code idempotent
 		if semester == 0 && branch == "" {
 			courses, err := queries.GetCourses(ctx)
-			if err != nil && err != sql.ErrNoRows {
+			if err != nil && err != pgx.ErrNoRows {
 				RespondError(w, 500, err.Error())
 				return
-			} else if err == sql.ErrNoRows || len(courses) == 0 {
+			} else if err == pgx.ErrNoRows || len(courses) == 0 {
 				RespondError(w, 404, "Courses not found in the database")
 				return
 			}
 			RespondJSON(w, 200, courses)
 		} else if semester != 0 && branch == "" {
 			courses, err := queries.GetCoursesBySemester(ctx, int16(semester))
-			if err == sql.ErrNoRows || len(courses) == 0 {
+			if err == pgx.ErrNoRows || len(courses) == 0 {
 				RespondError(w, 404, "Courses not found in the database")
 				return
 			}
 			RespondJSON(w, 200, courses)
 		} else if semester == 0 && branch != "" {
 			courses, err := queries.GetCoursesByBranch(ctx, branch)
-			if err == sql.ErrNoRows || len(courses) == 0 {
+			if err == pgx.ErrNoRows || len(courses) == 0 {
 				RespondError(w, 404, "Courses not found in the database")
 				return
 			}
 			RespondJSON(w, 200, courses)
 		} else {
 			courses, err := queries.GetCoursesByBranchAndSemester(ctx, query.GetCoursesByBranchAndSemesterParams{Branch: branch, Semester: int16(semester)})
-			if err == sql.ErrNoRows || len(courses) == 0 {
+			if err == pgx.ErrNoRows || len(courses) == 0 {
 				RespondError(w, 404, "Courses not found in the database")
 				return
 			}

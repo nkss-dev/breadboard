@@ -1,7 +1,7 @@
 package breadboard
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -13,32 +13,33 @@ import (
 
 	"github.com/go-co-op/gocron"
 	"github.com/gorilla/mux"
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/cors"
 )
 
 type server struct {
-	db     *sql.DB
+	conn   *pgx.Conn
 	router *mux.Router
 }
 
 // NewServer returns a new app instance.
 func NewServer() *server {
-	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Unable to connect to database:\n", err)
 	}
+
 	// !TODO: Make separate interface to initialise database
-	database.Init(db)
+	database.Init(conn)
 
 	// Initialize cronjob for fetching announcements
 	cron := gocron.NewScheduler(time.UTC)
 	cron.Every(1).Day().At("00:00").Do(func() {
-		h.FetchAnnouncements(db)
+		h.FetchAnnouncements(conn)
 	})
 	cron.StartAsync()
 
-	s := server{db: db, router: mux.NewRouter().StrictSlash(true)}
+	s := server{conn: conn, router: mux.NewRouter().StrictSlash(true)}
 	s.setRouters()
 	return &s
 }
@@ -61,35 +62,35 @@ func (s *server) setRouters() {
 	})
 
 	// Status
-	s.router.Handle("/status/student/discord", h.GetDiscordLinkStatus(s.db)).Methods("GET")
+	s.router.Handle("/status/student/discord", h.GetDiscordLinkStatus(s.conn)).Methods("GET")
 
 	// Announcements
-	s.router.HandleFunc("/announcements", h.GetAnnouncements(s.db)).Methods("GET")
+	s.router.HandleFunc("/announcements", h.GetAnnouncements(s.conn)).Methods("GET")
 
 	// Courses
-	s.router.HandleFunc("/courses", h.GetCourses(s.db)).Methods("GET")
-	s.router.HandleFunc("/courses", m.Authenticator(h.CreateCourse(s.db))).Methods("POST")
-	s.router.HandleFunc("/courses/{code}", h.GetCourse(s.db)).Methods("GET")
+	s.router.HandleFunc("/courses", h.GetCourses(s.conn)).Methods("GET")
+	s.router.HandleFunc("/courses", m.Authenticator(h.CreateCourse(s.conn))).Methods("POST")
+	s.router.HandleFunc("/courses/{code}", h.GetCourse(s.conn)).Methods("GET")
 
 	// Clubs
-	s.router.Handle("/clubs", h.GetClubs(s.db)).Methods("GET")
-	s.router.Handle("/clubs/{name}", h.GetClub(s.db)).Methods("GET")
+	s.router.Handle("/clubs", h.GetClubs(s.conn)).Methods("GET")
+	s.router.Handle("/clubs/{name}", h.GetClub(s.conn)).Methods("GET")
 
-	s.router.Handle("/clubs/{name}/faculty", h.GetClubFaculty(s.db)).Methods("GET")
-	s.router.Handle("/clubs/{name}/faculty", m.Authenticator(h.CreateClubFaculty(s.db))).Methods("POST")
-	s.router.Handle("/clubs/{name}/faculty/{fname}", m.Authenticator(h.DeleteClubFaculty(s.db))).Methods("DELETE")
+	s.router.Handle("/clubs/{name}/faculty", h.GetClubFaculty(s.conn)).Methods("GET")
+	s.router.Handle("/clubs/{name}/faculty", m.Authenticator(h.CreateClubFaculty(s.conn))).Methods("POST")
+	s.router.Handle("/clubs/{name}/faculty/{fname}", m.Authenticator(h.DeleteClubFaculty(s.conn))).Methods("DELETE")
 
-	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.ReadClubMembers(s.db))).Methods("GET")
-	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.CreateClubMember(s.db))).Methods("POST")
-	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.UpdateClubMember(s.db))).Methods("PUT")
-	s.router.Handle("/clubs/{name}/members/{roll}", m.Authenticator(h.DeleteClubMember(s.db))).Methods("DELETE")
+	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.ReadClubMembers(s.conn))).Methods("GET")
+	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.CreateClubMember(s.conn))).Methods("POST")
+	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.UpdateClubMember(s.conn))).Methods("PUT")
+	s.router.Handle("/clubs/{name}/members/{roll}", m.Authenticator(h.DeleteClubMember(s.conn))).Methods("DELETE")
 
-	s.router.Handle("/clubs/{name}/socials", h.GetClubSocials(s.db)).Methods("GET")
-	s.router.Handle("/clubs/{name}/socials", m.Authenticator(h.CreateClubSocial(s.db))).Methods("POST")
-	s.router.Handle("/clubs/{name}/socials/{type}", m.Authenticator(h.UpdateClubSocials(s.db))).Methods("PUT")
-	s.router.Handle("/clubs/{name}/socials/{type}", m.Authenticator(h.DeleteClubSocial(s.db))).Methods("DELETE")
+	s.router.Handle("/clubs/{name}/socials", h.GetClubSocials(s.conn)).Methods("GET")
+	s.router.Handle("/clubs/{name}/socials", m.Authenticator(h.CreateClubSocial(s.conn))).Methods("POST")
+	s.router.Handle("/clubs/{name}/socials/{type}", m.Authenticator(h.UpdateClubSocials(s.conn))).Methods("PUT")
+	s.router.Handle("/clubs/{name}/socials/{type}", m.Authenticator(h.DeleteClubSocial(s.conn))).Methods("DELETE")
 
 	// Students
-	s.router.Handle("/hostels", h.GetHostels(s.db)).Methods("GET")
-	s.router.Handle("/students/{id}", m.Authenticator(h.GetStudent(s.db))).Methods("GET")
+	s.router.Handle("/hostels", h.GetHostels(s.conn)).Methods("GET")
+	s.router.Handle("/students/{id}", m.Authenticator(h.GetStudent(s.conn))).Methods("GET")
 }
