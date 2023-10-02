@@ -1,7 +1,6 @@
-version: 1
-packages:
-  - name: "query"
-    path: ".sqlc-auto-gen"
+version: 2
+sql:
+  - engine: "postgresql"
     queries:
       - "./database/queries"
       - "./database/queries/club"
@@ -13,6 +12,9 @@ packages:
       - "./database/schemas/club.sql"
       - "./database/schemas/course.sql"
       - "./database/schemas/announcement.sql"
-    engine: "postgresql"
-    emit_json_tags: true
-    json_tags_case_style: "snake"
+    gen:
+      go:
+        package: "database"
+        out: ".sqlc-auto-gen"
+        emit_json_tags: true
+        json_tags_case_style: "snake"
