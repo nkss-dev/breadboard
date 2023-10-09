@@ -47,7 +47,7 @@ SELECT
                 'branch', bs.branch,
                 'semester', bs.semester,
                 'credits', bs.credits
-            )), '[]')::JSON
+            )), '[]')::JSONB
         FROM
             branch_specifics AS bs
         WHERE
@@ -66,7 +66,7 @@ SELECT
                 'branch', bs.branch,
                 'semester', bs.semester,
                 'credits', bs.credits
-            )), '[]')::JSON
+            )), '[]')::JSONB
         FROM
             branch_specifics AS bs
         WHERE
@@ -79,11 +79,11 @@ FROM
 SELECT
     c.*, (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT(
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
                 'branch', bs.branch,
                 'semester', bs.semester,
                 'credits', bs.credits
-            ))
+            )), '[]')::JSONB
         FROM
             branch_specifics AS bs
         WHERE
@@ -98,11 +98,11 @@ WHERE
 SELECT
     c.*, (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT(
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
                 'branch', bs.branch,
                 'semester', bs.semester,
                 'credits', bs.credits
-            ))
+            )), '[]')::JSONB
         FROM
             branch_specifics AS bs
         WHERE
@@ -117,11 +117,11 @@ WHERE
 SELECT
     c.*, (
         SELECT
-            JSON_AGG(JSON_BUILD_OBJECT(
+            COALESCE(JSON_AGG(JSON_BUILD_OBJECT(
                 'branch', bs.branch,
                 'semester', bs.semester,
                 'credits', bs.credits
-            ))
+            )), '[]')::JSONB
         FROM
             branch_specifics AS bs
         WHERE
