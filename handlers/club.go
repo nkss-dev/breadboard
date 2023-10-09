@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Club struct {
@@ -32,7 +33,7 @@ type Faculty struct {
 }
 
 // CreateClubFaculty creates a new faculty incharge for a group.
-func CreateClubFaculty(conn *pgx.Conn) http.HandlerFunc {
+func CreateClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +73,7 @@ func CreateClubFaculty(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // CreateClubMember adds a new member to a club.
-func CreateClubMember(conn *pgx.Conn) http.HandlerFunc {
+func CreateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 
@@ -111,7 +112,7 @@ func CreateClubMember(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // CreateClubSocial adds a new social media handle of a group.
-func CreateClubSocial(conn *pgx.Conn) http.HandlerFunc {
+func CreateClubSocial(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +148,7 @@ func CreateClubSocial(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // DeleteClubFaculty deletes an existing faculty incharge of a group.
-func DeleteClubFaculty(conn *pgx.Conn) http.HandlerFunc {
+func DeleteClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -174,7 +175,7 @@ func DeleteClubFaculty(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // DeleteClubMember deletes an existing member of a club.
-func DeleteClubMember(conn *pgx.Conn) http.HandlerFunc {
+func DeleteClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 
@@ -207,7 +208,7 @@ func DeleteClubMember(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // DeleteClubSocial deletes an existing social media handle of a group.
-func DeleteClubSocial(conn *pgx.Conn) http.HandlerFunc {
+func DeleteClubSocial(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -232,7 +233,7 @@ func DeleteClubSocial(conn *pgx.Conn) http.HandlerFunc {
 //
 // This handler takes in a name argument which is first
 // checked as an alias and then as the name of a group.
-func GetClub(conn *pgx.Conn) http.HandlerFunc {
+func GetClub(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -254,7 +255,7 @@ func GetClub(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // GetClubs retrieves the group details from the database.
-func GetClubs(conn *pgx.Conn) http.HandlerFunc {
+func GetClubs(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -273,7 +274,7 @@ func GetClubs(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // GetClubFaculty retrieves the management faculty of a group from the database.
-func GetClubFaculty(conn *pgx.Conn) http.HandlerFunc {
+func GetClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -289,7 +290,7 @@ func GetClubFaculty(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // GetClubSocials retrieves the social media links of a group from the database.
-func GetClubSocials(conn *pgx.Conn) http.HandlerFunc {
+func GetClubSocials(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -305,7 +306,7 @@ func GetClubSocials(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // ReadClubMembers retrieves the members of a club.
-func ReadClubMembers(conn *pgx.Conn) http.HandlerFunc {
+func ReadClubMembers(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 
@@ -331,7 +332,7 @@ func ReadClubMembers(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // UpdateClubMember updates a club member's details.
-func UpdateClubMember(conn *pgx.Conn) http.HandlerFunc {
+func UpdateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 
@@ -370,7 +371,7 @@ func UpdateClubMember(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // UpdateClubSocials updates the link of a social media handle for a group.
-func UpdateClubSocials(conn *pgx.Conn) http.HandlerFunc {
+func UpdateClubSocials(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {

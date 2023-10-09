@@ -14,6 +14,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/net/html"
 )
 
@@ -219,7 +220,7 @@ func parseDate(date string) (parsedDate pgtype.Date, err error) {
 // some formatting
 //
 // TODO: try to use sqlc or some other intermediate to store this query
-func FetchAnnouncements(conn *pgx.Conn) {
+func FetchAnnouncements(conn *pgxpool.Pool) {
 	insert_query := query_prefix
 	ctx := context.Background()
 	queries := query.New(conn)
@@ -263,7 +264,7 @@ func FetchAnnouncements(conn *pgx.Conn) {
 // GetAnnouncements returns all the announcements stored in database
 //
 // It is a wrapper function around
-func GetAnnouncements(conn *pgx.Conn) http.HandlerFunc {
+func GetAnnouncements(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {

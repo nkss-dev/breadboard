@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func Init(conn *pgx.Conn) {
+func Init(conn *pgxpool.Pool) {
 	filenames := []string{"announcement", "student", "faculty", "guild", "club", "course"}
 	script := []string{}
 	for _, filename := range filenames {

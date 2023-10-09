@@ -10,9 +10,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func GetDiscordLinkStatus(db *pgx.Conn) http.HandlerFunc {
+func GetDiscordLinkStatus(db *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(db)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +34,7 @@ func GetDiscordLinkStatus(db *pgx.Conn) http.HandlerFunc {
 }
 
 // GetHostels retrieves all the hostels and their meta data from the database.
-func GetHostels(conn *pgx.Conn) http.HandlerFunc {
+func GetHostels(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +44,7 @@ func GetHostels(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // GetStudent retrieves a single student's details based on their roll number, email, or Discord ID.
-func GetStudent(conn *pgx.Conn) http.HandlerFunc {
+func GetStudent(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 

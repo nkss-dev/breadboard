@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v2"
 )
@@ -36,7 +37,7 @@ type Course struct {
 	Specifics  []BranchSpecifics
 }
 
-func CreateCourse(conn *pgx.Conn) http.HandlerFunc {
+func CreateCourse(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +90,7 @@ func CreateCourse(conn *pgx.Conn) http.HandlerFunc {
 }
 
 // GetCourse is a handler for retrieving a single course via the `code` argument.
-func GetCourse(conn *pgx.Conn) http.HandlerFunc {
+func GetCourse(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +107,7 @@ func GetCourse(conn *pgx.Conn) http.HandlerFunc {
 
 // GetCourses is a handler for retrieving all the courses matching the given
 // query parameters. It outputs all the courses if no parameter is passed.
-func GetCourses(conn *pgx.Conn) http.HandlerFunc {
+func GetCourses(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {

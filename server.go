@@ -13,18 +13,18 @@ import (
 
 	"github.com/go-co-op/gocron"
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/cors"
 )
 
 type server struct {
-	conn   *pgx.Conn
+	conn   *pgxpool.Pool
 	router *mux.Router
 }
 
 // NewServer returns a new app instance.
 func NewServer() *server {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	conn, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalln("Unable to connect to database:\n", err)
 	}
