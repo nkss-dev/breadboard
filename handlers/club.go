@@ -12,7 +12,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -77,30 +76,16 @@ func CreateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 
-	type CreateClubMemberParams struct {
-		ClubName    string   `json:"club_name"`
-		RollNumber  string   `json:"roll_number"`
-		Position    string   `json:"position"`
-		ExtraGroups []string `json:"extra_groups"`
-		Comments    string   `json:"comments"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		var clubMember CreateClubMemberParams
+		var clubMember query.CreateClubMemberParams
 		json.NewDecoder(r.Body).Decode(&clubMember)
 
 		clubMember.ClubName = mux.Vars(r)["name"]
+		clubMember.RollNumber = mux.Vars(r)["roll"]
 
 		// TODO: add parameter validation middleware.
 
-		params := query.CreateClubMemberParams{
-			ClubName:    clubMember.ClubName,
-			RollNumber:  clubMember.RollNumber,
-			Position:    clubMember.Position,
-			ExtraGroups: clubMember.ExtraGroups,
-			Comments:    pgtype.Text{String: clubMember.Comments, Valid: true},
-		}
-		err := queries.CreateClubMember(ctx, params)
+		err := queries.CreateClubMember(ctx, clubMember)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while inserting details to our database")
@@ -336,30 +321,16 @@ func UpdateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 
-	type UpdateClubMemberParams struct {
-		ClubName    string   `json:"club_name"`
-		RollNumber  string   `json:"roll_number"`
-		Position    string   `json:"position"`
-		ExtraGroups []string `json:"extra_groups"`
-		Comments    string   `json:"comments"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		var clubMember UpdateClubMemberParams
+		var clubMember query.UpdateClubMemberParams
 		json.NewDecoder(r.Body).Decode(&clubMember)
 
 		clubMember.ClubName = mux.Vars(r)["name"]
+		clubMember.RollNumber = mux.Vars(r)["roll"]
 
 		// TODO: add parameter validation middleware.
 
-		params := query.UpdateClubMemberParams{
-			ClubName:    clubMember.ClubName,
-			RollNumber:  clubMember.RollNumber,
-			Position:    clubMember.Position,
-			ExtraGroups: clubMember.ExtraGroups,
-			Comments:    pgtype.Text{String: clubMember.Comments, Valid: true},
-		}
-		err := queries.UpdateClubMember(ctx, params)
+		err := queries.UpdateClubMember(ctx, clubMember)
 		if err != nil {
 			log.Println(err)
 			RespondError(w, 500, "Something went wrong while updating details to our database")
