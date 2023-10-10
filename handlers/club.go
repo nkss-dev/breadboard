@@ -33,9 +33,9 @@ type Faculty struct {
 }
 
 // CreateClubFaculty creates a new faculty incharge for a group.
-func CreateClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
+func CreateClubFaculty(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		clubName := mux.Vars(r)["name"]
 		vars := r.URL.Query()
@@ -73,9 +73,9 @@ func CreateClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // CreateClubMember adds a new member to a club.
-func CreateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
+func CreateClubMember(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var clubMember query.CreateClubMemberParams
@@ -98,9 +98,9 @@ func CreateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // CreateClubMemberBulk adds many new members to a club.
-func CreateClubMemberBulk(conn *pgxpool.Pool) http.HandlerFunc {
+func CreateClubMemberBulk(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var clubMembers []query.CreateClubMemberBulkParams
@@ -126,9 +126,9 @@ func CreateClubMemberBulk(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // CreateClubSocial adds a new social media handle of a group.
-func CreateClubSocial(conn *pgxpool.Pool) http.HandlerFunc {
+func CreateClubSocial(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		clubName := mux.Vars(r)["name"]
 		vars := r.URL.Query()
@@ -162,9 +162,9 @@ func CreateClubSocial(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // DeleteClubFaculty deletes an existing faculty incharge of a group.
-func DeleteClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
+func DeleteClubFaculty(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
@@ -189,9 +189,9 @@ func DeleteClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // DeleteClubMember deletes an existing member of a club.
-func DeleteClubMember(conn *pgxpool.Pool) http.HandlerFunc {
+func DeleteClubMember(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 
 	type DeleteClubMemberParams struct {
 		ClubName   string `json:"club_name"`
@@ -222,9 +222,9 @@ func DeleteClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // DeleteClubMemberBulk deletes existing members of a club.
-func DeleteClubMemberBulk(conn *pgxpool.Pool) http.HandlerFunc {
+func DeleteClubMemberBulk(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var rollNumbers []string
@@ -248,9 +248,9 @@ func DeleteClubMemberBulk(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // DeleteClubSocial deletes an existing social media handle of a group.
-func DeleteClubSocial(conn *pgxpool.Pool) http.HandlerFunc {
+func DeleteClubSocial(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		params := query.DeleteClubSocialParams{
@@ -273,9 +273,9 @@ func DeleteClubSocial(conn *pgxpool.Pool) http.HandlerFunc {
 //
 // This handler takes in a name argument which is first
 // checked as an alias and then as the name of a group.
-func GetClub(conn *pgxpool.Pool) http.HandlerFunc {
+func GetClub(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -295,9 +295,9 @@ func GetClub(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // GetClubs retrieves the group details from the database.
-func GetClubs(conn *pgxpool.Pool) http.HandlerFunc {
+func GetClubs(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		groups, err := queries.GetClubs(ctx)
 		if err == pgx.ErrNoRows {
@@ -314,9 +314,9 @@ func GetClubs(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // GetClubFaculty retrieves the management faculty of a group from the database.
-func GetClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
+func GetClubFaculty(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		group_name := mux.Vars(r)["name"]
 		faculty, err := queries.GetClubFaculty(ctx, group_name)
@@ -330,9 +330,9 @@ func GetClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // GetClubSocials retrieves the social media links of a group from the database.
-func GetClubSocials(conn *pgxpool.Pool) http.HandlerFunc {
+func GetClubSocials(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		group_name := mux.Vars(r)["name"]
 		socials, err := queries.GetClubSocials(ctx, group_name)
@@ -346,9 +346,9 @@ func GetClubSocials(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // ReadClubMembers retrieves the members of a club.
-func ReadClubMembers(conn *pgxpool.Pool) http.HandlerFunc {
+func ReadClubMembers(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 
 	type ReadClubMemberParams struct {
 		ClubName string `json:"club_name"`
@@ -372,9 +372,9 @@ func ReadClubMembers(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // UpdateClubMember updates a club member's details.
-func UpdateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
+func UpdateClubMember(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var clubMember query.UpdateClubMemberParams
@@ -397,9 +397,9 @@ func UpdateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // UpdateClubSocials updates the link of a social media handle for a group.
-func UpdateClubSocials(conn *pgxpool.Pool) http.HandlerFunc {
+func UpdateClubSocials(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		link := r.URL.Query().Get("link")

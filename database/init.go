@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func Init(conn *pgxpool.Pool) {
+func Init(pool *pgxpool.Pool) {
 	filenames := []string{"announcement", "student", "faculty", "guild", "club", "course"}
 	script := []string{}
 	for _, filename := range filenames {
@@ -25,7 +25,7 @@ func Init(conn *pgxpool.Pool) {
 		script = append(script, string(file))
 	}
 
-	_, err := conn.Exec(context.Background(), strings.Join(script, "\n"))
+	_, err := pool.Exec(context.Background(), strings.Join(script, "\n"))
 	if err != nil {
 		log.Fatalln(err)
 	}

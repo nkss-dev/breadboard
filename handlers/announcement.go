@@ -220,10 +220,10 @@ func parseDate(date string) (parsedDate pgtype.Date, err error) {
 // some formatting
 //
 // TODO: try to use sqlc or some other intermediate to store this query
-func FetchAnnouncements(conn *pgxpool.Pool) {
+func FetchAnnouncements(pool *pgxpool.Pool) {
 	insert_query := query_prefix
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	latest_date, err := queries.GetLatestAnnouncementDate(ctx)
 	if err != nil {
 		fmt.Println(err)
@@ -255,7 +255,7 @@ func FetchAnnouncements(conn *pgxpool.Pool) {
 		}
 	}
 	insert_query += " ON CONFLICT (date_of_creation, title) DO NOTHING"
-	_, inserterr := conn.Exec(ctx, insert_query)
+	_, inserterr := pool.Exec(ctx, insert_query)
 	if inserterr != nil {
 		fmt.Println(inserterr)
 	}
@@ -264,13 +264,13 @@ func FetchAnnouncements(conn *pgxpool.Pool) {
 // GetAnnouncements returns all the announcements stored in database
 //
 // It is a wrapper function around
-func GetAnnouncements(conn *pgxpool.Pool) http.HandlerFunc {
+func GetAnnouncements(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		announcements, err := queries.GetAcademicAnnouncements(ctx)
 		if err == pgx.ErrNoRows || len(announcements) == 0 {
-			FetchAnnouncements(conn)
+			FetchAnnouncements(pool)
 		}
 		announcements, err = queries.GetAcademicAnnouncements(ctx)
 		if err == pgx.ErrNoRows {

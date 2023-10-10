@@ -34,9 +34,9 @@ func GetDiscordLinkStatus(db *pgxpool.Pool) http.HandlerFunc {
 }
 
 // GetHostels retrieves all the hostels and their meta data from the database.
-func GetHostels(conn *pgxpool.Pool) http.HandlerFunc {
+func GetHostels(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		hostels, _ := queries.GetHostels(ctx)
 		RespondJSON(w, 200, hostels)
@@ -44,9 +44,9 @@ func GetHostels(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // GetStudent retrieves a single student's details based on their roll number, email, or Discord ID.
-func GetStudent(conn *pgxpool.Pool) http.HandlerFunc {
+func GetStudent(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]

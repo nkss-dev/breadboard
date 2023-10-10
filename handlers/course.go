@@ -37,9 +37,9 @@ type Course struct {
 	Specifics  []BranchSpecifics
 }
 
-func CreateCourse(conn *pgxpool.Pool) http.HandlerFunc {
+func CreateCourse(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		var coursePaths []string
 		json.NewDecoder(r.Body).Decode(&coursePaths)
@@ -90,9 +90,9 @@ func CreateCourse(conn *pgxpool.Pool) http.HandlerFunc {
 }
 
 // GetCourse is a handler for retrieving a single course via the `code` argument.
-func GetCourse(conn *pgxpool.Pool) http.HandlerFunc {
+func GetCourse(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -107,9 +107,9 @@ func GetCourse(conn *pgxpool.Pool) http.HandlerFunc {
 
 // GetCourses is a handler for retrieving all the courses matching the given
 // query parameters. It outputs all the courses if no parameter is passed.
-func GetCourses(conn *pgxpool.Pool) http.HandlerFunc {
+func GetCourses(pool *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
-	queries := query.New(conn)
+	queries := query.New(pool)
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := r.URL.Query()
 		var semester int
