@@ -1,17 +1,17 @@
 -- name: CreateClubMember :exec
 INSERT INTO club_member (
-    club_name, roll_number, position, extra_groups, comments
+    club_name, roll_number, position, extra_groups, comments, modified_by
 )
 VALUES (
-    @club_name, @roll_number, @position, @extra_groups, @comments
+    @club_name, @roll_number, @position, @extra_groups, @comments, @modified_by
 );
 
 -- name: CreateClubMemberBulk :copyfrom
 INSERT INTO club_member (
-    club_name, roll_number, position, extra_groups, comments
+    club_name, roll_number, position, extra_groups, comments, modified_by
 )
 VALUES (
-    @club_name, @roll_number, @position, @extra_groups, @comments
+    @club_name, @roll_number, @position, @extra_groups, @comments, @modified_by
 );
 
 -- name: ReadClubMembers :many
@@ -24,7 +24,8 @@ SELECT
     student.batch,
     club_member.position,
     club_member.extra_groups,
-    COALESCE(club_member.comments, '')
+    COALESCE(club_member.comments, ''),
+    modified_by
 FROM
     student
     JOIN club_member ON student.roll_number = club_member.roll_number
@@ -37,7 +38,8 @@ UPDATE
 SET
     position = @position,
     extra_groups = @extra_groups,
-    comments = @comments
+    comments = @comments,
+    modified_by = @modified_by
 WHERE
     roll_number = @roll_number
     AND club_name = @club_name;
