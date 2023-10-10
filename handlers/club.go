@@ -37,7 +37,7 @@ func CreateClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
-		group_name := mux.Vars(r)["name"]
+		clubName := mux.Vars(r)["name"]
 		vars := r.URL.Query()
 
 		name := vars.Get("name")
@@ -58,8 +58,8 @@ func CreateClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
 		}
 
 		params := query.CreateClubFacultyParams{
-			Name:  group_name,
-			EmpID: int32(mobile),
+			ClubName: clubName,
+			EmpID:    int32(mobile),
 		}
 		err = queries.CreateClubFaculty(ctx, params)
 		if err != nil {
@@ -68,7 +68,7 @@ func CreateClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
 			return
 		}
 
-		RespondJSON(w, 200, "Added "+name+" as a faculty incharge of "+group_name+" successfully!")
+		RespondJSON(w, 200, "Added "+name+" as a faculty incharge of "+clubName+" successfully!")
 	}
 }
 
@@ -78,27 +78,27 @@ func CreateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 	queries := query.New(conn)
 
 	type CreateClubMemberParams struct {
-		ClubNameOrAlias string   `json:"club_name_or_alias"`
-		RollNumber      string   `json:"roll_number"`
-		Position        string   `json:"position"`
-		ExtraGroups     []string `json:"extra_groups"`
-		Comments        string   `json:"comments"`
+		ClubName    string   `json:"club_name"`
+		RollNumber  string   `json:"roll_number"`
+		Position    string   `json:"position"`
+		ExtraGroups []string `json:"extra_groups"`
+		Comments    string   `json:"comments"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var clubMember CreateClubMemberParams
 		json.NewDecoder(r.Body).Decode(&clubMember)
 
-		clubMember.ClubNameOrAlias = mux.Vars(r)["name"]
+		clubMember.ClubName = mux.Vars(r)["name"]
 
 		// TODO: add parameter validation middleware.
 
 		params := query.CreateClubMemberParams{
-			ClubNameOrAlias: clubMember.ClubNameOrAlias,
-			RollNumber:      clubMember.RollNumber,
-			Position:        clubMember.Position,
-			ExtraGroups:     clubMember.ExtraGroups,
-			Comments:        pgtype.Text{String: clubMember.Comments, Valid: true},
+			ClubName:    clubMember.ClubName,
+			RollNumber:  clubMember.RollNumber,
+			Position:    clubMember.Position,
+			ExtraGroups: clubMember.ExtraGroups,
+			Comments:    pgtype.Text{String: clubMember.Comments, Valid: true},
 		}
 		err := queries.CreateClubMember(ctx, params)
 		if err != nil {
@@ -107,7 +107,7 @@ func CreateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 			return
 		}
 
-		RespondJSON(w, 200, "Successfully added '"+clubMember.RollNumber+"' to "+clubMember.ClubNameOrAlias+" as: "+clubMember.Position)
+		RespondJSON(w, 200, "Successfully added '"+clubMember.RollNumber+"' to "+clubMember.ClubName+" as: "+clubMember.Position)
 	}
 }
 
@@ -116,7 +116,7 @@ func CreateClubSocial(conn *pgxpool.Pool) http.HandlerFunc {
 	ctx := context.Background()
 	queries := query.New(conn)
 	return func(w http.ResponseWriter, r *http.Request) {
-		group_name := mux.Vars(r)["name"]
+		clubName := mux.Vars(r)["name"]
 		vars := r.URL.Query()
 
 		platform_type := vars.Get("type")
@@ -132,7 +132,7 @@ func CreateClubSocial(conn *pgxpool.Pool) http.HandlerFunc {
 		}
 
 		params := query.CreateClubSocialParams{
-			Name:         group_name,
+			ClubName:     clubName,
 			PlatformType: platform_type,
 			Link:         link,
 		}
@@ -143,7 +143,7 @@ func CreateClubSocial(conn *pgxpool.Pool) http.HandlerFunc {
 			return
 		}
 
-		RespondJSON(w, 200, "Added link of the "+platform_type+" handle for "+group_name+" successfully!")
+		RespondJSON(w, 200, "Added link of the "+platform_type+" handle for "+clubName+" successfully!")
 	}
 }
 
@@ -160,8 +160,8 @@ func DeleteClubFaculty(conn *pgxpool.Pool) http.HandlerFunc {
 		}
 
 		params := query.DeleteClubFacultyParams{
-			Name:  vars["name"],
-			EmpID: int32(id),
+			ClubName: vars["name"],
+			EmpID:    int32(id),
 		}
 		err = queries.DeleteClubFaculty(ctx, params)
 		if err != nil {
@@ -180,21 +180,21 @@ func DeleteClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 	queries := query.New(conn)
 
 	type DeleteClubMemberParams struct {
-		ClubNameOrAlias string `json:"club_name_or_alias"`
-		RollNumber      string `json:"roll_number"`
+		ClubName   string `json:"club_name"`
+		RollNumber string `json:"roll_number"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		clubMember := DeleteClubMemberParams{
-			ClubNameOrAlias: mux.Vars(r)["name"],
-			RollNumber:      mux.Vars(r)["roll"],
+			ClubName:   mux.Vars(r)["name"],
+			RollNumber: mux.Vars(r)["roll"],
 		}
 
 		// TODO: add parameter validation middleware.
 
 		params := query.DeleteClubMemberParams{
-			ClubNameOrAlias: clubMember.ClubNameOrAlias,
-			RollNumber:      clubMember.RollNumber,
+			ClubName:   clubMember.ClubName,
+			RollNumber: clubMember.RollNumber,
 		}
 		err := queries.DeleteClubMember(ctx, params)
 		if err != nil {
@@ -203,7 +203,7 @@ func DeleteClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 			return
 		}
 
-		RespondJSON(w, 200, "Successfully removed '"+clubMember.RollNumber+"' from "+clubMember.ClubNameOrAlias)
+		RespondJSON(w, 200, "Successfully removed '"+clubMember.RollNumber+"' from "+clubMember.ClubName)
 	}
 }
 
@@ -214,7 +214,7 @@ func DeleteClubSocial(conn *pgxpool.Pool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		params := query.DeleteClubSocialParams{
-			Name:         vars["name"],
+			ClubName:     vars["name"],
 			PlatformType: vars["type"],
 		}
 		err := queries.DeleteClubSocial(ctx, params)
@@ -311,17 +311,17 @@ func ReadClubMembers(conn *pgxpool.Pool) http.HandlerFunc {
 	queries := query.New(conn)
 
 	type ReadClubMemberParams struct {
-		ClubNameOrAlias string `json:"club_name_or_alias"`
+		ClubName string `json:"club_name"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		clubMember := ReadClubMemberParams{
-			ClubNameOrAlias: mux.Vars(r)["name"],
+			ClubName: mux.Vars(r)["name"],
 		}
 
 		// TODO: add parameter validation middleware.
 
-		members, err := queries.ReadClubMembers(ctx, clubMember.ClubNameOrAlias)
+		members, err := queries.ReadClubMembers(ctx, clubMember.ClubName)
 		if err != nil {
 			RespondError(w, 500, "Something went wrong while fetching details from our database")
 			return
@@ -337,27 +337,27 @@ func UpdateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 	queries := query.New(conn)
 
 	type UpdateClubMemberParams struct {
-		ClubNameOrAlias string   `json:"club_name_or_alias"`
-		RollNumber      string   `json:"roll_number"`
-		Position        string   `json:"position"`
-		ExtraGroups     []string `json:"extra_groups"`
-		Comments        string   `json:"comments"`
+		ClubName    string   `json:"club_name"`
+		RollNumber  string   `json:"roll_number"`
+		Position    string   `json:"position"`
+		ExtraGroups []string `json:"extra_groups"`
+		Comments    string   `json:"comments"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		var clubMember UpdateClubMemberParams
 		json.NewDecoder(r.Body).Decode(&clubMember)
 
-		clubMember.ClubNameOrAlias = mux.Vars(r)["name"]
+		clubMember.ClubName = mux.Vars(r)["name"]
 
 		// TODO: add parameter validation middleware.
 
 		params := query.UpdateClubMemberParams{
-			ClubNameOrAlias: clubMember.ClubNameOrAlias,
-			RollNumber:      clubMember.RollNumber,
-			Position:        clubMember.Position,
-			ExtraGroups:     clubMember.ExtraGroups,
-			Comments:        pgtype.Text{String: clubMember.Comments, Valid: true},
+			ClubName:    clubMember.ClubName,
+			RollNumber:  clubMember.RollNumber,
+			Position:    clubMember.Position,
+			ExtraGroups: clubMember.ExtraGroups,
+			Comments:    pgtype.Text{String: clubMember.Comments, Valid: true},
 		}
 		err := queries.UpdateClubMember(ctx, params)
 		if err != nil {
@@ -366,7 +366,7 @@ func UpdateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 			return
 		}
 
-		RespondJSON(w, 200, "Successfully updated '"+clubMember.RollNumber+"' to "+clubMember.ClubNameOrAlias+" as: "+clubMember.Position)
+		RespondJSON(w, 200, "Successfully updated '"+clubMember.RollNumber+"' to "+clubMember.ClubName+" as: "+clubMember.Position)
 	}
 }
 
@@ -385,7 +385,7 @@ func UpdateClubSocials(conn *pgxpool.Pool) http.HandlerFunc {
 		params := query.UpdateClubSocialsParams{
 			PlatformType: vars["type"],
 			Link:         link,
-			Name:         vars["name"],
+			ClubName:     vars["name"],
 		}
 		err := queries.UpdateClubSocials(ctx, params)
 		if err != nil {

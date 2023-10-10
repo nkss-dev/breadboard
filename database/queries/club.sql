@@ -3,8 +3,7 @@ INSERT INTO club_faculty (
     club_name, emp_id
 )
 VALUES (
-    (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
-    $2
+    @club_name, @emp_id
 );
 
 -- name: CreateClubSocial :exec
@@ -12,23 +11,21 @@ INSERT INTO club_social (
     club_name, platform_type, link
 )
 VALUES (
-    (SELECT c.name FROM club AS c WHERE c.name = $1 OR c.alias = $1),
-    $2,
-    $3
+    @club_name, @platform_type, @link
 );
 
 -- name: DeleteClubFaculty :exec
 DELETE FROM
     club_faculty AS cf
 WHERE
-    cf.club_name = (SELECT c.name FROM club c WHERE c.name = $1 OR c.alias = $1)
-    AND cf.emp_id = $2;
+    cf.club_name = @club_name
+    AND cf.emp_id = @emp_id;
 
 -- name: DeleteClubSocial :exec
 DELETE FROM club_social
 WHERE
-    club_name = (SELECT name FROM club WHERE name = $1 OR alias = $1)
-    AND platform_type = $2;
+    club_name = @club_name
+    AND platform_type = @platform_type;
 
 -- name: GetClub :one
 SELECT
@@ -84,8 +81,7 @@ JOIN
     club_details AS cd
     ON club.name = cd.club_name
 WHERE
-    club.name = $1
-    OR club.alias = $1;
+    club.name = @club_name;
 
 -- name: GetClubs :many
 SELECT
@@ -107,8 +103,7 @@ FROM
     faculty AS f
     JOIN club_faculty AS cf ON f.emp_id = cf.emp_id
 WHERE
-    cf.club_name = $1
-    OR $1 = (SELECT alias FROM club WHERE name = cf.club_name);
+    cf.club_name = @club_name;
 
 -- name: GetClubSocials :many
 SELECT
@@ -117,13 +112,13 @@ SELECT
 FROM
     club_social
 WHERE
-    club_name = (SELECT c.name FROM club AS c WHERE c.name = $1 or c.alias = $1);
+    club_name = @club_name;
 
 -- name: UpdateClubSocials :exec
 UPDATE
     club_social
 SET
-    link = $2
+    link = @link
 WHERE
-    platform_type = $1
-    AND club_name = (SELECT c.name FROM club AS c WHERE c.name = $3 or c.alias = $3);
+    platform_type = @platform_type
+    AND club_name = @club_name;
