@@ -6,6 +6,14 @@ VALUES (
     @club_name, @roll_number, @position, @extra_groups, @comments
 );
 
+-- name: CreateClubMemberBulk :copyfrom
+INSERT INTO club_member (
+    club_name, roll_number, position, extra_groups, comments
+)
+VALUES (
+    @club_name, @roll_number, @position, @extra_groups, @comments
+);
+
 -- name: ReadClubMembers :many
 SELECT
     student.roll_number,
@@ -40,3 +48,10 @@ DELETE FROM
 WHERE
     club_member.club_name = @club_name
     AND club_member.roll_number = @roll_number;
+
+-- name: DeleteClubMemberBulk :exec
+DELETE FROM
+    club_member
+WHERE
+    club_name = @club_name
+    AND roll_number = ANY(@roll_numbers::VARCHAR(9)[]);

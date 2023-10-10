@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	query "breadboard/.sqlc-auto-gen"
 
@@ -93,6 +94,34 @@ func CreateClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 		}
 
 		RespondJSON(w, 200, "Successfully added '"+clubMember.RollNumber+"' to "+clubMember.ClubName+" as: "+clubMember.Position)
+	}
+}
+
+// CreateClubMemberBulk adds many new members to a club.
+func CreateClubMemberBulk(conn *pgxpool.Pool) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(conn)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var clubMembers []query.CreateClubMemberBulkParams
+		json.NewDecoder(r.Body).Decode(&clubMembers)
+
+		var rollNumbers []string
+		for index, clubMember := range clubMembers {
+			clubMembers[index].ClubName = mux.Vars(r)["name"]
+			rollNumbers = append(rollNumbers, clubMember.RollNumber)
+		}
+
+		// TODO: add parameter validation middleware.
+
+		_, err := queries.CreateClubMemberBulk(ctx, clubMembers)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while inserting details to our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Sucessfully added the following students to "+mux.Vars(r)["name"]+": "+strings.Join(rollNumbers, "\n"))
 	}
 }
 
@@ -189,6 +218,32 @@ func DeleteClubMember(conn *pgxpool.Pool) http.HandlerFunc {
 		}
 
 		RespondJSON(w, 200, "Successfully removed '"+clubMember.RollNumber+"' from "+clubMember.ClubName)
+	}
+}
+
+// DeleteClubMemberBulk deletes existing members of a club.
+func DeleteClubMemberBulk(conn *pgxpool.Pool) http.HandlerFunc {
+	ctx := context.Background()
+	queries := query.New(conn)
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var rollNumbers []string
+		json.NewDecoder(r.Body).Decode(&rollNumbers)
+
+		// TODO: add parameter validation middleware.
+
+		params := query.DeleteClubMemberBulkParams{
+			ClubName:    mux.Vars(r)["name"],
+			RollNumbers: rollNumbers,
+		}
+		err := queries.DeleteClubMemberBulk(ctx, params)
+		if err != nil {
+			log.Println(err)
+			RespondError(w, 500, "Something went wrong while deleting details from our database")
+			return
+		}
+
+		RespondJSON(w, 200, "Successfully removed the following roll numbers from "+params.ClubName+": "+strings.Join(rollNumbers, "\n"))
 	}
 }
 

@@ -81,8 +81,10 @@ func (s *server) setRouters() {
 	s.router.Handle("/clubs/{name}/faculty/{fname}", m.Authenticator(h.DeleteClubFaculty(s.conn))).Methods("DELETE")
 
 	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.ReadClubMembers(s.conn))).Methods("GET")
+	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.CreateClubMemberBulk(s.conn))).Methods("POST")
 	s.router.Handle("/clubs/{name}/members/{roll}", m.Authenticator(h.CreateClubMember(s.conn))).Methods("POST")
 	s.router.Handle("/clubs/{name}/members/{roll}", m.Authenticator(h.UpdateClubMember(s.conn))).Methods("PUT")
+	s.router.Handle("/clubs/{name}/members", m.Authenticator(h.DeleteClubMemberBulk(s.conn))).Methods("DELETE")
 	s.router.Handle("/clubs/{name}/members/{roll}", m.Authenticator(h.DeleteClubMember(s.conn))).Methods("DELETE")
 
 	s.router.Handle("/clubs/{name}/socials", h.GetClubSocials(s.conn)).Methods("GET")
