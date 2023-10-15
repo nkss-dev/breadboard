@@ -2,7 +2,7 @@
   description = "breadboard's development environment";
 
   inputs = {
-    go-env.url = "https://flakehub.com/f/GetPsyched/go-env/0.1.0.tar.gz";
+    go-env.url = "https://flakehub.com/f/GetPsyched/go-env/0.x.x.tar.gz";
     go-env.inputs.nixpkgs.follows = "nixpkgs";
   };
 
