@@ -2,22 +2,23 @@
   description = "breadboard's development environment";
 
   inputs = {
-    go-env.url = "https://flakehub.com/f/GetPsyched/go-env/0.x.x.tar.gz";
-    go-env.inputs.nixpkgs.follows = "nixpkgs";
+    flakey-devShells.url = "https://flakehub.com/f/GetPsyched/not-so-flakey-devshells/0.x.x.tar.gz";
+    flakey-devShells.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs@{ nixpkgs, go-env, ... }:
+  outputs = inputs@{ nixpkgs, flakey-devShells, ... }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-      go-env-pkgs = go-env.outputs.packages.${system};
+      flakey-devShell-pkgs = flakey-devShells.outputs.packages.${system};
     in
     {
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = [
           pkgs.sqlc
-          go-env-pkgs.default
-          go-env-pkgs.vscode
+
+          (flakey-devShell-pkgs.default.override { environments = [ "nix" "go" ]; })
+          (flakey-devShell-pkgs.vscodium.override { environments = [ "nix" "go" ]; })
         ];
       };
     };

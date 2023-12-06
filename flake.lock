@@ -1,29 +1,30 @@
 {
   "nodes": {
-    "go-env": {
+    "flakey-devShells": {
       "inputs": {
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "narHash": "sha256-j9sQPhgaPI7yuh/IF4RkW/d8Zeps7R2XmwvJsJfsKYQ=",
-        "rev": "1d262add89331138edc083d5c68aa6be9e2ffa59",
-        "revCount": 32,
+        "lastModified": 1701507594,
+        "narHash": "sha256-cXfJRZ+r6hHCf3y9+OZfTYfll6alKYVbrtTtM8bNeRM=",
+        "rev": "cb5943b5904169a3602c0264c84749379008ec27",
+        "revCount": 87,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/GetPsyched/go-env/0.1.0/018abbe0-0d2b-72a8-a237-e5c9d4b1d15f/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/GetPsyched/not-so-flakey-devshells/0.2.6/018c29c2-2ae3-7766-ab1a-0fdd9f94b124/source.tar.gz"
       },
       "original": {
         "type": "tarball",
-        "url": "https://flakehub.com/f/GetPsyched/go-env/0.1.0.tar.gz"
+        "url": "https://flakehub.com/f/GetPsyched/not-so-flakey-devshells/0.x.x.tar.gz"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1694422566,
-        "narHash": "sha256-lHJ+A9esOz9vln/3CJG23FV6Wd2OoOFbDeEs4cMGMqc=",
-        "path": "/nix/store/zb2695k9v4hmjdki97p0yhd4mys270fs-source",
-        "rev": "3a2786eea085f040a66ecde1bc3ddc7099f6dbeb",
+        "lastModified": 1695644571,
+        "narHash": "sha256-asS9dCCdlt1lPq0DLwkVBbVoEKuEuz+Zi3DG7pR/RxA=",
+        "path": "/nix/store/i6hq63805y784dml4j8pgkrz3lryxzld-source",
+        "rev": "6500b4580c2a1f3d0f980d32d285739d8e156d92",
         "type": "path"
       },
       "original": {
@@ -33,7 +34,7 @@
     },
     "root": {
       "inputs": {
-        "go-env": "go-env",
+        "flakey-devShells": "flakey-devShells",
         "nixpkgs": "nixpkgs"
       }
     }
