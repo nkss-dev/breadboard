@@ -29,3 +29,5 @@ sql:
               import: "encoding/json"
               type: "RawMessage"
             nullable: true
+    database:
+      uri: postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}
